@@ -1,0 +1,119 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens — the single source of truth for colour, type and spacing.
+ *
+ * Tailwind 4 is configured in CSS rather than tailwind.config.mjs (see
+ * CLAUDE.md 9.2 and the note in MISSING-ASSETS.md). The rule is unchanged:
+ * no arbitrary hex values or magic numbers in components — add a token here.
+ *
+ * PLACEHOLDER PALETTE. The client's brand colours have not been supplied.
+ * These are a deliberately restrained neutral set with a single accent,
+ * chosen to read as premium rather than volume retail (CLAUDE.md 9.1).
+ * All pairings used for text meet WCAG AA (4.5:1) on their backgrounds.
+ */
+@theme {
+  /* Neutrals — warm-tinted greys, not pure black or blue-grey */
+  --color-ink: #17191c; /* body text, headings        — 16.4:1 on canvas */
+  --color-ink-muted: #5c6167; /* secondary text       —  5.9:1 on canvas */
+  --color-ink-subtle: #82878d; /* meta text, captions —  3.5:1, non-text only */
+  --color-canvas: #fbfaf8; /* page background */
+  --color-surface: #ffffff; /* cards, brand tiles */
+  --color-line: #e4e1dc; /* 1px borders — subtle, no shadows */
+  --color-line-strong: #c9c5be; /* input borders — 3:1 for UI components */
+
+  /* Single accent — deep green. One accent only (CLAUDE.md 9.1). */
+  --color-accent: #2f4a3f; /*                          — 9.1:1 on canvas */
+  --color-accent-hover: #24382f;
+  --color-accent-contrast: #ffffff; /* text on accent   — 9.1:1 */
+
+  /* Feedback — used only for form validation, never decoration */
+  --color-error: #a3282d; /*                            — 6.1:1 on canvas */
+  --color-success: #2f4a3f;
+
+  /* Type — self-hosted only, no Google Fonts CDN (CLAUDE.md 9.3).
+     Font files not yet supplied; the stacks below fall back to system
+     faces so nothing shifts once the real woff2 files land. */
+  --font-sans:
+    'PrincessSans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+    Helvetica, Arial, sans-serif;
+  --font-serif: 'PrincessSerif', ui-serif, Georgia, Cambria, 'Times New Roman', serif;
+
+  /* Fluid display sizes — clamped so there is no layout shift on load */
+  --text-display: clamp(2.25rem, 1.5rem + 3.2vw, 3.75rem);
+  --text-display--line-height: 1.08;
+  --text-display--letter-spacing: -0.02em;
+  --text-heading: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+  --text-heading--line-height: 1.2;
+  --text-heading--letter-spacing: -0.01em;
+
+  /* Layout */
+  --spacing-gutter: 1.25rem;
+  --spacing-section: clamp(3.5rem, 2rem + 6vw, 6.5rem);
+  --container-content: 44rem; /* prose measure */
+  --container-page: 75rem; /* max page width */
+
+  /* Minimum touch target (CLAUDE.md 9.5) */
+  --spacing-touch: 2.75rem; /* 44px */
+
+  /* Radii — restrained. Nothing fully rounded (CLAUDE.md 9.1). */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    line-height: 1.6;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Visible focus everywhere — pass/fail requirement (CLAUDE.md 10.1). */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Honour reduced motion (CLAUDE.md 10.1). */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Anchored sections must not hide under the fixed nav. */
+  :target {
+    scroll-margin-top: 6rem;
+  }
+}
+
+@layer components {
+  /* Skip link: present in the DOM, revealed on focus. */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    padding: 0.75rem 1rem;
+    background-color: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+
+  .skip-link:focus {
+    left: 0.5rem;
+    top: 0.5rem;
+  }
+}

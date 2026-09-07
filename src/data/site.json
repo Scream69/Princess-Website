@@ -1,0 +1,28 @@
+{
+  "name": "[AWAITING COPY: trading name]",
+  "legalName": "[AWAITING COPY: registered company name]",
+  "tagline": "[AWAITING COPY: one-line descriptor]",
+  "responsePromise": "We reply to every enquiry within 24 hours.",
+  "contact": {
+    "email": "[AWAITING DETAIL: enquiry destination email]",
+    "phone": "[AWAITING DETAIL: telephone]",
+    "whatsapp": "[AWAITING DETAIL: WhatsApp Business number, digits only, incl. country code]"
+  },
+  "hours": "[AWAITING DETAIL: opening hours]",
+  "company": {
+    "registrationNumber": "[AWAITING DETAIL: company registration number]",
+    "vatNumber": "[AWAITING DETAIL: VAT number]",
+    "registeredAddress": "[AWAITING DETAIL: registered office address]"
+  },
+  "social": [],
+  "nav": [
+    { "label": "How it works", "href": "/#how-it-works" },
+    { "label": "Brands", "href": "/#brands" },
+    { "label": "About", "href": "/#about" },
+    { "label": "Contact", "href": "/#contact" }
+  ],
+  "cta": {
+    "label": "Get a quote",
+    "href": "/order"
+  }
+}

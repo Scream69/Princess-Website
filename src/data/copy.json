@@ -1,0 +1,18 @@
+{
+  "home": {
+    "title": "[AWAITING COPY: home page title tag]",
+    "description": "[AWAITING COPY: home page meta description, 150-160 chars]",
+    "hero": {
+      "headline": "[AWAITING COPY: hero headline]",
+      "supporting": "[AWAITING COPY: hero supporting line]",
+      "process": "Choose your appliance on the manufacturer's website, send us the model number, and we will email you a quote within 24 hours."
+    }
+  },
+  "order": {
+    "title": "[AWAITING COPY: order page title tag]",
+    "description": "[AWAITING COPY: order page meta description, 150-160 chars]"
+  },
+  "footer": {
+    "note": "[AWAITING COPY: footer note, e.g. authorised dealer statement]"
+  }
+}

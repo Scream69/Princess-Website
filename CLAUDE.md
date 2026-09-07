@@ -55,7 +55,7 @@ These are absolute. Do not violate them even if asked to in a task prompt; raise
 | Layer | Choice | Notes |
 |---|---|---|
 | Framework | **Astro** (latest stable) | Static output, zero JS by default. `output: 'static'`. |
-| Styling | **Tailwind CSS** via the official Astro integration | Design tokens in config, see section 9. |
+| Styling | **Tailwind CSS 4** via the official `@tailwindcss/vite` plugin | Design tokens in an `@theme` block, see section 9. The old `@astrojs/tailwind` integration is Tailwind 3 / Astro ≤5 only and is not usable here. |
 | Interactivity | **Vanilla TypeScript** | No React, Vue or Svelte. The wizard is a small state machine; a framework is not justified. |
 | Forms | **Web3Forms** (or Netlify Forms if hosting there) | Access key in `.env`, never committed. |
 | Analytics | **Plausible** or **Umami** | Cookieless. No consent banner required. |
@@ -76,7 +76,6 @@ Pin versions. Before installing, check the current stable release rather than as
 ├── README.md
 ├── MISSING-ASSETS.md          # running list of logos/copy not yet supplied
 ├── astro.config.mjs
-├── tailwind.config.mjs
 ├── tsconfig.json
 ├── .env.example               # documents required vars, no real values
 ├── scripts/
@@ -113,7 +112,7 @@ Pin versions. Before installing, check the current stable release rather than as
     │   ├── privacy.astro
     │   └── 404.astro
     └── styles/
-        └── global.css
+        └── global.css     # @theme design tokens + base styles
 ```
 
 ---
@@ -334,7 +333,7 @@ Target: generous white space, one restrained accent colour, confident typography
 Avoid: gradients, everything-rounded, drop shadows on cards, more than one accent colour, emoji in UI copy, exclamation marks.
 
 ### 9.2 Tokens
-All in `tailwind.config.mjs`. No arbitrary hex values in components, no magic numbers — extend the theme instead. Await the client's brand colours; until then use a documented neutral palette with a single accent and note it in `MISSING-ASSETS.md`.
+All in the `@theme` block at the top of `src/styles/global.css` — Tailwind 4 is configured in CSS, not in a JS config file. No arbitrary hex values in components, no magic numbers — add a token instead. Await the client's brand colours; until then use a documented neutral palette with a single accent and note it in `MISSING-ASSETS.md`.
 
 ### 9.3 Type
 One family, or a serif for headings paired with a clean sans for body if the brand allows. Self-host the fonts (`woff2`, `font-display: swap`) — no Google Fonts CDN, since that carries a GDPR data-transfer question.
