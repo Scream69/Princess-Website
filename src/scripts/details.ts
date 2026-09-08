@@ -8,6 +8,7 @@
  */
 import copy from '../data/copy.json' with { type: 'json' };
 import countries from '../data/countries.json' with { type: 'json' };
+import { isLookupSupported, lookupPostcode, type PostcodeArea } from './postcode-lookup.ts';
 import type { EnquiryContact } from './storage.ts';
 import {
   validateCountry,
@@ -85,8 +86,44 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
     return { refresh: () => {} };
   }
 
+  const hint = root.querySelector<HTMLElement>('[data-detail-hint]');
+
   /** Non-null while the customer is correcting an already-answered question. */
   let editing: FieldName | null = null;
+  /** Last successful postcode confirmation, used to store the canonical form. */
+  let confirmed: PostcodeArea | null = null;
+  let lookupRun = 0;
+
+  /*
+   * Confirms a UK postcode as it is typed. Advisory only: a failure is silent,
+   * and the customer can always continue with whatever they entered.
+   */
+  async function confirmPostcode(raw: string): Promise<void> {
+    if (!hint) return;
+    const run = (lookupRun += 1);
+    confirmed = null;
+
+    if (!isLookupSupported(getContact().country) || raw.trim().length < 5) {
+      hint.textContent = '';
+      return;
+    }
+
+    const area = await lookupPostcode(raw);
+    // A slower earlier request must not overwrite a newer one's answer.
+    if (run !== lookupRun) return;
+
+    confirmed = area;
+    hint.textContent = area
+      ? `${area.postcode} — ${area.summary}`
+      : 'We could not confirm that postcode, but we will send it as you typed it.';
+  }
+
+  let hintTimer: ReturnType<typeof setTimeout> | undefined;
+  input.addEventListener('input', () => {
+    if (activeField() !== 'postcode') return;
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => void confirmPostcode(input.value), 400);
+  });
 
   const activeField = (): FieldName | null => editing ?? firstUnanswered(getContact());
 
@@ -172,6 +209,7 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
 
     questionText!.textContent = question.question;
     error!.textContent = '';
+    if (hint && field !== 'postcode') hint.textContent = '';
 
     input!.hidden = usesSelect;
     select!.hidden = !usesSelect;
@@ -194,6 +232,10 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
             : field === 'email'
               ? 'email'
               : 'postal-code';
+
+      // Re-confirm when returning to a postcode already answered, so the
+      // reassurance is there on an edit or after a refresh.
+      if (field === 'postcode' && input!.value.trim() !== '') void confirmPostcode(input!.value);
       return;
     }
 
@@ -240,7 +282,16 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
     (field === 'country' ? select : input).removeAttribute('aria-invalid');
     error.textContent = '';
     editing = null;
-    setContact({ [field]: result.value } as Partial<EnquiryContact>);
+
+    // Prefer the canonical spacing postcodes.io returned, but only when it is
+    // unmistakably the same postcode — never silently swap in a different one.
+    const bare = (value: string) => value.replace(/\s+/g, '').toUpperCase();
+    const value =
+      field === 'postcode' && confirmed && bare(confirmed.postcode) === bare(result.value)
+        ? confirmed.postcode
+        : result.value;
+
+    setContact({ [field]: value } as Partial<EnquiryContact>);
     refresh();
     focusControl();
   });

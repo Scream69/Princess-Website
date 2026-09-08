@@ -51,6 +51,10 @@ const { step3 } = copy.order;
         </select>
 
         <p id="detail-error" data-detail-error role="alert" class="mt-2 text-sm text-error"></p>
+
+        {/* Advisory only — confirmation that a UK postcode was recognised.
+            Never an error, and never blocks submitting (CLAUDE.md 8.6). */}
+        <p data-detail-hint aria-live="polite" class="mt-2 text-sm text-ink-muted"></p>
       </div>
 
       <button

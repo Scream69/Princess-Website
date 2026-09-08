@@ -427,6 +427,67 @@ check('an implausible postcode is caught', s.error, 'That looks too short — pl
 
 // The point of 8.6: no country pattern, so a Dutch postcode must be accepted
 // even though the customer said GB.
+// Postcode confirmation is advisory. Stub the API so the suite never depends
+// on the network, and prove both the good and the failing path.
+await evaluate(`
+  window.__realFetch = window.fetch;
+  window.fetch = (url, init) => String(url).includes('postcodes.io')
+    ? Promise.resolve(new Response(JSON.stringify({
+        result: { postcode: 'WD17 1AA', admin_district: 'Watford', region: 'East of England' },
+      }), { status: 200 }))
+    : window.__realFetch(url, init);
+  return 1;
+`);
+await evaluate(`
+  const input = document.querySelector('[data-detail-input]');
+  input.value = 'wd171aa'; input.dispatchEvent(new Event('input'));
+  return 1;
+`);
+await wait(900);
+s = await evaluate(`return document.querySelector('[data-detail-hint]').textContent;`);
+check('a recognised postcode is confirmed back', s, 'WD17 1AA — Watford, East of England');
+
+await evaluate(`
+  const form = document.querySelector('[data-detail-form]');
+  form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  return 1;
+`);
+await settle();
+s = await evaluate(`return JSON.parse(localStorage.getItem('enquiry:v1')).contact.postcode;`);
+check('the canonical spacing is stored', s, 'WD17 1AA');
+
+await evaluate(`
+  document.querySelector('[data-transcript] button[data-edit="postcode"]').click();
+  return 1;
+`);
+await evaluate(`
+  window.fetch = () => Promise.reject(new Error('offline'));
+  const input = document.querySelector('[data-detail-input]');
+  input.value = 'ZZ99 9ZZ'; input.dispatchEvent(new Event('input'));
+  return 1;
+`);
+await wait(900);
+s = await evaluate(`return {
+  hint: document.querySelector('[data-detail-hint]').textContent,
+  error: document.querySelector('[data-detail-error]').textContent,
+};`);
+check('an unconfirmable postcode is reassurance, not an error', s.hint, 'We could not confirm that postcode, but we will send it as you typed it.');
+check('and raises no validation error', s.error, '');
+
+await evaluate(`
+  const form = document.querySelector('[data-detail-form]');
+  form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  return 1;
+`);
+await settle();
+s = await evaluate(`return JSON.parse(localStorage.getItem('enquiry:v1')).contact.postcode;`);
+check('an unconfirmed postcode still goes through, as typed', s, 'ZZ99 9ZZ');
+
+await evaluate(`window.fetch = window.__realFetch; return 1;`);
+await evaluate(`
+  document.querySelector('[data-transcript] button[data-edit="postcode"]').click();
+  return 1;
+`);
 await answer('1234 ab');
 s = await evaluate(detailState);
 check('no postcode is rejected for failing a country pattern', s.error, '');

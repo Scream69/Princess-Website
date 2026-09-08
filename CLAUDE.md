@@ -313,7 +313,24 @@ What this does require:
   - Validate only that the value is present and plausible: roughly 3–10 characters, letters/digits/spaces/hyphens.
   - Uppercase and collapse repeated whitespace. Store what they typed.
   - **Never reject a postcode for not matching a country pattern.** If it looks unusual, accept it.
-- Label and placeholder adapt to the country: "Postcode" for UK/Ireland, "ZIP code" where that reads better, "Postal code" otherwise.
+- Label and placeholder adapt to the country: "Postcode" for UK/Ireland, "ZIP code" where that reads better, "Postal code" otherwise. Both strings live per-country in `countries.json`, so adding a served country is a data change with no code change.
+
+**Postcode confirmation (UK only).** `postcode-lookup.ts` sends a UK postcode to
+postcodes.io (ONS open data, no key, no cost) purely to echo back the town —
+"WD17 1AA — Watford, East of England" — so the customer can see they typed it
+correctly. Hard rules:
+
+- **It can never block.** A 404, a timeout, an outage or a non-UK country all
+  resolve to silence, and the postcode goes through exactly as typed.
+- **It is not an error state.** An unrecognised postcode gets reassurance, not a
+  validation message. New-build postcodes lag the dataset by months.
+- **No street address is fetched.** That would need a licensed Royal Mail PAF
+  provider and would contradict rule 7. The full address is an order-time
+  detail, collected by email once the customer accepts a quote.
+- It is a third-party data transfer, so it is named in the privacy policy.
+
+If the client ever does want the full address dropdown, that is a rule 7 change
+plus a paid PAF account in their name — raise it, do not just add it.
 - Include the country in the enquiry payload and in the subject line of the notification email — the client needs it to quote shipping.
 
 Two knock-on points to raise with the client rather than solve in code: manufacturer sites are market-specific, so a customer in Germany pasting a `miele.de` link may reference a **model number that differs from the UK SKU**; and selling to EU consumers brings EU distance-selling and VAT considerations that sit outside this build. Log both as questions, do not attempt to handle them in the site.
