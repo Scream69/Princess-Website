@@ -59,7 +59,7 @@ Phases, per CLAUDE.md 12. Each is committed working before the next begins.
 - [ ] 2. `brands.json` + brand grid — **blocked** on authorised-dealer status
 - [ ] 3. Wizard state machine, URL routing, storage, step shells
 - [x] 4. Step 2 — paste handling, parsing, tray, add-another loop
-- [ ] 5. Step 3 — chat-styled details, validation
+- [x] 5. Step 3 — chat-styled details, validation (**UK-only** until served countries confirmed)
 - [ ] 6. Submission, retry, queue, WhatsApp fallback, step 4
 - [ ] 7. Home page
 - [ ] 8. Analytics, SEO, privacy page, 404

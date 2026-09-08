@@ -1,8 +1,12 @@
 ---
-// Step 3 shell. The chat-styled question sequence, validation, the country
-// selector and the consent checkbox are Phase 5 (CLAUDE.md 6). This carries
-// the heading, focus target and navigation only, so the state machine can be
-// tested end to end before the form exists.
+import copy from '../../data/copy.json';
+import countries from '../../data/countries.json';
+
+// Step 3. Chat-*styled*, not a chat: a fixed five-question sequence with no
+// interpretation of anything the customer types (CLAUDE.md 2.1). There are no
+// typing indicators and no artificial delays — they are patronising and slow
+// the customer down (CLAUDE.md 6).
+const { step3 } = copy.order;
 ---
 
 <section data-step-panel="3" hidden>
@@ -11,22 +15,94 @@
     tabindex="-1"
     class="mt-6 max-w-content font-serif text-heading text-ink focus:outline-none"
   >
-    Your details
+    {step3.heading}
   </h2>
+  <p class="mt-4 max-w-content text-ink-muted">{step3.intro}</p>
 
-  <p class="mt-4 max-w-content text-ink-muted">
-    [PHASE 5: name, phone, email, country and postcode, asked one at a time, with
-    the consent checkbox and enquiry summary above the submit button.]
-  </p>
+  <div class="mt-8 max-w-content">
+    {/* Answered questions, as a transcript. Appended to rather than rebuilt,
+        so a live region announces only what is new (CLAUDE.md 10.1). */}
+    <ol data-transcript role="log" aria-live="polite" class="m-0 list-none space-y-4 p-0"></ol>
 
-  <div class="mt-8 flex flex-wrap gap-3">
+    <form data-detail-form class="mt-6">
+      <p data-detail-question class="text-ink"></p>
+
+      <div class="mt-3">
+        <label data-detail-label for="detail-input" class="block text-sm font-medium text-ink"
+        ></label>
+
+        <input
+          id="detail-input"
+          data-detail-input
+          type="text"
+          autocomplete="off"
+          aria-describedby="detail-error"
+          class="mt-2 h-touch w-full rounded-sm border border-line-strong bg-surface px-3 text-ink placeholder:text-ink-subtle"
+        />
+
+        <select
+          id="detail-select"
+          data-detail-select
+          hidden
+          aria-describedby="detail-error"
+          class="mt-2 h-touch w-full rounded-sm border border-line-strong bg-surface px-3 text-ink"
+        >
+          {countries.map((country) => <option value={country.code}>{country.name}</option>)}
+        </select>
+
+        <p id="detail-error" data-detail-error role="alert" class="mt-2 text-sm text-error"></p>
+      </div>
+
+      <button
+        type="submit"
+        class="mt-4 min-h-touch rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+      >
+        Continue
+      </button>
+    </form>
+
+    {/* Everything below appears only once all five answers are in. */}
+    <div data-review hidden class="mt-10 border-t border-line pt-8">
+      <h3 class="text-sm font-medium tracking-wide text-ink-muted uppercase">
+        {step3.reviewHeading} (<span data-review-count>0</span>)
+      </h3>
+      <ul data-review-list class="mt-2 list-none p-0"></ul>
+
+      <div class="mt-8 flex items-start gap-3">
+        <input
+          id="consent"
+          data-consent
+          type="checkbox"
+          class="mt-1 h-5 w-5 shrink-0 rounded-sm border-line-strong accent-accent"
+        />
+        <label for="consent" class="text-sm text-ink">
+          {step3.consent}{' '}
+          <a href="/privacy" class="text-accent underline underline-offset-4">
+            {step3.consentLink}
+          </a>
+        </label>
+      </div>
+
+      <button
+        type="button"
+        data-submit-enquiry
+        disabled
+        class="mt-6 min-h-touch rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {step3.submit}
+      </button>
+      <p data-submit-note class="mt-3 text-sm text-ink-muted"></p>
+    </div>
+  </div>
+
+  <div class="mt-10 flex flex-wrap gap-3">
     <button
       type="button"
       data-action="go-step"
       data-step="2"
       class="min-h-touch rounded-sm border border-line-strong px-6 font-medium text-ink transition-colors hover:border-ink"
     >
-      Back
+      Back to appliances
     </button>
   </div>
 </section>

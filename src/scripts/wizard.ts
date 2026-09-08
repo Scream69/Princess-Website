@@ -10,6 +10,7 @@
  * is no subscriber list: at four steps, one render function is enough.
  */
 import { initClipboard } from './clipboard.ts';
+import { initDetails, isComplete } from './details.ts';
 import { describe, parseInput } from './parse.ts';
 import { createId, createReference } from './reference.ts';
 import {
@@ -200,6 +201,7 @@ export function initWizard() {
     renderProgress();
     renderTray();
     renderBrand();
+    details?.refresh();
     for (const node of el.reference) node.textContent = state.reference;
 
     if (push) {
@@ -533,6 +535,42 @@ export function initWizard() {
   if (productInput && pasteButton) {
     initClipboard({ input: productInput, button: pasteButton, onText: showEcho });
   }
+
+  const submitNote = root.querySelector<HTMLElement>('[data-submit-note]');
+
+  const details = initDetails({
+    root,
+    getContact: () => state.contact,
+    getConsent: () => state.consent,
+    setContact: (changes) => update({ contact: { ...state.contact, ...changes } }),
+    setConsent: (consent) => update({ consent }),
+    renderReview: (list, count) => {
+      count.textContent = String(state.items.length);
+      list.replaceChildren(
+        ...state.items.map((item) => {
+          const row = document.createElement('li');
+          row.className = 'border-b border-line py-2 text-ink last:border-b-0';
+          row.textContent = itemLabel(item);
+          if (item.brandSlug && brandNames[item.brandSlug]) {
+            const brand = document.createElement('span');
+            brand.className = 'text-ink-muted';
+            brand.textContent = ` · ${brandNames[item.brandSlug]}`;
+            row.append(brand);
+          }
+          return row;
+        }),
+      );
+    },
+    onSubmit: () => {
+      // Phase 6 owns sending. Step 4 stays unreachable until an enquiry has
+      // actually left the browser — showing a confirmation for something we
+      // never sent is the worst defect this codebase could have (rule 2.4).
+      if (submitNote) {
+        submitNote.textContent =
+          '[PHASE 6: submission, retry, offline queue and WhatsApp fallback.]';
+      }
+    },
+  });
 
   window.addEventListener('popstate', () => {
     goToStep(readUrl(location.search).step ?? 1, false);

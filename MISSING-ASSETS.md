@@ -75,6 +75,13 @@ would put countries in front of customers that the client may not ship to.
 
 - [ ] Confirmed list of served European countries
 
+The step 3 selector is **built and working**, driven entirely by
+`countries.json`. Adding a country is a data change, no code. Each entry
+carries its own `postcodeLabel` and `postcodePlaceholder`, so the field
+relabels itself per country. Postcode validation is deliberately pattern-free
+(CLAUDE.md 8.6) and already accepts German, Dutch, Irish and Polish formats —
+this is verified in `npm test`.
+
 ---
 
 ## 2. Brand and design

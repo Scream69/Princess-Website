@@ -366,7 +366,132 @@ await settle();
 s = await evaluate(PROBE);
 check('removing an item updates tray and storage together', [s.tray, s.items], [2, 2]);
 
+// --- step 3: the details sequence --------------------------------------------
+await reset();
+await goto('/order');
+await clickBrand('miele');
+await addItem('H7860BPX');
+await evaluate(`document.querySelector('[data-continue-details]').click(); return 1;`);
+
+const answer = (value) => evaluate(`
+  const form = document.querySelector('[data-detail-form]');
+  const select = form.querySelector('[data-detail-select]');
+  const control = select.hidden ? form.querySelector('[data-detail-input]') : select;
+  control.value = ${JSON.stringify(value)};
+  form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  return 1;
+`).then(settle);
+
+const detailState = `
+  const form = document.querySelector('[data-detail-form]');
+  return {
+    question: document.querySelector('[data-detail-question]').textContent,
+    label: document.querySelector('[data-detail-label]').textContent,
+    error: document.querySelector('[data-detail-error]').textContent,
+    answered: [...document.querySelectorAll('[data-transcript] li')].map((li) => li.dataset.field),
+    formHidden: form.hidden,
+    reviewHidden: document.querySelector('[data-review]').hidden,
+    submitDisabled: document.querySelector('[data-submit-enquiry]').disabled,
+  };
+`;
+
+s = await evaluate(detailState);
+check('step 3 opens on the first question', s.question, 'What name should we put on the quote?');
+
+await answer('');
+s = await evaluate(detailState);
+check('an empty answer is refused with a reason', s.error, 'Please enter your name.');
+check('and does not advance', s.answered, []);
+
+await answer('Jane Doe');
+await answer('not a phone number');
+s = await evaluate(detailState);
+check('a bad phone number is caught', s.error, 'Please use only numbers, spaces and + ( ) -');
+
+await answer('+44 7700 900123');
+await answer('jane@example');
+s = await evaluate(detailState);
+check('a malformed email is caught', s.error, 'That does not look like an email address.');
+
+await answer('jane@example.co.uk');
+s = await evaluate(detailState);
+check('country is asked before postcode', s.question, 'Which country are we delivering to?');
+
+await answer('GB');
+s = await evaluate(detailState);
+check('the postcode label follows the country', s.label, 'Postcode');
+
+await answer('AB');
+s = await evaluate(detailState);
+check('an implausible postcode is caught', s.error, 'That looks too short — please check it.');
+
+// The point of 8.6: no country pattern, so a Dutch postcode must be accepted
+// even though the customer said GB.
+await answer('1234 ab');
+s = await evaluate(detailState);
+check('no postcode is rejected for failing a country pattern', s.error, '');
+check('all five questions answered', s.answered, ['name', 'phone', 'email', 'country', 'postcode']);
+check('the question form gives way to the review', [s.formHidden, s.reviewHidden], [true, false]);
+check('submit is gated on consent', s.submitDisabled, true);
+
+s = await evaluate(`
+  const stored = JSON.parse(localStorage.getItem('enquiry:v1'));
+  return stored.contact;
+`);
+check('the postcode is uppercased and collapsed, not reformatted', s.postcode, '1234 AB');
+check('contact details are persisted', [s.name, s.email, s.country], ['Jane Doe', 'jane@example.co.uk', 'GB']);
+
+await evaluate(`
+  const box = document.querySelector('[data-consent]');
+  box.checked = true; box.dispatchEvent(new Event('change'));
+  return 1;
+`);
+await settle();
+s = await evaluate(detailState);
+check('ticking consent unlocks submit', s.submitDisabled, false);
+
+// Editing an earlier answer reopens exactly that question.
+await evaluate(`
+  document.querySelector('[data-transcript] button[data-edit="email"]').click();
+  return 1;
+`);
+s = await evaluate(detailState);
+check('editing reopens the chosen question', s.question, 'Where should we send the quote?');
+check('and rolls the transcript back to it', s.answered, ['name', 'phone']);
+
+await answer('jane.doe@example.co.uk');
+await answer('GB');
+await answer('SW1A 1AA');
+s = await evaluate(`
+  return JSON.parse(localStorage.getItem('enquiry:v1')).contact.email;
+`);
+check('the corrected answer is kept', s, 'jane.doe@example.co.uk');
+
+await goto('/order?step=3');
+s = await evaluate(detailState);
+check('a refresh restores every answer', s.answered, ['name', 'phone', 'email', 'country', 'postcode']);
+
+s = await evaluate(`
+  document.querySelector('[data-submit-enquiry]').click();
+  return {
+    note: document.querySelector('[data-submit-note]').textContent,
+    step: [...document.querySelectorAll('section[data-step-panel]')].filter((x) => !x.hidden).map((x) => x.dataset.stepPanel).join(),
+  };
+`);
+check('submitting does not fake a confirmation before Phase 6', s.step, '3');
+
+s = await evaluate(`
+  const res = await fetch('/privacy');
+  return res.status;
+`);
+check('the consent link goes somewhere real', s, 200);
+
 // --- deep links -------------------------------------------------------------
+await reset();
+await goto('/order');
+await clickBrand('miele');
+await addItem('https://www.miele.co.uk/ovens/h7860bpx');
+
 await goto('/order?step=4');
 s = await evaluate(PROBE);
 check('?step=4 cannot forge a confirmation', [s.step, s.url], ['3', '?step=3']);

@@ -1,0 +1,59 @@
+---
+import Base from '../layouts/Base.astro';
+import site from '../data/site.json';
+
+/*
+ * Placeholder. The consent checkbox in step 3 links here, so this page must
+ * exist — a consent control pointing at a 404 is worse than no link at all.
+ *
+ * This is deliberately NOT a privacy policy. Writing one would mean inventing
+ * the controller's identity, retention periods and legal basis (CLAUDE.md 12).
+ * What follows is only a factual statement of what the form collects, which is
+ * verifiable from the code. The real policy must cover BOTH UK and EU GDPR,
+ * because the business serves customers across Europe (CLAUDE.md 11), and the
+ * site must not launch without it.
+ */
+---
+
+<Base
+  title="Privacy — [AWAITING COPY: trading name]"
+  description="How enquiry details submitted through this site are used."
+>
+  <div class="mx-auto max-w-page px-gutter pt-section pb-section">
+    <h1 class="max-w-content font-serif text-heading text-ink">Privacy</h1>
+
+    <div class="mt-6 max-w-content rounded-sm border border-line-strong bg-surface p-6">
+      <p class="font-medium text-ink">
+        [AWAITING: full privacy policy, covering both UK GDPR and EU GDPR.]
+      </p>
+      <p class="mt-2 text-sm text-ink-muted">
+        This site must not go live until this page carries a real policy. See
+        MISSING-ASSETS.md section 6.
+      </p>
+    </div>
+
+    <h2 class="mt-10 font-serif text-xl text-ink">What the enquiry form collects</h2>
+    <p class="mt-4 max-w-content text-ink-muted">
+      Accurate as of the current build, and limited to what is needed to reply with a quote:
+    </p>
+    <ul class="mt-4 max-w-content list-disc space-y-1 pl-5 text-ink-muted">
+      <li>Your name, phone number and email address</li>
+      <li>Your country and postcode, so we can quote for delivery</li>
+      <li>The appliances you asked about — the link or model number you sent, and any note</li>
+    </ul>
+    <p class="mt-4 max-w-content text-ink-muted">
+      No full address, no date of birth, and no marketing sign-up. The site sets no cookies and
+      uses no advertising or tracking tags.
+    </p>
+
+    <h2 class="mt-10 font-serif text-xl text-ink">Where it is held</h2>
+    <p class="mt-4 max-w-content text-ink-muted">
+      Your unfinished enquiry is kept in your own browser so you can come back to it, and is
+      discarded after 30 days or as soon as it is sent. You can clear it at any time with
+      &ldquo;Start again&rdquo; on the enquiry page.
+    </p>
+
+    <h2 class="mt-10 font-serif text-xl text-ink">Contact</h2>
+    <p class="mt-4 max-w-content text-ink-muted">{site.contact.email}</p>
+  </div>
+</Base>

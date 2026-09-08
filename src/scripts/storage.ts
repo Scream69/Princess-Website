@@ -63,7 +63,13 @@ export function createEmptyState(): EnquiryState {
     version: SCHEMA_VERSION,
     reference: '',
     items: [],
-    contact: { name: '', email: '', phone: '', country: 'GB', postcode: '' },
+    /*
+     * `country` starts empty, not 'GB'. The selector defaults to the United
+     * Kingdom in the UI (CLAUDE.md 8.6), but pre-filling a *valid* value here
+     * makes the question look answered, and step 3 would skip straight past it
+     * to the postcode — which then carries the wrong label for anyone abroad.
+     */
+    contact: { name: '', email: '', phone: '', country: '', postcode: '' },
     step: 1,
     consent: false,
     draftBrandSlug: null,

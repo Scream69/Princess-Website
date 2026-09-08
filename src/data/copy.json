@@ -15,6 +15,39 @@
       "heading": "Choose a brand",
       "intro": "Pick the manufacturer you are shopping for. Their site opens in a new tab so you can find the exact model — this page stays open behind it.",
       "skip": "Already have a model number? Skip to step 2"
+    },
+    "step3": {
+      "heading": "Your details",
+      "intro": "Five short questions, then we can send your quote.",
+      "questions": {
+        "name": {
+          "question": "What name should we put on the quote?",
+          "label": "Your name",
+          "placeholder": "First and last name"
+        },
+        "phone": {
+          "question": "What is the best number to reach you on?",
+          "label": "Phone number",
+          "placeholder": "07700 900123"
+        },
+        "email": {
+          "question": "Where should we send the quote?",
+          "label": "Email address",
+          "placeholder": "you@example.com"
+        },
+        "country": {
+          "question": "Which country are we delivering to?",
+          "label": "Country"
+        },
+        "postcode": {
+          "question": "And the postcode?",
+          "label": "Postcode"
+        }
+      },
+      "reviewHeading": "Your enquiry",
+      "consent": "I agree to my details being used to reply to this enquiry.",
+      "consentLink": "Privacy policy",
+      "submit": "Send my enquiry"
     }
   },
   "footer": {
