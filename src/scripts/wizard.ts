@@ -9,6 +9,8 @@
  * State changes go through `update()`, which persists and re-renders. There
  * is no subscriber list: at four steps, one render function is enough.
  */
+import { initClipboard } from './clipboard.ts';
+import { describe, parseInput } from './parse.ts';
 import { createId, createReference } from './reference.ts';
 import {
   createEmptyState,
@@ -151,6 +153,8 @@ export function initWizard() {
   }
 
   let state: EnquiryState = load() ?? createEmptyState();
+  /** Tray row currently open for correction; survives re-renders. */
+  let editingId: string | null = null;
 
   function update(changes: Partial<EnquiryState>, options: { push?: boolean } = {}): void {
     const previousStep = state.step;
@@ -216,38 +220,122 @@ export function initWizard() {
     if (el.trayEmpty) el.trayEmpty.hidden = items.length > 0;
     if (el.continueToDetails) el.continueToDetails.disabled = items.length === 0;
 
-    el.trayList.replaceChildren(
-      ...items.map((item) => {
-        const row = document.createElement('li');
-        row.className =
-          'flex items-start justify-between gap-4 border-b border-line py-3 last:border-b-0';
+    el.trayList.replaceChildren(...items.map(trayRow));
+  }
 
-        const text = document.createElement('div');
-        text.className = 'min-w-0';
+  function trayRow(item: EnquiryItem): HTMLLIElement {
+    const row = document.createElement('li');
+    row.className = 'border-b border-line py-3 last:border-b-0';
 
-        const title = document.createElement('p');
-        title.className = 'truncate text-ink';
-        title.textContent = itemLabel(item);
-        text.append(title);
+    if (editingId === item.id) {
+      row.append(correctionForm(item));
+      return row;
+    }
 
-        if (item.brandSlug && brandNames[item.brandSlug]) {
-          const brand = document.createElement('p');
-          brand.className = 'text-sm text-ink-muted';
-          brand.textContent = brandNames[item.brandSlug];
-          text.append(brand);
-        }
+    const line = document.createElement('div');
+    line.className = 'flex items-start justify-between gap-4';
 
-        const remove = document.createElement('button');
-        remove.type = 'button';
-        remove.className = 'min-h-touch shrink-0 px-2 text-sm text-ink-muted underline';
-        remove.textContent = 'Remove';
-        remove.setAttribute('aria-label', `Remove ${itemLabel(item)}`);
-        remove.addEventListener('click', () => removeItem(item.id));
+    const text = document.createElement('div');
+    text.className = 'min-w-0';
 
-        row.append(text, remove);
-        return row;
-      }),
-    );
+    const title = document.createElement('p');
+    title.className = 'truncate text-ink';
+    title.textContent = itemLabel(item);
+    text.append(title);
+
+    const detail = [item.brandSlug ? brandNames[item.brandSlug] : null, sourceNote(item)]
+      .filter(Boolean)
+      .join(' · ');
+    if (detail) {
+      const meta = document.createElement('p');
+      meta.className = 'truncate text-sm text-ink-muted';
+      meta.textContent = detail;
+      text.append(meta);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'flex shrink-0 items-center';
+
+    // "Is that right?" from CLAUDE.md 8.3, as a quiet correction affordance
+    // rather than a blocking confirm — parsing must never gate progress.
+    const correct = document.createElement('button');
+    correct.type = 'button';
+    correct.className = 'min-h-touch px-2 text-sm text-ink-muted underline';
+    correct.textContent = 'Not right?';
+    correct.setAttribute('aria-label', `Correct ${itemLabel(item)}`);
+    correct.addEventListener('click', () => {
+      editingId = item.id;
+      renderTray();
+      el.trayList?.querySelector<HTMLInputElement>('input')?.focus();
+    });
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'min-h-touch px-2 text-sm text-ink-muted underline';
+    remove.textContent = 'Remove';
+    remove.setAttribute('aria-label', `Remove ${itemLabel(item)}`);
+    remove.addEventListener('click', () => removeItem(item.id));
+
+    actions.append(correct, remove);
+    line.append(text, actions);
+    row.append(line);
+    return row;
+  }
+
+  function correctionForm(item: EnquiryItem): HTMLFormElement {
+    const form = document.createElement('form');
+    form.className = 'flex flex-col gap-2 sm:flex-row sm:items-end';
+
+    const label = document.createElement('label');
+    label.className = 'flex-1 text-sm text-ink-muted';
+    label.textContent = 'Model number or description';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = itemLabel(item);
+    input.className =
+      'mt-1 h-touch w-full rounded-sm border border-line-strong bg-surface px-3 text-ink';
+    label.append(input);
+
+    const save = document.createElement('button');
+    save.type = 'submit';
+    save.className = 'h-touch shrink-0 rounded-sm bg-accent px-5 text-sm font-medium text-accent-contrast';
+    save.textContent = 'Save';
+
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'min-h-touch shrink-0 px-2 text-sm text-ink-muted underline';
+    cancel.textContent = 'Cancel';
+    cancel.addEventListener('click', () => {
+      editingId = null;
+      renderTray();
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const corrected = input.value.trim();
+      editingId = null;
+      if (corrected === '') {
+        renderTray();
+        return;
+      }
+      // A hand-typed correction is authoritative: keep it verbatim and drop the
+      // guessed name, rather than re-parsing what the customer just fixed.
+      updateItem(item.id, { parsedModel: corrected, parsedName: null });
+    });
+
+    form.append(label, save, cancel);
+    return form;
+  }
+
+  /** The pasted link, shortened — reassurance that we kept what they sent. */
+  function sourceNote(item: EnquiryItem): string | null {
+    if (item.inputType !== 'url') return null;
+    try {
+      return new URL(item.rawInput).hostname.replace(/^www\./, '');
+    } catch {
+      return null;
+    }
   }
 
   function renderBrand(): void {
@@ -270,19 +358,21 @@ export function initWizard() {
     update({ step: clampStep(requested, guard()) }, { push });
   }
 
-  function addItem(rawInput: string): void {
+  function addItem(rawInput: string, forceDescription = false): void {
     const trimmed = rawInput.trim();
     if (trimmed === '') return;
+
+    const parsed = forceDescription
+      ? { inputType: 'description' as const, model: null, name: null }
+      : parseInput(trimmed, state.draftBrandSlug);
 
     const item: EnquiryItem = {
       id: createId(),
       brandSlug: state.draftBrandSlug,
       rawInput: trimmed,
-      // Parsing is Phase 4. Until then everything is stored verbatim and
-      // typed by the crudest possible test, which is honest about what we know.
-      inputType: /^https?:\/\//i.test(trimmed) ? 'url' : 'model',
-      parsedModel: null,
-      parsedName: null,
+      inputType: parsed.inputType,
+      parsedModel: parsed.model,
+      parsedName: parsed.name,
       note: '',
       addedAt: Date.now(),
     };
@@ -301,8 +391,15 @@ export function initWizard() {
     update({ items, step: clampStep(state.step, { ...guard(), itemCount: items.length }) });
   }
 
+  function updateItem(id: string, changes: Partial<EnquiryItem>): void {
+    update({ items: state.items.map((item) => (item.id === id ? { ...item, ...changes } : item)) });
+  }
+
   function itemLabel(item: EnquiryItem): string {
-    return item.parsedModel ?? item.parsedName ?? item.rawInput;
+    return describe(
+      { inputType: item.inputType, model: item.parsedModel, name: item.parsedName },
+      item.rawInput,
+    );
   }
 
   // --- wiring ---------------------------------------------------------------
@@ -368,14 +465,47 @@ export function initWizard() {
   });
 
   const addForm = root.querySelector<HTMLFormElement>('[data-add-item]');
+  const productInput = addForm?.querySelector<HTMLInputElement>('input[name="product"]') ?? null;
+  const echo = root.querySelector<HTMLElement>('[data-echo]');
+  const pasteButton = root.querySelector<HTMLElement>('[data-paste-button]');
+
+  /** Echoes what was understood before it is committed (CLAUDE.md 8.3). */
+  function showEcho(value: string): void {
+    if (!echo) return;
+    const trimmed = value.trim();
+    if (trimmed === '') {
+      echo.textContent = '';
+      return;
+    }
+    const parsed = parseInput(trimmed, state.draftBrandSlug);
+    echo.textContent =
+      parsed.model || parsed.name
+        ? `Got it — ${describe(parsed, trimmed)}. Add it if that looks right.`
+        : 'We will send this across as you have written it.';
+  }
+
   addForm?.addEventListener('submit', (event) => {
     event.preventDefault();
-    const input = addForm.querySelector<HTMLInputElement>('input[name="product"]');
-    if (!input) return;
-    addItem(input.value);
-    input.value = '';
-    input.focus();
+    if (!productInput) return;
+    addItem(productInput.value);
+    productInput.value = '';
+    showEcho('');
+    productInput.focus();
   });
+
+  const describeForm = root.querySelector<HTMLFormElement>('[data-add-description]');
+  describeForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const field = describeForm.querySelector<HTMLTextAreaElement>('textarea[name="description"]');
+    if (!field) return;
+    // Forced: "a quiet 60cm dishwasher" must never be mangled into a model.
+    addItem(field.value, true);
+    field.value = '';
+  });
+
+  if (productInput && pasteButton) {
+    initClipboard({ input: productInput, button: pasteButton, onText: showEcho });
+  }
 
   window.addEventListener('popstate', () => {
     goToStep(readUrl(location.search).step ?? 1, false);

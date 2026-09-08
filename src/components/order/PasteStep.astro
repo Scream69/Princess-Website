@@ -34,6 +34,17 @@ import Tray from './Tray.astro';
   </p>
 
   <form data-add-item class="mt-6 max-w-content">
+    {/* Shown only on returning to this tab, and only while the field is empty.
+        Not automatic, and never described as such (CLAUDE.md 8.1). */}
+    <button
+      type="button"
+      data-paste-button
+      hidden
+      class="mb-4 flex min-h-touch w-full items-center justify-center rounded-sm border border-accent bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+    >
+      Paste link or model number
+    </button>
+
     <label for="product" class="block text-sm font-medium text-ink">
       Product link or model number
     </label>
@@ -44,7 +55,9 @@ import Tray from './Tray.astro';
         type="text"
         required
         autocomplete="off"
+        spellcheck="false"
         placeholder="https://…  or  H7860BPX"
+        aria-describedby="product-echo"
         class="h-touch min-w-0 flex-1 rounded-sm border border-line-strong bg-surface px-3 text-ink placeholder:text-ink-subtle"
       />
       <button
@@ -54,7 +67,35 @@ import Tray from './Tray.astro';
         Add
       </button>
     </div>
+
+    {/* What we understood, echoed back before it is committed (CLAUDE.md 8.3). */}
+    <p id="product-echo" data-echo aria-live="polite" class="mt-2 min-h-5 text-sm text-ink-muted"></p>
   </form>
+
+  <details class="mt-4 max-w-content">
+    <summary class="cursor-pointer text-sm text-accent underline underline-offset-4">
+      Not sure — describe what you're after
+    </summary>
+    <form data-add-description class="mt-3">
+      <label for="description" class="block text-sm font-medium text-ink">
+        Tell us what you're looking for
+      </label>
+      <textarea
+        id="description"
+        name="description"
+        rows="3"
+        required
+        placeholder="A quiet integrated dishwasher, ideally within 60cm"
+        class="mt-2 block w-full rounded-sm border border-line-strong bg-surface p-3 text-ink placeholder:text-ink-subtle"
+      ></textarea>
+      <button
+        type="submit"
+        class="mt-3 min-h-touch rounded-sm border border-line-strong px-6 font-medium text-ink transition-colors hover:border-ink"
+      >
+        Add this
+      </button>
+    </form>
+  </details>
 
   <Tray />
 

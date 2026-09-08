@@ -226,6 +226,94 @@ s = await evaluate(PROBE);
 check('three appliances in the tray', [s.tray, s.items], [3, 3]);
 check('the reference is stable as items are added', s.reference, reference);
 
+// --- parsing and correction --------------------------------------------------
+s = await evaluate(`
+  return [...document.querySelectorAll('[data-tray-list] li p:first-child')].map((p) => p.textContent);
+`);
+check('pasted links are echoed back as readable products', s, [
+  'Ovens — H7860BPX',
+  'H7860BPX',
+  'KM7564FL',
+]);
+
+await evaluate(`
+  const input = document.querySelector('input[name=product]');
+  input.value = 'https://www.aeg.co.uk/kitchen/cooking/hobs/induction-hob/ikx64301cb/';
+  input.dispatchEvent(new Event('input'));
+  return 1;
+`);
+s = await evaluate(`return document.querySelector('[data-echo]').textContent;`);
+check('the echo confirms before committing', s, 'Got it — Induction Hob — IKX64301CB. Add it if that looks right.');
+
+await evaluate(`
+  const input = document.querySelector('input[name=product]');
+  input.value = 'a quiet integrated dishwasher';
+  input.dispatchEvent(new Event('input'));
+  return 1;
+`);
+s = await evaluate(`return document.querySelector('[data-echo]').textContent;`);
+check('unparseable input is accepted, not rejected', s, 'We will send this across as you have written it.');
+await evaluate(`
+  const input = document.querySelector('input[name=product]');
+  input.value = ''; input.dispatchEvent(new Event('input'));
+  return 1;
+`);
+
+// A paste anywhere on the page lands in the field without any permission.
+await evaluate(`
+  const data = new DataTransfer();
+  data.setData('text/plain', 'https://www.smeguk.com/products/retro-fridge-freezer');
+  document.body.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+  return 1;
+`);
+s = await evaluate(`return {
+  value: document.querySelector('input[name=product]').value,
+  echo: document.querySelector('[data-echo]').textContent,
+};`);
+check('a paste outside the field still lands in it', s.value, 'https://www.smeguk.com/products/retro-fridge-freezer');
+check('and is echoed immediately', s.echo, 'Got it — Retro Fridge Freezer. Add it if that looks right.');
+await evaluate(`
+  const input = document.querySelector('input[name=product]');
+  input.value = ''; input.dispatchEvent(new Event('input'));
+  return 1;
+`);
+
+// "Not right?" — a hand correction wins over the parse.
+await evaluate(`
+  document.querySelector('[data-tray-list] button[aria-label^="Correct"]').click();
+  return 1;
+`);
+await evaluate(`
+  const form = document.querySelector('[data-tray-list] form');
+  form.querySelector('input').value = 'BPX555061M';
+  form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  return 1;
+`);
+await settle();
+s = await evaluate(`
+  return document.querySelector('[data-tray-list] li p:first-child').textContent;
+`);
+check('a hand correction replaces the parsed model', s, 'BPX555061M');
+
+// The free-text path must never be parsed into a model.
+await evaluate(`
+  const form = document.querySelector('[data-add-description]');
+  form.querySelector('textarea').value = 'H7860BPX but in stainless steel';
+  form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  return 1;
+`);
+await settle();
+s = await evaluate(`
+  const stored = JSON.parse(localStorage.getItem('enquiry:v1'));
+  const last = stored.items[stored.items.length - 1];
+  return { type: last.inputType, model: last.parsedModel, raw: last.rawInput };
+`);
+check('a description stays a description', [s.type, s.model], ['description', null]);
+check('and is kept verbatim', s.raw, 'H7860BPX but in stainless steel');
+
+await evaluate(`document.querySelectorAll('[data-tray-list] button[aria-label^="Remove"]')[3].click(); return 1;`);
+await settle();
+
 // --- refresh mid-flow -------------------------------------------------------
 await goto('/order');
 s = await evaluate(PROBE);
@@ -244,7 +332,7 @@ s = await evaluate(PROBE);
 check('back returns to step 2 rather than leaving the site', s.step, '2');
 
 // --- removing ---------------------------------------------------------------
-await evaluate(`document.querySelector('[data-tray-list] button').click(); return 1;`);
+await evaluate(`document.querySelector('[data-tray-list] button[aria-label^="Remove"]').click(); return 1;`);
 await settle();
 s = await evaluate(PROBE);
 check('removing an item updates tray and storage together', [s.tray, s.items], [2, 2]);

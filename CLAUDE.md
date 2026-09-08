@@ -283,7 +283,16 @@ Implement all three layers:
 ### 8.3 Parsing (`parse.ts`)
 Given a pasted string:
 - If it's a URL: extract the last meaningful path segment, humanise the slug, and look for a model-number pattern. `/ovens/h7860bpx-handleless-oven` → name "Handleless Oven", model "H7860BPX".
-- Brand-specific patterns where known (Miele `H 7860 BPX`, NEFF `B64CT73G0B`, Siemens `HB578A0S6B`). Keep patterns in a table in `parse.ts`, one regex per brand, with a generic fallback.
+- Brand-specific patterns where known. **`BRAND_MODEL_PATTERNS` in `parse.ts` is
+  deliberately empty.** Writing 65 regexes without having seen a real URL from
+  each brand would be inventing brand facts (rule 2.2), and the NEFF/Siemens
+  examples this section originally cited are not brands the client carries.
+  The generic extractor — longest token in the deepest path segment containing
+  both letters and digits — handles every real URL met so far. Add an override
+  only when a real URL proves the generic rule wrong, and cite that URL.
+- Where the model occupies its own path segment (AEG:
+  `/hobs/induction-hob/ikx64301cb/`), the descriptive name is taken from the
+  segment above it.
 - Normalise whitespace and case; store `rawInput` unmodified as well.
 - Echo back: *"Got it — NEFF B64CT73G0B. Is that right?"* with a correct/confirm option.
 - **Parsing is a convenience, never a gate.** If nothing matches, accept the input as-is and move on.
