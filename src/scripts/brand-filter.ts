@@ -57,6 +57,12 @@ export function initBrandFilter(root: ParentNode = document): void {
   const empty = root.querySelector<HTMLElement>('[data-brand-empty]');
   const featured = root.querySelector<HTMLElement>('[data-brand-featured]');
   const cards = Array.from(root.querySelectorAll<HTMLElement>('[data-brand-card]'));
+  /*
+   * The featured row repeats six brands that are also in the A–Z grid, so the
+   * count has to ignore it — "71 brands shown" for 65 brands reads as a bug to
+   * anyone who counts, and it is the screen-reader user's only feedback.
+   */
+  const counted = cards.filter((card) => !card.closest('[data-brand-featured]'));
   const rail = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-brand-rail-letter]'));
   const chips = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-brand-category]'));
 
@@ -66,16 +72,14 @@ export function initBrandFilter(root: ParentNode = document): void {
 
   function apply(): void {
     const state = { query: input!.value, category };
-    let visible = 0;
 
     for (const card of cards) {
-      const show = isVisible(state, {
+      card.hidden = !isVisible(state, {
         name: card.dataset.name ?? '',
         categories: (card.dataset.categories ?? '').split(' ').filter(Boolean),
       });
-      card.hidden = !show;
-      if (show) visible += 1;
     }
+    const visible = counted.filter((card) => !card.hidden).length;
 
     // A rail letter that would jump to a hidden card is a broken promise.
     const live = new Set(cards.filter((c) => !c.hidden).map((c) => c.dataset.letter));

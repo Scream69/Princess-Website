@@ -1,0 +1,36 @@
+---
+import site from '../../data/site.json';
+
+// Step 4. Reachable only once an enquiry has actually been sent — `submitted`
+// in the stored state gates it, so `?step=4` cannot forge a confirmation.
+// Submission itself, and the WhatsApp fallback, are Phase 6 (CLAUDE.md 8.7).
+---
+
+<section data-step-panel="4" hidden>
+  <h2
+    data-step-heading
+    tabindex="-1"
+    class="mt-6 max-w-content font-serif text-heading text-ink focus:outline-none"
+  >
+    Enquiry sent
+  </h2>
+
+  <p class="mt-4 max-w-content text-ink-muted">{site.responsePromise}</p>
+
+  <div class="mt-8 max-w-content rounded-sm border border-line bg-surface p-6">
+    <p class="text-sm text-ink-muted">Your reference</p>
+    <p data-reference class="mt-1 font-serif text-heading tracking-wide text-ink"></p>
+    <button
+      type="button"
+      data-action="copy-reference"
+      class="mt-4 min-h-touch rounded-sm border border-line-strong px-5 text-sm font-medium text-ink transition-colors hover:border-ink"
+    >
+      Copy reference
+    </button>
+  </div>
+
+  <p class="mt-8 max-w-content text-sm text-ink-muted">
+    [PHASE 6: "Message us on WhatsApp instead", pre-filled with the enquiry. Held
+    back until the WhatsApp Business number is supplied — see MISSING-ASSETS.md 4.]
+  </p>
+</section>

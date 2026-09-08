@@ -1,0 +1,32 @@
+---
+// Step 3 shell. The chat-styled question sequence, validation, the country
+// selector and the consent checkbox are Phase 5 (CLAUDE.md 6). This carries
+// the heading, focus target and navigation only, so the state machine can be
+// tested end to end before the form exists.
+---
+
+<section data-step-panel="3" hidden>
+  <h2
+    data-step-heading
+    tabindex="-1"
+    class="mt-6 max-w-content font-serif text-heading text-ink focus:outline-none"
+  >
+    Your details
+  </h2>
+
+  <p class="mt-4 max-w-content text-ink-muted">
+    [PHASE 5: name, phone, email, country and postcode, asked one at a time, with
+    the consent checkbox and enquiry summary above the submit button.]
+  </p>
+
+  <div class="mt-8 flex flex-wrap gap-3">
+    <button
+      type="button"
+      data-action="go-step"
+      data-step="2"
+      class="min-h-touch rounded-sm border border-line-strong px-6 font-medium text-ink transition-colors hover:border-ink"
+    >
+      Back
+    </button>
+  </div>
+</section>

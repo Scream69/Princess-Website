@@ -1,0 +1,44 @@
+---
+// Step 4 is a success screen and is not counted here (CLAUDE.md 6): three
+// reads as shorter than four, and step 4 asks nothing of the customer.
+const steps = [
+  { number: 1, label: 'Choose a brand' },
+  { number: 2, label: 'Add your appliance' },
+  { number: 3, label: 'Your details' },
+];
+---
+
+<div data-progress class="border-b border-line pb-4">
+  {/* Mobile: one line and a fill bar. Four labels side by side do not fit
+      at 320px and never look like anything but a squeeze (CLAUDE.md 9.5). */}
+  <div class="md:hidden">
+    <p data-progress-label class="text-sm font-medium text-ink">Step 1 of 3 — Choose a brand</p>
+    <div class="mt-2 h-0.5 w-full bg-line">
+      <div data-progress-fill class="h-full bg-accent transition-[width] duration-200" style="width:33.333%"></div>
+    </div>
+  </div>
+
+  <ol class="hidden gap-2 md:flex">
+    {
+      steps.map((step) => (
+        <li class="flex-1">
+          <button
+            type="button"
+            data-progress-step={step.number}
+            data-action="go-step"
+            data-step={step.number}
+            data-state="todo"
+            aria-current="false"
+            class="group w-full text-left"
+          >
+            <span class="block h-0.5 w-full bg-line group-data-[state=current]:bg-accent group-data-[state=done]:bg-accent"></span>
+            <span class="mt-2 block text-sm text-ink-subtle group-enabled:group-hover:text-ink group-data-[state=current]:font-medium group-data-[state=current]:text-ink group-data-[state=done]:text-ink-muted">
+              <span class="tabular-nums">{step.number}.</span>
+              {' '}{step.label}
+            </span>
+          </button>
+        </li>
+      ))
+    }
+  </ol>
+</div>

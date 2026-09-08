@@ -81,7 +81,8 @@ Pin versions. Before installing, check the current stable release rather than as
 ├── tsconfig.json
 ├── .env.example               # documents required vars, no real values
 ├── scripts/
-│   └── check-links.mjs        # link-rot checker, see section 8.9
+│   ├── check-links.mjs        # link-rot checker, see section 8.9
+│   └── e2e-wizard.mjs         # drives the wizard in real Chrome, see 12
 └── src/
     ├── data/
     │   ├── brands.json        # THE brand list — single source of truth
@@ -180,9 +181,18 @@ type EnquiryState = {
   };
   step: 1 | 2 | 3 | 4;
   consent: boolean;
+  draftBrandSlug: string | null;  // brand chosen in step 1, before an item exists
+  submitted: boolean;             // gates step 4
   updatedAt: number;
 };
 ```
+
+`draftBrandSlug` holds the brand between step 1 and step 2 — while the customer
+is away on the manufacturer's site and has not yet added a product. It has to
+persist, or a refresh mid-step-2 forgets which brand they picked.
+
+`submitted` exists so `?step=4` cannot forge a confirmation screen for an
+enquiry that was never sent.
 
 Persisted in `localStorage` under `enquiry:v1`.
 **Expire after 30 days** on read. Clear entirely after successful submission.
@@ -431,6 +441,13 @@ Do not jump ahead. Each phase should be working and committed before the next.
 - **Small commits**, one concern each, conventional-commit style.
 - **No placeholder lorem ipsum in anything the client will see.** Use real copy from `copy.json`, or an obvious `[AWAITING COPY: hero headline]` marker.
 - **Test the wizard end to end after every change to it.** Including: refresh mid-flow, back button, add three items, submit with the network offline.
+  - `npm run dev` in one terminal, `npm run test:e2e` in another. It drives a
+    real Chrome or Edge over the DevTools Protocol using Node's built-in
+    WebSocket — no test framework, no browser-automation package.
+  - It cannot cover iOS Safari, which is primary traffic (10.3). The clipboard
+    behaviour in Phase 4 must be checked by hand on a real device.
+  - `npm test` is the unit layer: pure logic only (filter matching, step
+    guards, storage parsing, reference format).
 - **Update this file** when an architectural decision changes. It is the source of truth.
 - Keep functions small and named for what they do. TypeScript strict mode on. No `any`.
 - Comment *why*, not *what* — particularly in `clipboard.ts` and `submit.ts`, where the constraints are non-obvious.

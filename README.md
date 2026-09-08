@@ -36,6 +36,8 @@ npm run dev
 | `npm run build` | Static build to `dist/` |
 | `npm run preview` | Serve the built output |
 | `npm run check` | Astro + TypeScript diagnostics |
+| `npm test` | Unit tests — pure logic, no DOM |
+| `npm run test:e2e` | Drives the wizard in real Chrome (needs `npm run dev` running) |
 | `npm run check:links` | Brand link-rot checker (see Maintenance) |
 
 ## Design tokens
@@ -75,6 +77,21 @@ npm run check:links
 It reads `src/data/brands.json`, requests each `url`, and reports non-200
 responses and redirects. Update `brands.json` with any URL that has moved.
 The script lands in Phase 10.
+
+## Testing
+
+`npm test` covers the pure logic: filter matching, step guards, storage
+parsing and expiry, reference format.
+
+`npm run test:e2e` drives the whole wizard in a real headless Chrome or Edge
+over the DevTools Protocol — cold load, filtering, choosing a brand, adding and
+removing appliances, refresh mid-flow, the back button, deep links and discard.
+It uses Node's built-in WebSocket, so there is no browser-automation
+dependency. Start `npm run dev` first; set `CHROME_PATH` if neither browser is
+in the usual place.
+
+Neither covers **iOS Safari**, which is primary traffic. The clipboard
+behaviour in particular has to be checked by hand on a real device.
 
 ## Before launch
 

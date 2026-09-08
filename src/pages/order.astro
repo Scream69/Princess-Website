@@ -1,24 +1,84 @@
 ---
 import Base from '../layouts/Base.astro';
 import BrandGrid from '../components/order/BrandGrid.astro';
+import ProgressBar from '../components/order/ProgressBar.astro';
+import PasteStep from '../components/order/PasteStep.astro';
+import DetailsStep from '../components/order/DetailsStep.astro';
+import Confirmation from '../components/order/Confirmation.astro';
 import copy from '../data/copy.json';
 
-// Phase 2. This page currently hosts the brand grid only. The wizard state
-// machine, URL step routing and the progress bar are Phase 3 (CLAUDE.md 12),
-// so nothing here reads or writes enquiry state yet.
+// Phase 3. All four step shells are rendered here and the wizard toggles
+// visibility, so a refresh or a back-button press can never land the customer
+// on a blank page. With JS off this degrades to step 1 alone: a working brand
+// directory that opens manufacturer sites in a new tab.
 const { step1 } = copy.order;
 ---
 
 <Base title={copy.order.title} description={copy.order.description} showNavLinks={false}>
-  <div class="mx-auto max-w-page px-gutter pt-section pb-section">
-    <p class="text-sm font-medium tracking-wide text-ink-muted uppercase">Step 1 of 3</p>
-    <h1 class="mt-2 max-w-content font-serif text-heading text-ink">{step1.heading}</h1>
-    <p class="mt-4 max-w-content text-ink-muted">{step1.intro}</p>
+  <div data-wizard class="mx-auto max-w-page px-gutter pt-section pb-section">
+    <h1 class="sr-only">Request a quote</h1>
 
-    <a href="/order?step=2" class="mt-4 inline-block text-sm text-accent underline underline-offset-4">
-      {step1.skip} &#8594;
-    </a>
+    <ProgressBar />
 
-    <BrandGrid />
+    {/* Step changes are announced here as well as focused, because a customer
+        tabbing through does not necessarily read the heading (CLAUDE.md 10.1). */}
+    <p data-announce role="status" aria-live="polite" class="sr-only"></p>
+
+    <div
+      data-resume
+      hidden
+      class="mt-6 flex flex-wrap items-center gap-4 rounded-sm border border-line bg-surface p-4"
+    >
+      <p class="text-ink">
+        Welcome back — you had <span data-resume-count>0</span> saved. Continue where you left off?
+      </p>
+      <div class="flex gap-3">
+        <button
+          type="button"
+          data-action="resume-continue"
+          class="min-h-touch rounded-sm bg-accent px-5 text-sm font-medium text-accent-contrast"
+        >
+          Continue
+        </button>
+        <button
+          type="button"
+          data-action="resume-discard"
+          class="min-h-touch px-2 text-sm text-ink-muted underline"
+        >
+          Start again
+        </button>
+      </div>
+    </div>
+
+    <section data-step-panel="1">
+      <h2
+        data-step-heading
+        tabindex="-1"
+        class="mt-6 max-w-content font-serif text-heading text-ink focus:outline-none"
+      >
+        {step1.heading}
+      </h2>
+      <p class="mt-4 max-w-content text-ink-muted">{step1.intro}</p>
+
+      <a
+        href="/order?step=2"
+        data-action="go-step"
+        data-step="2"
+        class="mt-4 inline-block text-sm text-accent underline underline-offset-4"
+      >
+        {step1.skip} &#8594;
+      </a>
+
+      <BrandGrid />
+    </section>
+
+    <PasteStep />
+    <DetailsStep />
+    <Confirmation />
   </div>
 </Base>
+
+<script>
+  import { initWizard } from '../scripts/wizard';
+  initWizard();
+</script>
