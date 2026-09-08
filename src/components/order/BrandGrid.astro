@@ -1,0 +1,139 @@
+---
+import { alphabet, brands, categories, featuredBrands, firstLetter } from '../../data/brands';
+import BrandCard from './BrandCard.astro';
+
+// One flat, alphabetical grid. Letters are marked by the sticky A–Z rail and
+// per-letter scroll anchors rather than by a heading row per letter, so the
+// cards flow continuously and no space is wasted (CLAUDE.md 9.4).
+const seen = new Set<string>();
+const cards = brands.map((brand) => {
+  const letter = firstLetter(brand.name);
+  const isFirstOfLetter = !seen.has(letter);
+  seen.add(letter);
+  return { brand, isFirstOfLetter };
+});
+---
+
+<div class="mt-10">
+  <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <div class="w-full md:max-w-sm">
+      <label for="brand-filter" class="block text-sm font-medium text-ink">
+        Search {brands.length} brands
+      </label>
+      <input
+        id="brand-filter"
+        data-brand-filter
+        type="search"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="Start typing a brand name"
+        class="mt-2 block h-touch w-full rounded-sm border border-line-strong bg-surface px-3 text-ink placeholder:text-ink-subtle"
+      />
+    </div>
+
+    <div class="flex flex-wrap gap-2" role="group" aria-label="Filter by product type">
+      <button
+        type="button"
+        data-brand-category="all"
+        aria-pressed="true"
+        class="min-h-touch rounded-sm border border-line px-4 text-sm text-ink-muted transition-colors aria-pressed:border-accent aria-pressed:bg-accent aria-pressed:text-accent-contrast"
+      >
+        All
+      </button>
+      {
+        categories.map((category) => (
+          <button
+            type="button"
+            data-brand-category={category.value}
+            aria-pressed="false"
+            class="min-h-touch rounded-sm border border-line px-4 text-sm text-ink-muted transition-colors aria-pressed:border-accent aria-pressed:bg-accent aria-pressed:text-accent-contrast"
+          >
+            {category.label}
+          </button>
+        ))
+      }
+    </div>
+  </div>
+
+  <p data-brand-status class="sr-only" role="status" aria-live="polite"></p>
+
+  {
+    featuredBrands.length > 0 && (
+      <section data-brand-featured class="mt-10">
+        <h3 class="text-sm font-medium tracking-wide text-ink-muted uppercase">Popular brands</h3>
+        <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {featuredBrands.map((brand) => (
+            <BrandCard brand={brand} isFirstOfLetter={false} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <div class="mt-10 flex gap-6">
+    <nav
+      aria-label="Jump to letter"
+      class="sticky top-24 hidden h-fit shrink-0 flex-col items-center gap-0.5 lg:flex"
+    >
+      {
+        alphabet.map(({ letter, has }) =>
+          has ? (
+            <a
+              data-brand-rail-letter={letter}
+              href={`#letter-${letter}`}
+              class="flex h-6 w-6 items-center justify-center rounded-sm text-xs text-ink-muted transition-colors hover:bg-surface hover:text-accent aria-disabled:pointer-events-none aria-disabled:text-ink-subtle aria-disabled:opacity-40"
+            >
+              {letter}
+            </a>
+          ) : (
+            <span
+              aria-hidden="true"
+              class="flex h-6 w-6 items-center justify-center text-xs text-ink-subtle opacity-40"
+            >
+              {letter}
+            </span>
+          ),
+        )
+      }
+    </nav>
+
+    <div class="min-w-0 flex-1">
+      {/* Plain grid of links rather than a ul/li: the card itself must be the
+          grid item, so that hiding a filtered-out brand closes the gap instead
+          of leaving an empty cell. */}
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {
+          cards.map(({ brand, isFirstOfLetter }) => (
+            <BrandCard brand={brand} isFirstOfLetter={isFirstOfLetter} />
+          ))
+        }
+      </div>
+
+      <div data-brand-empty hidden class="rounded-sm border border-line bg-surface p-8 text-center">
+        <p class="text-ink">No brands match that search.</p>
+        <p class="mt-2 text-sm text-ink-muted">
+          We can still quote for it — the brand list is not exhaustive.
+        </p>
+        <a
+          href="/order?step=2"
+          class="mt-6 inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+        >
+          Tell us anyway &#8594;
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Cards must line up regardless of which letter they fall under, so the
+     scroll anchor sits on the card itself rather than on a heading row. */
+  [data-brand-card][id] {
+    scroll-margin-top: 7rem;
+  }
+</style>
+
+<script>
+  import { initBrandFilter } from '../../scripts/brand-filter';
+  initBrandFilter();
+</script>

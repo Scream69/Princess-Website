@@ -10,7 +10,12 @@
   },
   "order": {
     "title": "[AWAITING COPY: order page title tag]",
-    "description": "[AWAITING COPY: order page meta description, 150-160 chars]"
+    "description": "[AWAITING COPY: order page meta description, 150-160 chars]",
+    "step1": {
+      "heading": "Choose a brand",
+      "intro": "Pick the manufacturer you are shopping for. Their site opens in a new tab so you can find the exact model — this page stays open behind it.",
+      "skip": "Already have a model number? Skip to step 2"
+    }
   },
   "footer": {
     "note": "[AWAITING COPY: footer note, e.g. authorised dealer statement]"

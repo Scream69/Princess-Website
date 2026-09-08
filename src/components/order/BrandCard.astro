@@ -1,0 +1,60 @@
+---
+import { firstLetter, type LinkableBrand } from '../../data/brands';
+
+interface Props {
+  brand: LinkableBrand;
+  /** True for the first brand under each initial — carries the A–Z rail's scroll target. */
+  isFirstOfLetter: boolean;
+}
+
+const { brand, isFirstOfLetter } = Astro.props;
+const letter = firstLetter(brand.name);
+
+// No manufacturer logo files have been supplied yet, so every card currently
+// renders the documented text fallback (CLAUDE.md 2.3, 9.4). opticalScale is
+// wired but inert until real SVGs land and each value is tuned by eye.
+const logoUrl = brand.logo ? `/brands/${brand.logo}` : null;
+---
+
+<a
+  data-brand-card
+  data-name={brand.name}
+  data-slug={brand.slug}
+  data-letter={letter}
+  data-categories={brand.categories.join(' ')}
+  id={isFirstOfLetter ? `letter-${letter}` : undefined}
+  href={brand.url}
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label={`${brand.name} — view range on the manufacturer's site (opens in a new tab)`}
+  class="group relative flex min-h-32 flex-col items-center justify-center gap-2 rounded-sm border border-line bg-surface px-4 py-6 transition-[transform,border-color] duration-150 hover:-translate-y-0.5 hover:border-line-strong focus-visible:-translate-y-0.5"
+  style={`--optical-scale:${brand.opticalScale}`}
+>
+  {
+    logoUrl ? (
+      <img
+        src={logoUrl}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        class="max-h-10 w-auto max-w-full origin-center"
+        style="scale: var(--optical-scale)"
+      />
+    ) : (
+      <span
+        aria-hidden="true"
+        class="text-center font-serif text-lg leading-tight text-ink origin-center"
+        style="scale: var(--optical-scale)"
+      >
+        {brand.name}
+      </span>
+    )
+  }
+
+  <span
+    aria-hidden="true"
+    class="text-xs text-ink-subtle opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+  >
+    View range &#8599;
+  </span>
+</a>

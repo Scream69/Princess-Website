@@ -1,0 +1,24 @@
+---
+import Base from '../layouts/Base.astro';
+import BrandGrid from '../components/order/BrandGrid.astro';
+import copy from '../data/copy.json';
+
+// Phase 2. This page currently hosts the brand grid only. The wizard state
+// machine, URL step routing and the progress bar are Phase 3 (CLAUDE.md 12),
+// so nothing here reads or writes enquiry state yet.
+const { step1 } = copy.order;
+---
+
+<Base title={copy.order.title} description={copy.order.description} showNavLinks={false}>
+  <div class="mx-auto max-w-page px-gutter pt-section pb-section">
+    <p class="text-sm font-medium tracking-wide text-ink-muted uppercase">Step 1 of 3</p>
+    <h1 class="mt-2 max-w-content font-serif text-heading text-ink">{step1.heading}</h1>
+    <p class="mt-4 max-w-content text-ink-muted">{step1.intro}</p>
+
+    <a href="/order?step=2" class="mt-4 inline-block text-sm text-accent underline underline-offset-4">
+      {step1.skip} &#8594;
+    </a>
+
+    <BrandGrid />
+  </div>
+</Base>
