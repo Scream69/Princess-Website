@@ -314,6 +314,35 @@ check('and is kept verbatim', s.raw, 'H7860BPX but in stainless steel');
 await evaluate(`document.querySelectorAll('[data-tray-list] button[aria-label^="Remove"]')[3].click(); return 1;`);
 await settle();
 
+// --- an enquiry saved before the parser existed ------------------------------
+await evaluate(`
+  const stored = JSON.parse(localStorage.getItem('enquiry:v1'));
+  stored.items = [{
+    id: 'legacy', brandSlug: 'aeg',
+    rawInput: 'https://www.aeg.co.uk/kitchen/cooking/ovens/oven/bpx535061m/',
+    inputType: 'url', parsedModel: null, parsedName: null, note: '', addedAt: Date.now(),
+  }, {
+    id: 'legacy-free', brandSlug: null,
+    rawInput: 'something quiet for a small kitchen',
+    inputType: 'description', parsedModel: null, parsedName: null, note: '', addedAt: Date.now(),
+  }];
+  localStorage.setItem('enquiry:v1', JSON.stringify(stored));
+  return 1;
+`);
+await goto('/order?step=2');
+s = await evaluate(`
+  return [...document.querySelectorAll('[data-tray-list] li p:first-child')].map((p) => p.textContent);
+`);
+check('a stored item with no parse is re-parsed on load', s[0], 'Oven — BPX535061M');
+check('a stored description is left as the customer wrote it', s[1], 'something quiet for a small kitchen');
+
+await reset();
+await goto('/order');
+await clickBrand('miele');
+await addItem('https://www.miele.co.uk/ovens/h7860bpx');
+await addItem('H7860BPX');
+await addItem('KM7564FL');
+
 // --- refresh mid-flow -------------------------------------------------------
 await goto('/order');
 s = await evaluate(PROBE);

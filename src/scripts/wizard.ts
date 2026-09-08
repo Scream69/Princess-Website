@@ -152,7 +152,34 @@ export function initWizard() {
     if (heading) el.headings.set(step, heading);
   }
 
+  /*
+   * Items saved before the parser existed carry no parsed fields, and a stored
+   * enquiry lives for 30 days — so without this, anyone mid-enquiry when a
+   * parser change ships keeps seeing raw URLs. Re-parse on load rather than
+   * bumping the schema version, which would throw their enquiry away instead.
+   *
+   * Descriptions are left alone: the customer chose free text deliberately.
+   */
+  function backfillParse(items: EnquiryItem[]): { items: EnquiryItem[]; changed: boolean } {
+    let changed = false;
+    const parsedItems = items.map((item) => {
+      if (item.inputType === 'description' || item.parsedModel || item.parsedName) return item;
+      const parsed = parseInput(item.rawInput, item.brandSlug);
+      if (!parsed.model && !parsed.name) return item;
+      changed = true;
+      return {
+        ...item,
+        inputType: parsed.inputType,
+        parsedModel: parsed.model,
+        parsedName: parsed.name,
+      };
+    });
+    return { items: parsedItems, changed };
+  }
+
   let state: EnquiryState = load() ?? createEmptyState();
+  const backfilled = backfillParse(state.items);
+  if (backfilled.changed) state = { ...state, items: backfilled.items };
   /** Tray row currently open for correction; survives re-renders. */
   let editingId: string | null = null;
 
@@ -526,6 +553,7 @@ export function initWizard() {
   history.replaceState({ step: state.step }, '', stepUrl(state.step));
   // previousStep === state.step, so the first paint moves no focus.
   render(state.step, false);
+  if (backfilled.changed) save(state);
 
   if (resumable && el.resume) {
     el.resume.hidden = false;
