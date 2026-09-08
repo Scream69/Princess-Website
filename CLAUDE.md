@@ -12,7 +12,9 @@ A **two-page static website** for a UK premium appliance retailer.
 The business does not sell online. It captures enquiries and replies with a quote by hand.
 
 **The model:**
-1. Customer wants an appliance (Miele, Siemens, Gaggenau, AEG, NEFF, and ~60 others).
+1. Customer wants an appliance or a piece of consumer electronics (Miele, AEG,
+   Smeg, Samsung, Sony and ~60 others — the Euronics range; `brands.json` is
+   the definitive list).
 2. They browse the *manufacturer's own website* to choose a product.
 3. They copy the product page link or model number.
 4. They come back to this site and submit it, with their contact details.
@@ -130,6 +132,7 @@ The single source of truth for the brand directory. One object per brand.
   "url": "https://www.miele.co.uk/",
   "logo": "miele.svg",
   "opticalScale": 1.0,
+  "categories": ["appliances"],
   "featured": true,
   "authorised": true,
   "active": true
@@ -140,9 +143,10 @@ The single source of truth for the brand directory. One object per brand.
 |---|---|
 | `slug` | URL-safe id. Used in deep links (`/order?brand=miele`) and analytics. |
 | `name` | Display name and accessible label. |
-| `url` | **UK homepage only.** Must be `.co.uk` where one exists. No product or category deep links — they rot, and the client has decided against them. |
-| `logo` | Filename in `src/assets/brands/`. |
+| `url` | **UK homepage only.** Must be `.co.uk` where one exists. No product or category deep links — they rot, and the client has decided against them. `null` is permitted **only** on an inactive brand; `assertLinkable` in `brands.ts` throws at build time otherwise. |
+| `logo` | Filename in `src/assets/brands/`, or `null` to render the text fallback. |
 | `opticalScale` | Multiplier, roughly `0.7`–`1.3`, tuned by eye so every logo reads at the same visual weight. See section 9.4. |
+| `categories` | Array of `appliances` \| `av` \| `other`. Drives the category chips. An array, not a single value, because Samsung, LG, Sharp, Toshiba and Hisense sell both appliances and TVs. |
 | `featured` | Shown in the "popular brands" row above the A–Z. |
 | `authorised` | Whether the client is an authorised dealer. See section 11. |
 | `active` | `false` hides it without deleting the record. |
@@ -309,6 +313,14 @@ Honeypot field (visually hidden, not `display:none`), plus a minimum time-to-sub
 ### 8.9 Link-rot checker
 `scripts/check-links.mjs` — reads `brands.json`, requests each `url`, reports non-200s and redirects. Run quarterly. Document it in the README as a maintenance task.
 
+**Learned from the first manual run (Phase 2):** roughly a sixth of the list —
+Miele, Dyson, Samsung, Sony, Sebo, Asko, Hisense, Loewe, Rangemaster, Numatic —
+answers `403` to a scripted `HEAD`, and Russell Hobbs answers `405`. These are
+bot-protection responses, not dead links; all load normally in a browser. The
+checker must **not** report them as failures or it will be ignored within a
+quarter. Treat `403`/`405`/`429` as "reachable, blocked to scripts", follow
+redirects, send a real browser `User-Agent`, and fall back to `GET` on failure.
+
 ### 8.10 Analytics events
 Fire on: step view, brand click (with slug), paste success, paste failure, manual entry used, add-another used, item removed, validation error (with field), submit attempt, submit success, submit failure, WhatsApp click, abandonment step.
 This funnel tells the client which brands drive enquiries and exactly where customers drop out.
@@ -326,7 +338,16 @@ Do not build these. They were considered and rejected.
 ## 9. Design
 
 ### 9.1 Direction
-This client sells **Miele and Gaggenau**, not budget electricals. The reference the client supplied (Euronics) is navy-and-yellow volume retail — take its *information architecture*, reject its aesthetic.
+The client is a **Euronics member** and carries that group's range — 67 brands
+spanning premium appliances (Miele, Smeg, Liebherr, Fisher & Paykel), mainstream
+appliances (Beko, Indesit, Hotpoint), and TV/audio (Sony, Samsung, LG, KEF).
+
+**Open question, not yet answered:** whether the site should present as premium
+or as general electricals. Do not resolve it in code — it is a positioning
+decision for the client (logged in `MISSING-ASSETS.md`). Until it is answered,
+the restrained direction below holds, because it degrades gracefully either way.
+
+The reference the client supplied (Euronics) is navy-and-yellow volume retail — take its *information architecture*, reject its aesthetic.
 
 Target: generous white space, one restrained accent colour, confident typography, subtle borders rather than heavy shadows. Calm and expensive. If the finished page looks like a link farm or a discount retailer, it has failed.
 
@@ -423,8 +444,12 @@ Works on mobile Safari · keyboard accessible · handles the failure case · sta
 
 Track these; do not guess answers.
 
-- [ ] Final brand list, and authorised-dealer status per brand
-- [ ] Buying group membership, and access to a brand asset pack
+- [x] Final brand list — 67 Euronics brands, supplied and in `brands.json`
+- [x] Buying group membership — **Euronics**
+- [ ] Authorised-dealer status confirmed **in writing** (currently assumed from
+      Euronics membership — see `MISSING-ASSETS.md` 1.1)
+- [ ] Access to the Euronics brand asset pack (logos)
+- [ ] Positioning: premium specialist or general electricals (`MISSING-ASSETS.md` 1.2)
 - [ ] Logo files (vector) for the client and for each manufacturer
 - [ ] Brand colours, fonts, and any guidelines
 - [ ] Home page copy: hero, about, how-it-works

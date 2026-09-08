@@ -14,28 +14,60 @@ Markers used in the code:
 
 ## 1. Blocking the build
 
-### 1.1 Brand list and authorised-dealer status — blocks Phase 2
+### 1.1 Brand logos — blocks the Phase 2 finish
 
-`src/data/brands.json` is an **empty array**. CLAUDE.md 11 forbids adding a
-brand before authorised-dealer status is confirmed, because displaying a
-manufacturer's trademark implies a supply relationship.
+The brand list itself is **resolved**: 67 Euronics brands are in
+`src/data/brands.json`, supplied by the client. Buying group is **Euronics**.
 
-Phase 2 (the brand grid) is the visual centrepiece and the longest piece of
-polish work in the project, so this is the critical path.
+What is still missing is the artwork:
 
-Needed:
+- [ ] Vector logo (SVG) per brand → `src/assets/brands/<slug>.svg`, ideally
+      from the Euronics brand asset pack rather than sourced individually
+- [ ] `opticalScale` per brand — currently `1.0` for all 67 as a placeholder.
+      It is tuned by eye against the real logo and cannot be set in advance.
 
-- [ ] Confirmed brand list, with authorised-dealer status per brand
-- [ ] Buying-group membership (Euronics / NEWS / CIH) and, if a member,
-      access to the group's brand asset pack
-- [ ] Vector logo (SVG) per confirmed brand → `src/assets/brands/<slug>.svg`
-- [ ] UK homepage URL per brand (`.co.uk` where one exists, homepage only —
-      no product or category deep links)
+Until logos land, **every card renders the documented text fallback**
+(CLAUDE.md 9.4). The grid is therefore only half-judgeable: layout, filter,
+A–Z and hover behaviour are final, optical balance is not.
 
-`opticalScale` per brand is tuned by eye once the real logo files are in
-place; it cannot be set in advance.
+**Assumption on record, needs client sign-off:** every brand is written as
+`"authorised": true` on the basis that Euronics membership confirms dealer
+status for the group's range. CLAUDE.md 11 says not to assume this. If the
+client cannot confirm it in writing, the flag must be revisited before launch.
 
-### 1.2 Served countries — blocks the Step 3 country selector
+### 1.2 Positioning — premium or general electricals?
+
+CLAUDE.md 9.1 originally read "this client sells Miele and Gaggenau, not budget
+electricals". The supplied list contradicts that: it has Miele and AEG but **no
+Siemens, Gaggenau, NEFF or Bosch**, and roughly a quarter of it is TV, audio and
+lifestyle (Sony, KEF, Ninebot, Reflex Active, Revitive).
+
+- [ ] Confirm whether the site presents as a premium appliance specialist or as
+      a general electricals retailer. This changes the home page copy and the
+      visual direction, so it is worth settling before Phase 7.
+- [ ] Confirm the client genuinely cannot supply Siemens / Gaggenau / NEFF /
+      Bosch — their absence may simply be an omission in the list supplied.
+
+### 1.3 Brand data corrections already applied
+
+Recorded here so they can be checked back with the client:
+
+- **Comfee** — the supplied `comfee-uk.com` returns a hard 404. Changed to
+  `https://www.comfee.com/uk`, which resolves.
+- **Vispera** and **Zenith** — no manufacturer website exists (the client's own
+  list says "sold via retailers only"). Both set `"active": false`: a card that
+  opens nothing is a dead end in the middle of the funnel. They need either a
+  destination or a decision to drop them.
+- **AEG** and **Zanussi** — both refused connection from the dev machine during
+  the link check. Almost certainly Electrolux bot protection rather than a dead
+  site, but unverified. Worth a manual look.
+- **Display names** lightly corrected to the registered trademark styling:
+  `Fisher & Paykel`, `IceKing`, `Lenco`, `NutriBullet`, `Schönhaus`, `TP-Link`.
+- **`featured`** is a placeholder six (Miele, Samsung, LG, Smeg, Dyson,
+  Hotpoint), chosen only so the "popular brands" row is buildable.
+  - [ ] Client to choose the real featured set.
+
+### 1.4 Served countries — blocks the Step 3 country selector
 
 `src/data/countries.json` currently contains **United Kingdom only**. The
 served European countries have not been confirmed, and guessing the list
