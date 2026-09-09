@@ -1,12 +1,13 @@
 ---
-// One tray, in step 2. The step 3 summary of the same items is Phase 5;
-// when it lands, the wizard's single `[data-tray-list]` query becomes a
-// querySelectorAll rather than a second component.
+import copy from '../../data/copy.json';
+
+// One tray, in step 2. Step 3 shows the same items again as a review summary,
+// rendered by the wizard rather than by a second component.
 ---
 
 <section data-tray hidden class="mt-8 rounded-sm border border-line bg-surface p-4">
   <h3 class="text-sm font-medium tracking-wide text-ink-muted uppercase">
-    Your enquiry (<span data-tray-count>0</span>)
+    {copy.order.trayHeading} (<span data-tray-count>0</span>)
   </h3>
   <ul data-tray-list class="mt-2 list-none p-0"></ul>
 </section>

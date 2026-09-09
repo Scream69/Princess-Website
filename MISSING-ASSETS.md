@@ -109,7 +109,10 @@ All in `src/data/copy.json` and `src/data/site.json`.
 - [ ] Home: about section, credentials
 - [ ] Footer note (e.g. an authorised-dealer statement)
 - [ ] Title tag and meta description for `/` and `/order`
-- [ ] Trading name and registered company name
+- [ ] Trading name and registered company name. The enquiry address is
+      `info@princeselectronics.com`, but the trading name has not been
+      confirmed in writing and is **not** inferred from the domain — it stays
+      `[AWAITING COPY]` until the client states it.
 
 The fixed 24-hour response promise is written and lives in `site.json`
 (`responsePromise`). It is a flat string and is never computed from the
@@ -117,7 +120,9 @@ clock (CLAUDE.md 8.5).
 
 ## 4. Business details
 
-- [ ] Enquiry destination email address
+- [x] Enquiry destination email address — `info@princeselectronics.com`,
+      supplied 2026-09-09 and now in `site.json`. It is also the contact
+      address shown on the privacy page.
 - [ ] Telephone number
 - [ ] WhatsApp Business number. **Now blocks launch.** Until it is set,
       `WhatsAppButton.astro`, the step 4 follow-up link and the failure-path
@@ -137,7 +142,8 @@ clock (CLAUDE.md 8.5).
       confirmed. Canonical and Open Graph URLs are omitted rather than
       guessed, and `sitemap.xml` cannot be generated without it.
 - [ ] Web3Forms access key (or Netlify Forms, if hosting there). **Blocks
-      launch**, and needs the destination email address above first. With
+      launch.** Now unblocked to set up: create the account against
+      `info@princeselectronics.com` and paste the key into `.env`. With
       `PUBLIC_WEB3FORMS_KEY` empty, `postEnquiry` reports `unconfigured`
       rather than posting: the enquiry is queued on the device and the
       customer is told honestly that it has not gone yet — never that it

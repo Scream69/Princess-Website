@@ -1,10 +1,15 @@
 ---
+import copy from '../../data/copy.json';
 import Tray from './Tray.astro';
 
-// Step 2. Phase 3 gives this step a plain text input so items can reach the
-// tray and the add-another loop is exercisable. Clipboard return-detection,
-// the global paste listener and model-number parsing are Phase 4
-// (CLAUDE.md 8.1, 8.3) — deliberately absent, not forgotten.
+// Step 2 — the step the whole site exists for: get a usable model number back
+// from the manufacturer's site (CLAUDE.md 1). Three ways forward, all valid: a
+// pasted link, a typed model number, or free text. None of them is a gate.
+//
+// The explanation above the field spells out the copy-and-paste, because it is
+// the one thing a first-time customer has to do that no other website asks of
+// them. Nothing here describes pasting as automatic — it cannot be (8.1).
+const { step2 } = copy.order;
 ---
 
 <section data-step-panel="2" hidden>
@@ -13,12 +18,12 @@ import Tray from './Tray.astro';
     tabindex="-1"
     class="mt-6 max-w-content font-serif text-heading text-ink focus:outline-none"
   >
-    Add your appliance
+    {step2.heading}
   </h2>
 
   <div data-brand-chosen hidden class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1">
     <p class="text-ink-muted">
-      Brand: <span data-brand-name class="font-medium text-ink"></span>
+      {step2.brandLabel}: <span data-brand-name class="font-medium text-ink"></span>
     </p>
     <a
       data-brand-link
@@ -28,10 +33,8 @@ import Tray from './Tray.astro';
       class="text-sm text-accent underline underline-offset-4"></a>
   </div>
 
-  <p class="mt-4 max-w-content text-ink-muted">
-    Copy the product page link from the manufacturer's site, or type the model number.
-    Either is enough for us to quote.
-  </p>
+  <p class="mt-4 max-w-content text-ink-muted">{step2.intro}</p>
+  <p class="mt-3 max-w-content text-sm text-ink-muted">{step2.alternatives}</p>
 
   <form data-add-item class="mt-6 max-w-content">
     {/* Shown only on returning to this tab, and only while the field is empty.
@@ -42,12 +45,10 @@ import Tray from './Tray.astro';
       hidden
       class="mb-4 flex min-h-touch w-full items-center justify-center rounded-sm border border-accent bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
     >
-      Paste link or model number
+      {step2.pasteButton}
     </button>
 
-    <label for="product" class="block text-sm font-medium text-ink">
-      Product link or model number
-    </label>
+    <label for="product" class="block text-sm font-medium text-ink">{step2.inputLabel}</label>
     <div class="mt-2 flex flex-col gap-2 sm:flex-row">
       <input
         id="product"
@@ -56,7 +57,7 @@ import Tray from './Tray.astro';
         required
         autocomplete="off"
         spellcheck="false"
-        placeholder="https://…  or  H7860BPX"
+        placeholder={step2.inputPlaceholder}
         aria-describedby="product-echo"
         class="h-touch min-w-0 flex-1 rounded-sm border border-line-strong bg-surface px-3 text-ink placeholder:text-ink-subtle"
       />
@@ -64,7 +65,7 @@ import Tray from './Tray.astro';
         type="submit"
         class="h-touch shrink-0 rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
       >
-        Add
+        {step2.add}
       </button>
     </div>
 
@@ -74,25 +75,25 @@ import Tray from './Tray.astro';
 
   <details class="mt-4 max-w-content">
     <summary class="cursor-pointer text-sm text-accent underline underline-offset-4">
-      Not sure — describe what you're after
+      {step2.describeSummary}
     </summary>
     <form data-add-description class="mt-3">
       <label for="description" class="block text-sm font-medium text-ink">
-        Tell us what you're looking for
+        {step2.describeLabel}
       </label>
       <textarea
         id="description"
         name="description"
         rows="3"
         required
-        placeholder="A quiet integrated dishwasher, ideally within 60cm"
+        placeholder={step2.describePlaceholder}
         class="mt-2 block w-full rounded-sm border border-line-strong bg-surface p-3 text-ink placeholder:text-ink-subtle"
       ></textarea>
       <button
         type="submit"
         class="mt-3 min-h-touch rounded-sm border border-line-strong px-6 font-medium text-ink transition-colors hover:border-ink"
       >
-        Add this
+        {step2.describeAdd}
       </button>
     </form>
   </details>
@@ -105,7 +106,7 @@ import Tray from './Tray.astro';
       data-action="add-another"
       class="min-h-touch rounded-sm border border-line-strong px-6 font-medium text-ink transition-colors hover:border-ink"
     >
-      Add another appliance
+      {step2.addAnother}
     </button>
     <button
       type="button"
@@ -115,7 +116,7 @@ import Tray from './Tray.astro';
       disabled
       class="min-h-touch rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
     >
-      Continue to your details
+      {step2.continue}
     </button>
   </div>
 </section>

@@ -11,14 +11,47 @@
   "order": {
     "title": "[AWAITING COPY: order page title tag]",
     "description": "[AWAITING COPY: order page meta description, 150-160 chars]",
+    "process": {
+      "heading": "How this works",
+      "steps": [
+        {
+          "title": "Choose the brand",
+          "detail": "Pick the manufacturer below. Their site opens in a new tab, and this page stays open behind it."
+        },
+        {
+          "title": "Copy the appliance link",
+          "detail": "On their site, copy the link to the appliance you want, then paste it into the box here."
+        },
+        {
+          "title": "Fill in your details",
+          "detail": "Your name, phone, email and where you are. Then we price it and reply."
+        }
+      ]
+    },
     "step1": {
       "heading": "Choose a brand",
-      "intro": "Pick the manufacturer you are shopping for. Their site opens in a new tab so you can find the exact model — this page stays open behind it.",
+      "intro": "Most of this happens on the manufacturer’s own website — you come back here with the link to the appliance you want.",
       "skip": "Already have a model number? Skip to step 2"
+    },
+    "step2": {
+      "heading": "Add your appliance",
+      "intro": "On the manufacturer’s site, open the appliance you want and copy the link from your browser’s address bar. Paste it below and we will work out the model from it.",
+      "alternatives": "No link to hand? The model number from the product page is enough on its own — and if you have not settled on a model yet, describe what you are after instead.",
+      "brandLabel": "Brand",
+      "pasteButton": "Paste link or model number",
+      "inputLabel": "Product link or model number",
+      "inputPlaceholder": "https://…  or  H7860BPX",
+      "add": "Add",
+      "describeSummary": "Not sure — describe what you’re after",
+      "describeLabel": "Tell us what you’re looking for",
+      "describePlaceholder": "A quiet integrated dishwasher, ideally within 60cm",
+      "describeAdd": "Add this",
+      "addAnother": "Add another appliance",
+      "continue": "Continue to your details"
     },
     "step3": {
       "heading": "Your details",
-      "intro": "Five short questions, then we can send your quote.",
+      "intro": "Five short questions — everything we need to price your enquiry and get back to you. You can change any answer before you send it.",
       "questions": {
         "name": {
           "question": "What name should we put on the quote?",
@@ -73,8 +106,10 @@
       "whatsapp": "Message us on WhatsApp instead",
       "whatsappNote": "Useful if you want to send us a screenshot of the appliance.",
       "whatsappPrefill": "I have just sent an enquiry through your website. My reference is",
-      "again": "Send another enquiry"
-    }
+      "again": "Send another enquiry",
+      "intro": "That is everything we need. Your enquiry is with us and nothing further is needed from you."
+    },
+    "trayHeading": "Your enquiry"
   },
   "footer": {
     "note": "[AWAITING COPY: footer note, e.g. authorised dealer statement]"

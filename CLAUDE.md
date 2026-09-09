@@ -505,7 +505,7 @@ Track these; do not guess answers.
 - [ ] Logo files (vector) for the client and for each manufacturer
 - [ ] Brand colours, fonts, and any guidelines
 - [ ] Home page copy: hero, about, how-it-works
-- [ ] Enquiry destination email address
+- [x] Enquiry destination email address — `info@princeselectronics.com`
 - [ ] WhatsApp Business number
 - [ ] Opening hours for the footer (the response promise is fixed at 24 hours)
 - [ ] Confirmed list of served European countries for the selector

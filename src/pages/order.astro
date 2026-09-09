@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import BrandGrid from '../components/order/BrandGrid.astro';
 import ProgressBar from '../components/order/ProgressBar.astro';
+import ProcessSteps from '../components/order/ProcessSteps.astro';
 import PasteStep from '../components/order/PasteStep.astro';
 import DetailsStep from '../components/order/DetailsStep.astro';
 import Confirmation from '../components/order/Confirmation.astro';
@@ -60,11 +61,13 @@ const { step1 } = copy.order;
       </h2>
       <p class="mt-4 max-w-content text-ink-muted">{step1.intro}</p>
 
+      <ProcessSteps />
+
       <a
         href="/order?step=2"
         data-action="go-step"
         data-step="2"
-        class="mt-4 inline-block text-sm text-accent underline underline-offset-4"
+        class="mt-8 inline-block text-sm text-accent underline underline-offset-4"
       >
         {step1.skip} &#8594;
       </a>
