@@ -1,11 +1,10 @@
 ---
-import site from '../data/site.json';
+import { whatsappHref } from '../data/site';
 
 // The number is not yet supplied; rendering a dead link would be worse
 // than rendering nothing, so the button is withheld until it is set
 // (tracked in MISSING-ASSETS.md).
-const digits = site.contact.whatsapp.replace(/\D/g, '');
-const href = digits ? `https://wa.me/${digits}` : null;
+const href = whatsappHref();
 ---
 
 {

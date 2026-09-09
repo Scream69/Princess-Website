@@ -6,7 +6,7 @@ import countries from '../../data/countries.json';
 // interpretation of anything the customer types (CLAUDE.md 2.1). There are no
 // typing indicators and no artificial delays — they are patronising and slow
 // the customer down (CLAUDE.md 6).
-const { step3 } = copy.order;
+const { step3, submit } = copy.order;
 ---
 
 <section data-step-panel="3" hidden>
@@ -87,6 +87,16 @@ const { step3 } = copy.order;
         </label>
       </div>
 
+      {/* Honeypot (CLAUDE.md 8.8). A checkbox rather than a text input, and
+          visually hidden by clipping rather than display:none, so it is
+          invisible to a person but present to a bot. `sr-only` would leave it
+          to screen readers, hence aria-hidden and tabindex. Browser autofill
+          fills fields, not boxes, so a real customer cannot trip it. */}
+      <div class="sr-only" aria-hidden="true">
+        <label for="botcheck">Leave this box unticked</label>
+        <input id="botcheck" name="botcheck" data-honeypot type="checkbox" tabindex="-1" />
+      </div>
+
       <button
         type="button"
         data-submit-enquiry
@@ -95,7 +105,43 @@ const { step3 } = copy.order;
       >
         {step3.submit}
       </button>
-      <p data-submit-note class="mt-3 text-sm text-ink-muted"></p>
+      <p data-submit-note role="status" aria-live="polite" class="mt-3 text-sm text-ink-muted"></p>
+
+      {/* The failure path. Honest about what happened, and never a dead end:
+          the enquiry is queued on the device and WhatsApp is offered as a
+          second route out (CLAUDE.md 8.7 steps 3 and 4). */}
+      <div
+        data-submit-failure
+        hidden
+        class="mt-6 rounded-sm border border-line-strong bg-surface p-4"
+      >
+        {/* Focused when it appears, rather than announced through a live
+            region: a keyboard or screen-reader user pressing submit needs to
+            land on the reason and the way out, not hear it read from
+            elsewhere on the page (CLAUDE.md 10.1). */}
+        <h4 data-failure-heading tabindex="-1" class="font-medium text-ink focus:outline-none"></h4>
+        <p data-failure-body class="mt-2 text-sm text-ink-muted"></p>
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            data-submit-retry
+            class="min-h-touch rounded-sm border border-line-strong px-6 text-sm font-medium text-ink transition-colors hover:border-ink"
+          >
+            {submit.retry}
+          </button>
+          <a
+            data-whatsapp-fallback
+            href="#"
+            hidden
+            target="_blank"
+            rel="noopener noreferrer"
+            class="min-h-touch rounded-sm bg-accent px-6 py-3 text-sm font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+          >
+            {submit.whatsapp}
+          </a>
+        </div>
+        <p data-whatsapp-note hidden class="mt-3 text-sm text-ink-subtle">{submit.whatsappNote}</p>
+      </div>
     </div>
   </div>
 

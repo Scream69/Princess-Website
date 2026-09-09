@@ -9,8 +9,10 @@
  * State changes go through `update()`, which persists and re-renders. There
  * is no subscriber list: at four steps, one render function is enough.
  */
+import copy from '../data/copy.json' with { type: 'json' };
+import { whatsappHref } from '../data/site.ts';
 import { initClipboard } from './clipboard.ts';
-import { initDetails, isComplete } from './details.ts';
+import { countryName, initDetails, isComplete } from './details.ts';
 import { describe, parseInput } from './parse.ts';
 import { createId, createReference } from './reference.ts';
 import {
@@ -24,6 +26,21 @@ import {
   type EnquiryState,
   type Step,
 } from './storage.ts';
+import {
+  buildPayload,
+  dropFromQueue,
+  isHoneypotTripped,
+  passesTimeCheck,
+  postEnquiry,
+  queueEnquiry,
+  readSubmissionTimes,
+  recordSubmission,
+  retryQueue,
+  whatsappMessage,
+  withinRateLimit,
+  type EnquiryPayload,
+  type SessionMeta,
+} from './submit.ts';
 
 /** Step 4 is a success screen and is not counted in the progress bar (CLAUDE.md 6). */
 export const COUNTED_STEPS = 3;
@@ -92,6 +109,16 @@ interface Elements {
   resumeCount: HTMLElement | null;
   reference: HTMLElement[];
   continueToDetails: HTMLButtonElement | null;
+  submitButton: HTMLButtonElement | null;
+  submitNote: HTMLElement | null;
+  failure: HTMLElement | null;
+  failureHeading: HTMLElement | null;
+  failureBody: HTMLElement | null;
+  retryButton: HTMLButtonElement | null;
+  whatsappFallback: HTMLAnchorElement | null;
+  whatsappNote: HTMLElement | null;
+  whatsappFollowup: HTMLAnchorElement | null;
+  honeypot: HTMLInputElement | null;
 }
 
 const STEP_TITLES: Record<Step, string> = {
@@ -138,6 +165,16 @@ export function initWizard() {
     resumeCount: root.querySelector('[data-resume-count]'),
     reference: Array.from(root.querySelectorAll('[data-reference]')),
     continueToDetails: root.querySelector('[data-continue-details]'),
+    submitButton: root.querySelector('[data-submit-enquiry]'),
+    submitNote: root.querySelector('[data-submit-note]'),
+    failure: root.querySelector('[data-submit-failure]'),
+    failureHeading: root.querySelector('[data-failure-heading]'),
+    failureBody: root.querySelector('[data-failure-body]'),
+    retryButton: root.querySelector('[data-submit-retry]'),
+    whatsappFallback: root.querySelector('[data-whatsapp-fallback]'),
+    whatsappNote: root.querySelector('[data-whatsapp-note]'),
+    whatsappFollowup: root.querySelector('[data-whatsapp-followup]'),
+    honeypot: root.querySelector('[data-honeypot]'),
   };
 
   /*
@@ -184,6 +221,20 @@ export function initWizard() {
   /** Tray row currently open for correction; survives re-renders. */
   let editingId: string | null = null;
 
+  /*
+   * Session metadata for the payload (CLAUDE.md 8.7 step 6). Deliberately not
+   * persisted: adding it to the stored schema would mean a version bump, and a
+   * version bump discards every enquiry saved by the previous build. Metadata
+   * is worth having, not worth an enquiry — so a customer who refreshes sends
+   * a shorter brand list and a shorter time on page.
+   */
+  const session: SessionMeta & { brandsClicked: string[] } = {
+    entryUrl: location.href,
+    brandsClicked: [],
+    msOnPage: 0,
+  };
+  const loadedAt = Date.now();
+
   function update(changes: Partial<EnquiryState>, options: { push?: boolean } = {}): void {
     const previousStep = state.step;
     state = { ...state, ...changes };
@@ -203,6 +254,13 @@ export function initWizard() {
     renderBrand();
     details?.refresh();
     for (const node of el.reference) node.textContent = state.reference;
+
+    // Step 4's WhatsApp link carries the reference, so a customer who follows
+    // up with a screenshot does not have to type it out.
+    if (el.whatsappFollowup && state.reference !== '') {
+      const href = whatsappHref(`${copy.order.step4.whatsappPrefill} ${state.reference}.`);
+      if (href) el.whatsappFollowup.href = href;
+    }
 
     if (push) {
       history.pushState({ step: state.step }, '', stepUrl(state.step));
@@ -391,6 +449,16 @@ export function initWizard() {
     const trimmed = rawInput.trim();
     if (trimmed === '') return;
 
+    /*
+     * An appliance added after a sent enquiry starts a *new* enquiry. Without
+     * this, `reference || createReference()` below would reuse the reference
+     * the client has already received an email about, and two different
+     * enquiries would arrive under one number.
+     */
+    if (state.submitted) {
+      state = { ...createEmptyState(), step: state.step, draftBrandSlug: state.draftBrandSlug };
+    }
+
     const parsed = forceDescription
       ? { inputType: 'description' as const, model: null, name: null }
       : parseInput(trimmed, state.draftBrandSlug);
@@ -472,11 +540,11 @@ export function initWizard() {
     button.dataset.label = original;
     try {
       await navigator.clipboard.writeText(state.reference);
-      button.textContent = 'Copied';
+      button.textContent = copy.order.step4.copied;
     } catch {
       // Clipboard write can be refused outright. The reference is on screen
       // either way, so say so rather than failing silently.
-      button.textContent = 'Select and copy above';
+      button.textContent = copy.order.step4.copyFailed;
     }
     setTimeout(() => {
       button.textContent = original;
@@ -489,6 +557,11 @@ export function initWizard() {
   root.addEventListener('click', (event) => {
     const card = (event.target as HTMLElement).closest<HTMLElement>('[data-brand-card]');
     if (!card?.dataset.slug) return;
+    // Which brands they opened, in order, for the payload's metadata — this is
+    // the funnel data that tells the client which brands drive enquiries.
+    if (!session.brandsClicked.includes(card.dataset.slug)) {
+      session.brandsClicked.push(card.dataset.slug);
+    }
     update({ draftBrandSlug: card.dataset.slug });
     goToStep(2);
   });
@@ -536,7 +609,137 @@ export function initWizard() {
     initClipboard({ input: productInput, button: pasteButton, onText: showEcho });
   }
 
-  const submitNote = root.querySelector<HTMLElement>('[data-submit-note]');
+  // --- submission (CLAUDE.md 8.7) -------------------------------------------
+
+  /*
+   * Baked in at build time from .env. An empty key means the site was deployed
+   * unconfigured: `postEnquiry` reports that distinctly, the enquiry is queued
+   * rather than dropped, and a later build with the key delivers it.
+   */
+  const ACCESS_KEY: string = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
+  const SUBMIT_COPY = copy.order.submit;
+
+  /** Guards against a second send while the first is still in flight. */
+  let sending = false;
+
+  function currentPayload(): EnquiryPayload {
+    return buildPayload({
+      state,
+      session: { ...session, msOnPage: Date.now() - loadedAt },
+      countryLabel: countryName(state.contact.country),
+      brandNames,
+    });
+  }
+
+  function setSubmitBusy(busy: boolean): void {
+    if (el.submitButton) {
+      el.submitButton.disabled = busy;
+      el.submitButton.textContent = busy ? SUBMIT_COPY.sending : copy.order.step3.submit;
+    }
+    if (el.retryButton) el.retryButton.disabled = busy;
+    if (el.submitNote) el.submitNote.textContent = busy ? SUBMIT_COPY.retrying : '';
+  }
+
+  type FailureKind = 'failure' | 'blocked' | 'limit';
+
+  /*
+   * The failure path must never be a dead end (rule 2.4). Whatever went wrong,
+   * the customer is told the truth and handed a second route: retry, and —
+   * once the client supplies a number — WhatsApp, pre-filled with the whole
+   * enquiry so nothing has to be retyped.
+   */
+  function showFailure(kind: FailureKind, payload: EnquiryPayload): void {
+    if (!el.failure) return;
+    el.failure.hidden = false;
+
+    const heading =
+      kind === 'failure'
+        ? SUBMIT_COPY.failureHeading
+        : kind === 'blocked'
+          ? SUBMIT_COPY.blockedHeading
+          : SUBMIT_COPY.limitHeading;
+    const body =
+      kind === 'failure'
+        ? SUBMIT_COPY.failureBody
+        : kind === 'blocked'
+          ? SUBMIT_COPY.blockedBody
+          : SUBMIT_COPY.limitBody;
+
+    if (el.failureHeading) el.failureHeading.textContent = heading;
+    if (el.failureBody) el.failureBody.textContent = body;
+
+    const href = whatsappHref(whatsappMessage(payload));
+    if (el.whatsappFallback) {
+      el.whatsappFallback.hidden = href === null;
+      if (href) el.whatsappFallback.href = href;
+    }
+    if (el.whatsappNote) el.whatsappNote.hidden = href === null;
+
+    // Focus rather than scroll: it brings the panel into view for everyone,
+    // works for a screen reader, and respects prefers-reduced-motion.
+    el.failureHeading?.focus();
+  }
+
+  function hideFailure(): void {
+    if (el.failure) el.failure.hidden = true;
+  }
+
+  /*
+   * Delivery confirmed. Only now is anything cleared, and only the reference
+   * survives: the personal data has served its purpose (rule 2.7), while
+   * `submitted` plus the reference are what let a refresh on step 4 still show
+   * the customer their number.
+   */
+  function completeEnquiry(reference: string): void {
+    recordSubmission();
+    dropFromQueue(reference);
+    update({ ...createEmptyState(), reference, submitted: true, step: 4 }, { push: true });
+    flush();
+  }
+
+  async function submitEnquiry(): Promise<void> {
+    if (sending) return;
+    // Nothing incomplete can be sent: the button is disabled without consent,
+    // and this is the belt to that braces.
+    if (state.items.length === 0 || !isComplete(state.contact) || !state.consent) return;
+
+    const payload = currentPayload();
+    const now = Date.now();
+    const startedAt = state.items[0]?.addedAt ?? null;
+
+    // Spam guards, in cheapest-first order (CLAUDE.md 8.8). None of them
+    // queues: a submission we refuse must not then be delivered by the queue
+    // on the next page load.
+    if (isHoneypotTripped(el.honeypot) || !passesTimeCheck({ now, loadedAt, startedAt })) {
+      showFailure('blocked', payload);
+      return;
+    }
+    if (!withinRateLimit(readSubmissionTimes(now), now)) {
+      showFailure('limit', payload);
+      return;
+    }
+
+    sending = true;
+    setSubmitBusy(true);
+    hideFailure();
+
+    const result = await postEnquiry({ accessKey: ACCESS_KEY, payload });
+
+    sending = false;
+    setSubmitBusy(false);
+
+    if (result.ok) {
+      completeEnquiry(payload.reference);
+      return;
+    }
+
+    // Queue before telling them, so the enquiry is safe on the device even if
+    // the render below throws.
+    queueEnquiry(payload);
+    showFailure('failure', payload);
+  }
+
+  el.retryButton?.addEventListener('click', () => void submitEnquiry());
 
   const details = initDetails({
     root,
@@ -561,15 +764,7 @@ export function initWizard() {
         }),
       );
     },
-    onSubmit: () => {
-      // Phase 6 owns sending. Step 4 stays unreachable until an enquiry has
-      // actually left the browser — showing a confirmation for something we
-      // never sent is the worst defect this codebase could have (rule 2.4).
-      if (submitNote) {
-        submitNote.textContent =
-          '[PHASE 6: submission, retry, offline queue and WhatsApp fallback.]';
-      }
-    },
+    onSubmit: () => void submitEnquiry(),
   });
 
   window.addEventListener('popstate', () => {
@@ -599,4 +794,19 @@ export function initWizard() {
   }
 
   flush();
+
+  /*
+   * Anything that failed to send last time gets one more try, on every load
+   * (CLAUDE.md 8.7 step 3). If the enquiry still on this device is the one
+   * that got through, the customer has never seen a confirmation for it — so
+   * finish the job and show them step 4 with their reference.
+   */
+  void retryQueue({
+    accessKey: ACCESS_KEY,
+    onSent: (entry) => {
+      if (entry.reference === state.reference && !state.submitted && state.items.length > 0) {
+        completeEnquiry(entry.reference);
+      }
+    },
+  });
 }

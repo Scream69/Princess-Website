@@ -1,9 +1,20 @@
 ---
+import copy from '../../data/copy.json';
 import site from '../../data/site.json';
+import { whatsappHref } from '../../data/site';
 
-// Step 4. Reachable only once an enquiry has actually been sent — `submitted`
-// in the stored state gates it, so `?step=4` cannot forge a confirmation.
-// Submission itself, and the WhatsApp fallback, are Phase 6 (CLAUDE.md 8.7).
+// Step 4. Reachable only once the form endpoint has confirmed delivery:
+// `submitted` in the stored state gates it, and is only ever set from a
+// confirmed response, so neither `?step=4` nor a failed send can forge a
+// confirmation (CLAUDE.md 2.4, 6).
+//
+// The personal data is cleared at this point and only the reference is kept,
+// so this screen deliberately shows nothing back about the appliances.
+const { step4 } = copy.order;
+
+// Static base link; the wizard appends the reference at runtime. Null until
+// the client supplies a number, in which case the whole block is withheld.
+const whatsapp = whatsappHref();
 ---
 
 <section data-step-panel="4" hidden>
@@ -12,25 +23,49 @@ import site from '../../data/site.json';
     tabindex="-1"
     class="mt-6 max-w-content font-serif text-heading text-ink focus:outline-none"
   >
-    Enquiry sent
+    {step4.heading}
   </h2>
 
   <p class="mt-4 max-w-content text-ink-muted">{site.responsePromise}</p>
 
   <div class="mt-8 max-w-content rounded-sm border border-line bg-surface p-6">
-    <p class="text-sm text-ink-muted">Your reference</p>
+    <p class="text-sm text-ink-muted">{step4.referenceLabel}</p>
     <p data-reference class="mt-1 font-serif text-heading tracking-wide text-ink"></p>
+    <p class="mt-2 text-sm text-ink-subtle">{step4.referenceNote}</p>
     <button
       type="button"
       data-action="copy-reference"
       class="mt-4 min-h-touch rounded-sm border border-line-strong px-5 text-sm font-medium text-ink transition-colors hover:border-ink"
     >
-      Copy reference
+      {step4.copy}
     </button>
   </div>
 
-  <p class="mt-8 max-w-content text-sm text-ink-muted">
-    [PHASE 6: "Message us on WhatsApp instead", pre-filled with the enquiry. Held
-    back until the WhatsApp Business number is supplied — see MISSING-ASSETS.md 4.]
+  {
+    whatsapp && (
+      <div class="mt-8 max-w-content">
+        <a
+          data-whatsapp-followup
+          href={whatsapp}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-block min-h-touch rounded-sm border border-line-strong px-6 py-3 font-medium text-ink transition-colors hover:border-ink"
+        >
+          {step4.whatsapp}
+        </a>
+        <p class="mt-3 text-sm text-ink-subtle">{step4.whatsappNote}</p>
+      </div>
+    )
+  }
+
+  <p class="mt-10">
+    <a
+      href="/order"
+      data-action="go-step"
+      data-step="1"
+      class="text-sm text-accent underline underline-offset-4"
+    >
+      {step4.again} &#8594;
+    </a>
   </p>
 </section>

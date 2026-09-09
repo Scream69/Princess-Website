@@ -119,10 +119,13 @@ clock (CLAUDE.md 8.5).
 
 - [ ] Enquiry destination email address
 - [ ] Telephone number
-- [ ] WhatsApp Business number. Until it is set, `WhatsAppButton.astro`
-      **renders nothing** — a dead WhatsApp link on the enquiry failure path
-      would breach CLAUDE.md 2.4, so the button is withheld rather than
-      broken.
+- [ ] WhatsApp Business number. **Now blocks launch.** Until it is set,
+      `WhatsAppButton.astro`, the step 4 follow-up link and the failure-path
+      fallback all **render nothing** — a dead WhatsApp link is worse than
+      none, so they are withheld rather than broken (`src/data/site.ts`).
+      Without it, a customer whose enquiry cannot be sent has only "Try
+      again": the second route out required by CLAUDE.md 8.7 step 4 does not
+      exist yet.
 - [ ] Opening hours for the footer
 - [ ] Company registration number, VAT number, registered office address
 
@@ -133,7 +136,14 @@ clock (CLAUDE.md 8.5).
 - [ ] `site` in `astro.config.mjs` is commented out until the domain is
       confirmed. Canonical and Open Graph URLs are omitted rather than
       guessed, and `sitemap.xml` cannot be generated without it.
-- [ ] Web3Forms access key (or Netlify Forms, if hosting there)
+- [ ] Web3Forms access key (or Netlify Forms, if hosting there). **Blocks
+      launch**, and needs the destination email address above first. With
+      `PUBLIC_WEB3FORMS_KEY` empty, `postEnquiry` reports `unconfigured`
+      rather than posting: the enquiry is queued on the device and the
+      customer is told honestly that it has not gone yet — never that it
+      has. A later build with the key delivers whatever is queued.
+      For local work, any non-empty value enables the delivery checks in
+      `npm run test:e2e`, which stub every request.
 - [ ] Analytics: Plausible or Umami, confirmed as cookieless
 - [ ] Hosting account, under the client's own ownership
 
@@ -143,6 +153,31 @@ clock (CLAUDE.md 8.5).
       serves customers across Europe. Required before launch. Confirm whether
       the client is supplying it or it is in scope for this build.
 - [ ] Confirm the client is registered as data controller
+
+---
+
+## 6a. Submission decisions on record
+
+Phase 6 choices that are ours, not the client's, and are worth a look:
+
+- **Only the reference survives a successful send.** CLAUDE.md 5.2 says to
+  clear the enquiry entirely, and 6 says step 4 is gated on `submitted`. Both
+  cannot be literally true, so a successful send clears every personal field
+  and keeps `reference` + `submitted`. A refresh on the confirmation screen
+  therefore still shows the customer their number, and nothing personal is
+  retained.
+- **A rate-limited submission is not queued.** Five enquiries an hour per
+  browser is the cap (CLAUDE.md 8.8). Queueing a refused submission would
+  deliver it on the next page load and make the limit meaningless, so the
+  customer is pointed at WhatsApp instead — which is why the missing number
+  above matters.
+- **Session metadata is not persisted.** Brands clicked and time on page are
+  session-only, because adding them to the stored schema would mean a version
+  bump, and a version bump discards every enquiry saved by the previous build.
+  A customer who refreshes mid-enquiry sends shorter metadata.
+- **The privacy page now names Web3Forms and the retry queue.** Both are
+  factual statements about the code; the real policy (section 6) still has to
+  cover them properly.
 
 ---
 

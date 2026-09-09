@@ -48,6 +48,32 @@
       "consent": "I agree to my details being used to reply to this enquiry.",
       "consentLink": "Privacy policy",
       "submit": "Send my enquiry"
+    },
+    "submit": {
+      "sending": "Sending your enquiry…",
+      "retrying": "Still trying — this can take a few seconds.",
+      "failureHeading": "We could not send your enquiry",
+      "failureBody": "Nothing has been lost. Your enquiry is saved on this device and we will keep trying to send it.",
+      "blockedHeading": "We could not accept that from this browser",
+      "blockedBody": "This can happen with some browser extensions and automated tools. Try again, or send your enquiry to us directly.",
+      "limitHeading": "That is several enquiries from this device",
+      "limitBody": "We have not sent this one. If it is a separate enquiry, send it to us directly and we will pick it up with the others.",
+      "retry": "Try again",
+      "whatsapp": "Send it on WhatsApp instead",
+      "whatsappNote": "This opens WhatsApp with your enquiry already written out.",
+      "recovered": "Your earlier enquiry reached us. Reference"
+    },
+    "step4": {
+      "heading": "Enquiry sent",
+      "referenceLabel": "Your reference",
+      "referenceNote": "Quote this if you get in touch before we reply.",
+      "copy": "Copy reference",
+      "copied": "Copied",
+      "copyFailed": "Select and copy above",
+      "whatsapp": "Message us on WhatsApp instead",
+      "whatsappNote": "Useful if you want to send us a screenshot of the appliance.",
+      "whatsappPrefill": "I have just sent an enquiry through your website. My reference is",
+      "again": "Send another enquiry"
     }
   },
   "footer": {

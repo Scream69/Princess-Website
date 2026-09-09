@@ -57,10 +57,10 @@ Phases, per CLAUDE.md 12. Each is committed working before the next begins.
 
 - [x] 1. Scaffold, config, tokens, layout, nav, footer
 - [ ] 2. `brands.json` + brand grid — **blocked** on authorised-dealer status
-- [ ] 3. Wizard state machine, URL routing, storage, step shells
+- [x] 3. Wizard state machine, URL routing, storage, step shells
 - [x] 4. Step 2 — paste handling, parsing, tray, add-another loop
 - [x] 5. Step 3 — chat-styled details, validation (**UK-only** until served countries confirmed)
-- [ ] 6. Submission, retry, queue, WhatsApp fallback, step 4
+- [x] 6. Submission, retry, queue, WhatsApp fallback, step 4 (**needs the form key and WhatsApp number** — see MISSING-ASSETS.md 4 and 5)
 - [ ] 7. Home page
 - [ ] 8. Analytics, SEO, privacy page, 404
 - [ ] 9. Accessibility and performance pass
@@ -81,14 +81,20 @@ The script lands in Phase 10.
 ## Testing
 
 `npm test` covers the pure logic: filter matching, step guards, storage
-parsing and expiry, reference format.
+parsing and expiry, reference format, the enquiry payload, and the submission
+retry, queue and spam rules.
 
 `npm run test:e2e` drives the whole wizard in a real headless Chrome or Edge
 over the DevTools Protocol — cold load, filtering, choosing a brand, adding and
-removing appliances, refresh mid-flow, the back button, deep links and discard.
-It uses Node's built-in WebSocket, so there is no browser-automation
-dependency. Start `npm run dev` first; set `CHROME_PATH` if neither browser is
-in the usual place.
+removing appliances, refresh mid-flow, the back button, deep links, discard,
+and submission including the offline path. It uses Node's built-in WebSocket,
+so there is no browser-automation dependency. Start `npm run dev` first; set
+`CHROME_PATH` if neither browser is in the usual place.
+
+The delivery checks need `PUBLIC_WEB3FORMS_KEY` set to any non-empty value in
+`.env` (every request is stubbed, so nothing is sent anywhere). Without it the
+suite verifies the unconfigured behaviour instead — queued, and no false
+confirmation — and says so.
 
 Neither covers **iOS Safari**, which is primary traffic. The clipboard
 behaviour in particular has to be checked by hand on a real device.

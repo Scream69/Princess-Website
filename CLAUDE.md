@@ -195,8 +195,15 @@ persist, or a refresh mid-step-2 forgets which brand they picked.
 enquiry that was never sent.
 
 Persisted in `localStorage` under `enquiry:v1`.
-**Expire after 30 days** on read. Clear entirely after successful submission.
-Wrap every `localStorage` call in try/catch — Safari private mode throws.
+**Expire after 30 days** on read. Wrap every `localStorage` call in try/catch —
+Safari private mode throws.
+
+After a confirmed submission, every personal field is cleared and **only
+`reference` and `submitted` are kept**. Clearing the record outright would
+contradict section 6, where `submitted` gates step 4: a refresh on the
+confirmation screen has to keep showing the customer their reference. Nothing
+personal is retained, and the next appliance added starts a fresh enquiry with
+a new reference.
 
 ---
 
@@ -341,7 +348,9 @@ Two knock-on points to raise with the client rather than solve in code: manufact
 3. Still failing: write to a `pending-enquiry` queue in `localStorage`, retry on next page load.
 4. Show the customer an honest message with a WhatsApp button pre-filled with the whole enquiry, so the lead is never lost.
 5. Only clear the enquiry after confirmed success.
-6. Include in the payload: reference, all items (brand, raw input, parsed model, note), contact details, and metadata — brands clicked, time on page, entry URL.
+6. Include in the payload: reference, all items (brand, raw input, parsed model, note), contact details, and metadata — brands clicked, time on page, entry URL. The payload is flat and string-valued: a form-to-email service renders nested objects as unreadable JSON, so items arrive as numbered lines.
+7. An empty access key is reported as `unconfigured`, distinct from a network failure: nothing is posted, the enquiry is queued, and the customer is never told it was sent. A later build with the key delivers what is queued.
+8. Queue entries are keyed by reference, so "Try again" replaces rather than duplicates, and a confirmed send removes the entry — otherwise the client is emailed the same enquiry twice.
 
 ### 8.8 Spam protection
 Honeypot field (visually hidden, not `display:none`), plus a minimum time-to-submit check (~3 seconds), plus a per-browser rate limit in `localStorage`. **No CAPTCHA** — it costs real enquiries.

@@ -12,9 +12,23 @@
  *   npm run test:e2e     # in another
  */
 import { spawn } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import COPY from '../src/data/copy.json' with { type: 'json' };
+import SITE from '../src/data/site.json' with { type: 'json' };
+
+/*
+ * The delivery path can only be exercised when the build has a form access
+ * key: with none, `postEnquiry` refuses to post at all, which is the correct
+ * behaviour for an unconfigured build (CLAUDE.md 8.7) but leaves nothing to
+ * intercept. Any non-empty value in .env is enough — every request is stubbed,
+ * so nothing reaches the client's inbox. Restart the dev server after adding it.
+ */
+const HAS_KEY = /^PUBLIC_WEB3FORMS_KEY=.+$/m.test(
+  existsSync('.env') ? readFileSync('.env', 'utf8') : '',
+);
+const WHATSAPP_NUMBER = SITE.contact.whatsapp.replace(/\D/g, '');
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:4321';
 const PORT = 9333;
@@ -88,8 +102,13 @@ await new Promise((resolve) => (socket.onopen = resolve));
 
 let nextId = 0;
 const pending = new Map();
+/** "No console errors" is part of the definition of done (CLAUDE.md 12). */
+const consoleErrors = [];
 socket.onmessage = (event) => {
   const message = JSON.parse(event.data);
+  if (message.method === 'Runtime.consoleAPICalled' && message.params.type === 'error') {
+    consoleErrors.push(message.params.args.map((arg) => arg.description ?? arg.value).join(' '));
+  }
   const resolve = pending.get(message.id);
   if (resolve) {
     pending.delete(message.id);
@@ -136,6 +155,9 @@ const PROBE = `
   const stored = (() => {
     try { return JSON.parse(localStorage.getItem('enquiry:v1')); } catch { return 'threw'; }
   })();
+  const queued = (() => {
+    try { return JSON.parse(localStorage.getItem('pending-enquiry')); } catch { return 'threw'; }
+  })();
   return {
     step: visible.join(',') || 'none',
     url: location.search || '(none)',
@@ -147,6 +169,14 @@ const PROBE = `
     items: stored?.items?.length ?? null,
     reference: stored?.reference ?? null,
     draft: stored?.draftBrandSlug ?? null,
+    submitted: stored?.submitted ?? null,
+    contactName: stored?.contact?.name ?? null,
+    shownReference: document.querySelector('[data-reference]')?.textContent,
+    failureShown: !document.querySelector('[data-submit-failure]')?.hidden,
+    failureHeading: document.querySelector('[data-failure-heading]')?.textContent,
+    whatsappShown: !document.querySelector('[data-whatsapp-fallback]')?.hidden,
+    queue: Array.isArray(queued) ? queued.map((entry) => entry.reference) : queued,
+    posts: window.__posts ?? 0,
   };
 `;
 
@@ -533,19 +563,138 @@ s = await evaluate(detailState);
 check('a refresh restores every answer', s.answered, ['name', 'phone', 'email', 'country', 'postcode']);
 
 s = await evaluate(`
-  document.querySelector('[data-submit-enquiry]').click();
-  return {
-    note: document.querySelector('[data-submit-note]').textContent,
-    step: [...document.querySelectorAll('section[data-step-panel]')].filter((x) => !x.hidden).map((x) => x.dataset.stepPanel).join(),
-  };
-`);
-check('submitting does not fake a confirmation before Phase 6', s.step, '3');
-
-s = await evaluate(`
   const res = await fetch('/privacy');
   return res.status;
 `);
 check('the consent link goes somewhere real', s, 200);
+
+// --- submission (CLAUDE.md 8.7) ---------------------------------------------
+// The suite is sitting on a complete step 3: one appliance, five answers,
+// consent ticked. Everything below drives the send itself.
+
+const submit = () => evaluate(`document.querySelector('[data-submit-enquiry]').click(); return 1;`);
+const failureCopy = COPY.order.submit;
+
+s = await evaluate(PROBE);
+const sendReference = s.reference;
+
+// A bot ticking the hidden box is refused, and nothing is posted or queued.
+await evaluate(`
+  const box = document.querySelector('[data-honeypot]');
+  box.checked = true;
+  return 1;
+`);
+await submit();
+await settle();
+s = await evaluate(PROBE);
+check('a tripped honeypot sends nothing', [s.step, s.posts, s.queue], ['3', 0, null]);
+check('and says so rather than failing silently', s.failureHeading, failureCopy.blockedHeading);
+await evaluate(`document.querySelector('[data-honeypot]').checked = false; return 1;`);
+
+// The failure that matters: submitting with no network. Nothing may be lost,
+// and nothing may look like a success (rule 2.4).
+await evaluate(`
+  window.__posts = 0;
+  window.__realFetch ??= window.fetch;
+  window.__succeed = false;
+  window.fetch = (url, init) => {
+    if (!String(url).includes('web3forms')) return window.__realFetch(url, init);
+    window.__posts += 1;
+    return window.__succeed
+      ? Promise.resolve(new Response(JSON.stringify({ success: true }), { status: 200 }))
+      : Promise.reject(new Error('offline'));
+  };
+  return 1;
+`);
+
+await submit();
+// One attempt plus two retries, backing off 800ms then 2400ms (CLAUDE.md 8.7).
+await wait(4500);
+s = await evaluate(PROBE);
+check('an offline submission never reaches step 4', s.step, '3');
+check('the customer is told the truth', [s.failureShown, s.failureHeading], [true, failureCopy.failureHeading]);
+check('the enquiry is queued on the device', s.queue, [sendReference]);
+check('and the enquiry itself is left intact', [s.items, s.submitted], [1, false]);
+if (HAS_KEY) check('the post was retried twice before giving up', s.posts, 3);
+
+// The WhatsApp fallback is the second route out, and is withheld rather than
+// rendered dead while the number is missing (MISSING-ASSETS.md 4).
+check(
+  WHATSAPP_NUMBER ? 'the WhatsApp fallback is offered' : 'no WhatsApp number, so no dead link',
+  s.whatsappShown,
+  Boolean(WHATSAPP_NUMBER),
+);
+
+if (HAS_KEY) {
+  // Try again, this time with the endpoint answering.
+  await evaluate(`window.__succeed = true; window.__posts = 0; return 1;`);
+  await evaluate(`document.querySelector('[data-submit-retry]').click(); return 1;`);
+  await settle();
+  s = await evaluate(PROBE);
+  check('a confirmed send reaches step 4', [s.step, s.url], ['4', '?step=4']);
+  check('the reference is shown back', s.shownReference, sendReference);
+  check('the queue is emptied, so the client is not emailed twice', s.queue, null);
+  check('the personal data is cleared', [s.items, s.contactName], [0, '']);
+  check('and the reference survives to identify the enquiry', [s.submitted, s.reference], [true, sendReference]);
+
+  await goto('/order?step=4');
+  s = await evaluate(PROBE);
+  check('a refresh on the confirmation keeps it', [s.step, s.shownReference], ['4', sendReference]);
+
+  // An enquiry that failed, then delivered from the queue on the next load:
+  // the customer never saw a confirmation, so finish the job for them.
+  await reset();
+  await goto('/order');
+  await clickBrand('miele');
+  await addItem('H7860BPX');
+  await evaluate(`document.querySelector('[data-continue-details]').click(); return 1;`);
+  for (const value of ['Jane Doe', '+44 7700 900123', 'jane@example.co.uk', 'GB', 'SW1A 1AA']) {
+    await answer(value);
+  }
+  await evaluate(`
+    const box = document.querySelector('[data-consent]');
+    box.checked = true; box.dispatchEvent(new Event('change'));
+    return 1;
+  `);
+  await settle();
+  s = await evaluate(PROBE);
+  const stranded = s.reference;
+
+  await evaluate(`
+    localStorage.setItem('pending-enquiry', JSON.stringify([{
+      reference: '${stranded}',
+      payload: { reference: '${stranded}', subject: 'Enquiry ${stranded}' },
+      queuedAt: Date.now(),
+      attempts: 1,
+    }]));
+    return 1;
+  `);
+
+  const stub = await send('Page.addScriptToEvaluateOnNewDocument', {
+    source: `
+      window.__posts = 0;
+      const real = window.fetch;
+      window.fetch = (url, init) => {
+        if (!String(url).includes('web3forms')) return real(url, init);
+        window.__posts += 1;
+        return Promise.resolve(new Response(JSON.stringify({ success: true }), { status: 200 }));
+      };
+    `,
+  });
+
+  await goto('/order?step=3');
+  await settle();
+  s = await evaluate(PROBE);
+  check('a queued enquiry is retried on the next load', [s.posts, s.queue], [1, null]);
+  check('and the customer finally gets their confirmation', s.step, '4');
+  check('with the reference it was queued under', s.shownReference, stranded);
+
+  await send('Page.removeScriptToEvaluateOnNewDocument', { identifier: stub.result.identifier });
+} else {
+  console.log('  note  delivery-path checks skipped — set PUBLIC_WEB3FORMS_KEY in .env');
+}
+
+await evaluate(`if (window.__realFetch) window.fetch = window.__realFetch; return 1;`);
 
 // --- deep links -------------------------------------------------------------
 await reset();
@@ -591,6 +740,8 @@ s = await evaluate(`
   return focusable.filter((el) => el.closest('section[data-step-panel][hidden]')).length;
 `);
 check('a hidden step traps nothing in the tab order', s, 0);
+
+check('the wizard logs no console errors', consoleErrors, []);
 
 const failed = results.filter((ok) => !ok).length;
 console.log(`\n${results.length - failed}/${results.length} passed`);
