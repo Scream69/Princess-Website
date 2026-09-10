@@ -2,6 +2,7 @@
 import { brands as allBrands } from '../../data/brands';
 import copy from '../../data/copy.json';
 import site from '../../data/site.json';
+import HeroBackdrop from './HeroBackdrop.astro';
 
 /*
  * The home page has five seconds to explain a model no other retailer uses:
@@ -18,48 +19,55 @@ import site from '../../data/site.json';
 const { hero } = copy.home;
 ---
 
-<section
-  class="mx-auto grid max-w-page gap-12 px-gutter pt-section pb-section lg:grid-cols-[1fr_16rem] lg:gap-16"
->
-  <div>
-    {/* The tagline, sized as a kicker rather than a second headline. Gold-ink
-        rather than gold: this is read, not just seen. */}
-    <p class="text-sm font-medium tracking-[0.14em] text-gold-ink uppercase">{hero.eyebrow}</p>
+{/* `relative` anchors the backdrop, `isolate` keeps its stacking context
+    from reaching the fixed nav, and `overflow-hidden` contains rows that are
+    deliberately wider than the page. */}
+<section class="relative isolate overflow-hidden">
+  <HeroBackdrop />
 
-    <h1 class="mt-5 max-w-content font-serif text-display text-ink">{hero.headline}</h1>
+  <div
+    class="relative z-10 mx-auto grid max-w-page gap-12 px-gutter pt-section pb-section lg:grid-cols-[1fr_16rem] lg:gap-16"
+  >
+    <div>
+      {/* The tagline, sized as a kicker rather than a second headline.
+          Gold-ink rather than gold: this is read, not just seen. */}
+      <p class="text-sm font-medium tracking-[0.14em] text-gold-ink uppercase">{hero.eyebrow}</p>
 
-    <p class="mt-6 max-w-content text-lg text-ink-muted">{hero.supporting}</p>
+      <h1 class="mt-5 max-w-content font-serif text-display text-ink">{hero.headline}</h1>
 
-    <p class="mt-8 max-w-content border-l-2 border-gold pl-4 text-ink">{hero.process}</p>
+      <p class="mt-6 max-w-content text-lg text-ink-muted">{hero.supporting}</p>
 
-    <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
-      <a
-        href={site.cta.href}
-        class="inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
-      >
-        {site.cta.label}
-      </a>
-      <a
-        href="#how-it-works"
-        class="inline-flex min-h-touch items-center text-sm text-accent underline underline-offset-4"
-      >
-        {hero.cta} &#8595;
-      </a>
+      <p class="mt-8 max-w-content border-l-2 border-gold pl-4 text-ink">{hero.process}</p>
+
+      <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <a
+          href={site.cta.href}
+          class="inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+        >
+          {site.cta.label}
+        </a>
+        <a
+          href="#how-it-works"
+          class="inline-flex min-h-touch items-center text-sm text-accent underline underline-offset-4"
+        >
+          {hero.cta} &#8595;
+        </a>
+      </div>
     </div>
+
+    <aside class="lg:pt-2">
+      <dl class="m-0">
+        <div class="border-t-2 border-gold pt-4">
+          <dt class="font-serif text-display-sm text-ink">{allBrands.length}</dt>
+          <dd class="m-0 text-sm text-ink-muted">{hero.facts.brands}</dd>
+        </div>
+        <div class="mt-8 border-t-2 border-gold pt-4">
+          <dt class="font-serif text-2xl text-ink">{hero.facts.group}</dt>
+          <dd class="m-0 text-sm text-ink-muted">{hero.facts.groupLabel}</dd>
+        </div>
+      </dl>
+
+      <p class="mt-8 border-t border-line pt-4 text-sm text-ink-muted">{site.responsePromise}</p>
+    </aside>
   </div>
-
-  <aside class="lg:pt-2">
-    <dl class="m-0">
-      <div class="border-t-2 border-gold pt-4">
-        <dt class="font-serif text-display-sm text-ink">{allBrands.length}</dt>
-        <dd class="m-0 text-sm text-ink-muted">{hero.facts.brands}</dd>
-      </div>
-      <div class="mt-8 border-t-2 border-gold pt-4">
-        <dt class="font-serif text-2xl text-ink">{hero.facts.group}</dt>
-        <dd class="m-0 text-sm text-ink-muted">{hero.facts.groupLabel}</dd>
-      </div>
-    </dl>
-
-    <p class="mt-8 border-t border-line pt-4 text-sm text-ink-muted">{site.responsePromise}</p>
-  </aside>
 </section>

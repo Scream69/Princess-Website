@@ -1,0 +1,138 @@
+---
+import { brands as allBrands } from '../../data/brands';
+
+/*
+ * The same brand names as the strip below the hero, but as texture rather
+ * than as a list: larger, far slower, and faint enough that you read the
+ * headline first and notice the names second.
+ *
+ * Three things keep it from being wallpaper that ruins the page:
+ *
+ *   - It is masked top and bottom and kept at 3-4% ink, so it is texture
+ *     rather than a second headline competing for the same eye.
+ *   - It is `ink` at low opacity rather than a tint of its own, so it cannot
+ *     introduce a second background colour or a gradient wash (9.1).
+ *   - It is `aria-hidden` and `pointer-events: none`: decoration repeating
+ *     the strip below is not worth a screen reader's time, and it must never
+ *     intercept a click meant for the CTA.
+ *
+ * **Each row is one text node, not one per brand.** The first cut rendered a
+ * list item per name — around 260 of them across both layers — and Lighthouse
+ * fell from 100 to 71 with 1.15s of blocking time, because a throttled phone
+ * has to lay out and paint every one of them behind an animating mask. Joined
+ * strings look identical and cost 14 nodes. If this ever needs to become a
+ * list again, check the performance budget in CLAUDE.md 10.2 first.
+ */
+const ROWS = 7;
+const SEPARATOR = ' · '; // em space, middle dot, em space
+
+const rows = Array.from({ length: ROWS }, (_, index) =>
+  allBrands
+    .filter((_brand, position) => position % ROWS === index)
+    .map((brand) => brand.name)
+    .join(SEPARATOR),
+);
+---
+
+<div class="backdrop" aria-hidden="true">
+  {
+    rows.map((row, index) => (
+      <div class:list={['row', index % 2 === 1 && 'row-reverse']}>
+        {/* Twice, so the second copy is already in place when the first
+            finishes travelling and the loop has no visible seam. */}
+        <span class="track">{row}</span>
+        <span class="track">{row}</span>
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .backdrop {
+    --gap: 3rem;
+
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+
+    display: grid;
+    align-content: center;
+    gap: clamp(0.25rem, 1.5vh, 1rem);
+
+    color: var(--color-ink);
+    /* Watermark, not wallpaper. At 0.05 the names competed with the headline
+       for the same eye; at 0.03 they are texture you notice second. */
+    opacity: 0.03;
+
+    /* Nothing inside affects layout outside, and the browser can skip it
+       entirely when it is scrolled past. */
+    contain: content;
+
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+  }
+
+  @media (min-width: 64rem) {
+    .backdrop {
+      opacity: 0.04;
+    }
+  }
+
+  .row {
+    display: flex;
+    width: max-content;
+    gap: var(--gap);
+  }
+
+  .track {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-family: var(--font-serif);
+    /* Smaller than the first attempt: names the size of the headline read as
+       a competing headline, however faint. */
+    font-size: clamp(1.5rem, 3.2vw, 2.75rem);
+    line-height: 1.15;
+    /* Slower than the strip below by a factor of two, so the two layers
+       never look like they are racing each other. */
+    animation: hero-drift 200s linear infinite;
+  }
+
+  .row:nth-child(2) .track {
+    animation-duration: 260s;
+  }
+  .row:nth-child(3) .track {
+    animation-duration: 170s;
+  }
+  .row:nth-child(4) .track {
+    animation-duration: 300s;
+  }
+  .row:nth-child(5) .track {
+    animation-duration: 220s;
+  }
+  .row:nth-child(6) .track {
+    animation-duration: 280s;
+  }
+  .row:nth-child(7) .track {
+    animation-duration: 190s;
+  }
+
+  .row-reverse .track {
+    animation-direction: reverse;
+  }
+
+  @keyframes hero-drift {
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .track {
+      animation: none !important;
+      transform: none !important;
+    }
+  }
+</style>
