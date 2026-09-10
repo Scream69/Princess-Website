@@ -43,8 +43,9 @@
         "pasteLabel": "Paste it here",
         "recognised": "Link recognised",
         "detailsLabel": "Your details",
-        "sentLabel": "Enquiry sent",
-        "referenceLabel": "Your reference"
+        "sentLabel": "Sent",
+        "referenceLabel": "Your reference",
+        "copied": "Copied"
       }
     },
     "brands": {

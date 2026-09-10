@@ -106,6 +106,7 @@ const CHOSEN = 3;
                     >{figures.addressPath}</span
                   >
                 </span>
+                <span class="flag flag-copied">{figures.copied}</span>
               </div>
 
               <p class="figure-label mt-6">{figures.pasteLabel}</p>
@@ -118,12 +119,14 @@ const CHOSEN = 3;
             <div class="figure" data-figure="3">
               <p class="figure-label">{figures.detailsLabel}</p>
               <div class="bubble">{copy.order.step3.questions.name.question}</div>
-              <div class="answer"></div>
+              <div class="answer"><span class="typed"></span></div>
 
               <div class="receipt">
                 <p class="figure-label">{figures.referenceLabel}</p>
                 <p class="reference">
-                  ENQ-<span class="mask">&#9679;&#9679;&#9679;&#9679;&#9679;</span>
+                  ENQ-{[0, 1, 2, 3, 4].map((index) => (
+                    <span class="mask" style={`--i:${index}`}>&#9679;</span>
+                  ))}
                 </p>
                 <p class="promise">{site.responsePromise}</p>
               </div>
@@ -181,9 +184,9 @@ const CHOSEN = 3;
      */
     [data-enhanced].stage {
       --panel: 37rem;
-      /* Scroll distance per step. Much less than this and the three steps
-         flick past in a single flick of a trackpad. */
-      --step-scroll: 38vh;
+      /* Scroll distance per step. Long enough that each figure has time to
+         play out before the next step takes over. */
+      --step-scroll: 56vh;
 
       position: relative;
       min-height: calc(var(--panel) + (var(--step-scroll) * 3));
@@ -356,6 +359,26 @@ const CHOSEN = 3;
     color: var(--color-ink-subtle);
   }
 
+  .flag {
+    margin-left: auto;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-gold-ink);
+    padding: 0.125rem 0.5rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    color: var(--color-surface);
+  }
+
+  .typed {
+    display: block;
+    height: 100%;
+    width: 60%;
+    border-right: 1px solid var(--color-accent);
+    background-color: var(--color-canvas);
+    transform-origin: left;
+  }
+
   .caret {
     width: 1px;
     height: 1.125rem;
@@ -381,6 +404,7 @@ const CHOSEN = 3;
   }
 
   .answer {
+    overflow: hidden;
     margin-top: 0.5rem;
     margin-left: 20%;
     height: 2.5rem;
@@ -403,6 +427,7 @@ const CHOSEN = 3;
   }
 
   .mask {
+    display: inline-block;
     color: var(--color-ink-subtle);
   }
 
@@ -468,7 +493,7 @@ const CHOSEN = 3;
   @keyframes pop {
     from {
       opacity: 0;
-      transform: scale(0.94);
+      transform: scale(0.9);
     }
   }
 
@@ -477,8 +502,30 @@ const CHOSEN = 3;
       border-color: var(--color-line);
       transform: none;
     }
-    60% {
-      transform: translateY(-6px);
+    55% {
+      transform: translateY(-7px);
+    }
+  }
+
+  @keyframes recede {
+    to {
+      opacity: 0.45;
+    }
+  }
+
+  /* A reveal rather than a width change: clip-path costs no layout. */
+  @keyframes type {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  @keyframes fill {
+    from {
+      transform: scaleX(0);
     }
   }
 
@@ -494,77 +541,113 @@ const CHOSEN = 3;
     }
   }
 
+  @keyframes flash {
+    0%,
+    100% {
+      border-color: var(--color-line-strong);
+    }
+    40% {
+      border-color: var(--color-gold);
+    }
+  }
+
   @media (min-width: 64rem) {
-    /* 1 — the tiles land one after another, then one is chosen. */
+    /* --- 1: the directory fills, then one brand is chosen --------------- */
+
     [data-enhanced][data-visible] .figure[data-active] .tile {
-      animation: rise 420ms both;
-      animation-delay: calc(var(--i) * 70ms);
+      animation: rise 480ms both;
+      animation-delay: calc(var(--i) * 110ms);
     }
 
     [data-enhanced][data-visible] .figure[data-active] .tile-chosen {
       animation:
-        rise 420ms both,
-        select 500ms 620ms both;
+        rise 480ms both,
+        select 620ms 900ms both;
+    }
+
+    /* The rest step back once the choice is made. */
+    [data-enhanced][data-visible] .figure[data-active] .tile:not(.tile-chosen) {
+      animation:
+        rise 480ms calc(var(--i) * 110ms) both,
+        recede 500ms 1000ms both;
     }
 
     [data-enhanced][data-visible] .figure[data-active] .tile-hint {
-      animation: rise 400ms 900ms both;
+      animation: rise 420ms 1300ms both;
     }
 
-    /* 2 — the address arrives, then the paste is recognised. */
+    /* --- 2: the address types, is copied, then lands in the field ------- */
+
     [data-enhanced][data-visible] .figure[data-active] .bar-address {
-      animation: rise 420ms both;
+      animation:
+        rise 460ms both,
+        flash 700ms 1500ms both;
     }
 
     [data-enhanced][data-visible] .figure[data-active] .url {
-      display: inline-block;
-      animation: rise 500ms 180ms both;
+      animation: type 1100ms 320ms steps(26, end) both;
+    }
+
+    [data-enhanced][data-visible] .figure[data-active] .flag-copied {
+      animation: pop 340ms 1600ms both, rise 400ms 2300ms reverse both;
     }
 
     [data-enhanced][data-visible] .figure[data-active] .bar-paste {
-      animation: rise 420ms 620ms both;
+      animation: rise 460ms 2100ms both;
     }
 
     [data-enhanced][data-visible] .figure[data-active] .caret {
       animation:
-        rise 200ms 620ms both,
-        /* Two blinks, finishing as the chip lands — a caret still blinking
-           beside "Link recognised" reads as though nothing happened. */
-        blink 260ms 640ms steps(1) 2;
+        rise 220ms 2100ms both,
+        blink 280ms 2300ms steps(1) 3;
     }
 
     [data-enhanced][data-visible] .figure[data-active] .chip {
-      animation: pop 380ms 1150ms both;
+      animation: pop 400ms 2900ms both;
     }
 
-    /* 3 — the question, the answer, then the reference. */
+    /* --- 3: the question, the answer, then the reference resolves ------- */
+
     [data-enhanced][data-visible] .figure[data-active] .bubble {
-      animation: rise 420ms both;
+      animation: rise 460ms both;
     }
 
     [data-enhanced][data-visible] .figure[data-active] .answer {
-      animation: rise 420ms 400ms both;
+      animation: rise 460ms 600ms both;
+    }
+
+    [data-enhanced][data-visible] .figure[data-active] .typed {
+      animation: fill 900ms 1000ms both;
     }
 
     [data-enhanced][data-visible] .figure[data-active] .receipt {
-      animation: rise 460ms 780ms both;
+      animation: rise 480ms 2000ms both;
     }
 
     [data-enhanced][data-visible] .figure[data-active] .receipt::before {
       content: '';
       display: block;
-      height: 2px;
-      margin-bottom: -2px;
-      /* Redraws the gold rule left to right as the receipt arrives. */
-      background-color: var(--color-gold);
-      transform-origin: left;
-      animation: sweep 600ms 900ms both;
       position: relative;
       top: -1rem;
+      height: 2px;
+      margin-bottom: -2px;
+      background-color: var(--color-gold);
+      transform-origin: left;
+      animation: sweep 700ms 2200ms both;
     }
 
     [data-enhanced][data-visible] .figure[data-active] .reference {
-      animation: rise 420ms 1050ms both;
+      animation: rise 440ms 2500ms both;
+    }
+
+    /* The five characters of the reference arrive one at a time. */
+    [data-enhanced][data-visible] .figure[data-active] .mask {
+      animation: pop 300ms both;
+      animation-delay: calc(2800ms + (var(--i) * 130ms));
+    }
+
+    [data-enhanced][data-visible] .figure[data-active] .promise {
+      animation: rise 440ms 3500ms both;
     }
   }
 
