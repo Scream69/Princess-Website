@@ -40,7 +40,7 @@ const CHOSEN = 3;
 ---
 
 <section id="how-it-works" class="border-y border-line bg-surface">
-  <div class="mx-auto max-w-page px-gutter py-section">
+  <div class="section-inner mx-auto max-w-page px-gutter py-section">
     <div class="stage" data-stage>
       {/* Sentinels: something for the observer to cross. They add no height
           of their own — the track's height comes from the CSS. */}
@@ -80,7 +80,7 @@ const CHOSEN = 3;
           {/* Decorative: everything here is said properly in the column on
               the left, so there is nothing for a screen reader to gain. */}
           <div class="figures" aria-hidden="true">
-            <div class="figure" data-figure="1">
+            <div class="figure" data-figure="1" data-length="1800">
               <p class="figure-label">{figures.brandsLabel}</p>
               <div class="tiles">
                 {
@@ -97,7 +97,7 @@ const CHOSEN = 3;
               </div>
             </div>
 
-            <div class="figure" data-figure="2">
+            <div class="figure" data-figure="2" data-length="3350">
               <p class="figure-label">{figures.addressLabel}</p>
               <div class="bar bar-address">
                 <span class="dot"></span>
@@ -116,7 +116,7 @@ const CHOSEN = 3;
               </div>
             </div>
 
-            <div class="figure" data-figure="3">
+            <div class="figure" data-figure="3" data-length="4000">
               <p class="figure-label">{figures.detailsLabel}</p>
               <div class="bubble">{copy.order.step3.questions.name.question}</div>
               <div class="answer"><span class="typed"></span></div>
@@ -183,10 +183,20 @@ const CHOSEN = 3;
      * the panel releases.
      */
     [data-enhanced].stage {
-      --panel: 37rem;
-      /* Scroll distance per step. Long enough that each figure has time to
-         play out before the next step takes over. */
-      --step-scroll: 56vh;
+      /*
+       * Capped at the viewport, not fixed. At 125-150% browser zoom — which
+       * is the default on plenty of Windows laptops — a fixed 37rem panel
+       * plus the nav is taller than the screen, so the button fell off the
+       * bottom and the composition could not be seen at once. The sentinel
+       * maths reads the same variable, so the track follows automatically.
+       */
+      --panel: min(37rem, calc(100vh - 8.5rem));
+      /*
+       * Scroll distance per step, which is now what sets the *pace* of each
+       * sequence rather than just the spacing: the figure is scrubbed by
+       * position, so more distance means a slower, more readable playback.
+       */
+      --step-scroll: 75vh;
 
       position: relative;
       min-height: calc(var(--panel) + (var(--step-scroll) * 3));
@@ -272,7 +282,13 @@ const CHOSEN = 3;
         transform 450ms ease;
     }
 
-    [data-enhanced][data-visible] .figure[data-active] {
+    /*
+     * No `[data-visible]` gate any more. It existed because the sequences
+     * ran on a clock and had to be held back until the reader arrived;
+     * scrubbed by scroll, a figure is only ever at frame zero until someone
+     * scrolls it forward, so there is nothing to wait for.
+     */
+    [data-enhanced] .figure[data-active] {
       opacity: 1;
       transform: none;
     }
@@ -281,6 +297,93 @@ const CHOSEN = 3;
       display: block;
       align-self: end;
       margin-top: 2.5rem;
+    }
+  }
+
+  /*
+   * Short viewports — a laptop, or any screen at 125%+ zoom. The panel cap
+   * above is only honoured if the content inside it also gets smaller.
+   */
+  @media (min-width: 64rem) and (max-height: 52rem) {
+    [data-enhanced] .viewport {
+      top: 4.5rem;
+    }
+
+    [data-enhanced] .band-head {
+      margin-bottom: 1.75rem;
+    }
+
+    [data-enhanced] .band-head p {
+      margin-top: 0.75rem;
+    }
+
+    [data-enhanced] .band,
+    [data-enhanced] .figures {
+      min-height: 11rem;
+    }
+
+    [data-enhanced] .band {
+      gap: 2rem;
+    }
+
+    [data-enhanced] .rail {
+      margin-top: 1.5rem;
+    }
+
+    [data-enhanced] .cta {
+      margin-top: 1.5rem;
+    }
+
+    [data-enhanced] .section-inner,
+    .section-inner {
+      padding-block: 3rem;
+    }
+  }
+
+  @media (min-width: 64rem) and (max-height: 44rem) {
+    [data-enhanced] .viewport {
+      /* Just clear of the 4rem nav, or the gold rule tucks under it. */
+      top: 4.75rem;
+    }
+
+    [data-enhanced] .band,
+    [data-enhanced] .figures {
+      min-height: 8rem;
+    }
+
+    [data-enhanced] .band-head {
+      margin-bottom: 1rem;
+    }
+
+    [data-enhanced] .band-head p {
+      margin-top: 0.5rem;
+    }
+
+    /* The step numeral is decoration; it can give up the most. */
+    [data-enhanced] .step > span:nth-of-type(2) {
+      margin-top: 0.5rem;
+      font-size: 1.5rem;
+    }
+
+    [data-enhanced] .step h3 {
+      margin-top: 0.375rem;
+    }
+
+    [data-enhanced] .rail {
+      margin-top: 1rem;
+    }
+
+    [data-enhanced] .cta {
+      margin-top: 1rem;
+    }
+
+    [data-enhanced] .tile {
+      min-height: 3.25rem;
+    }
+
+    [data-enhanced] .section-inner,
+    .section-inner {
+      padding-block: 2rem;
     }
   }
 
@@ -470,17 +573,23 @@ const CHOSEN = 3;
     color: var(--color-ink);
   }
 
-  /* --- each figure plays its step ---------------------------------------
+  /* --- each figure is scrubbed by the scroll ---------------------------
    *
-   * The animations hang off `[data-active]`, so they restart every time a
-   * step is scrolled back to: removing the attribute cancels them, adding it
-   * runs them again. Only opacity and transform, so none of it costs layout.
+   * Every animation here is `paused`, and its delay is offset by
+   * `--elapsed`, a time the script sets from how far the reader has scrolled
+   * through the step. A paused animation with a negative delay renders the
+   * frame at that point in its timeline, so the whole sequence becomes a
+   * timeline the reader scrubs rather than a clip that plays on its own.
    *
-   * They are also gated on `[data-visible]`, which the script sets when the
-   * section reaches the screen. Without that, step one is marked active at
-   * page load and its sequence plays to an empty room — by the time anyone
-   * scrolls down to look, it finished long ago and the figure appears to be
-   * a static picture. That is exactly what it looked like.
+   * That is the fix for the real complaint: on a clock, a fast scroller
+   * missed the sequence entirely and the honest remedies were either to
+   * slow it down (which bores everyone else) or to lock the page (which
+   * takes the reader's control away). Tied to scroll position, the sequence
+   * cannot be missed and cannot get in anyone's way.
+   *
+   * `--total` is each figure's full length; the script needs the same
+   * numbers, and they are passed to it from the markup rather than being
+   * written down twice.
    */
 
   @keyframes rise {
@@ -552,79 +661,109 @@ const CHOSEN = 3;
   }
 
   @media (min-width: 64rem) {
+    /* Every animated part of a figure runs on the shared scrubbed clock. */
+    [data-enhanced] .figure * {
+      animation-play-state: paused;
+      animation-fill-mode: both;
+      animation-timing-function: ease;
+    }
+
     /* --- 1: the directory fills, then one brand is chosen --------------- */
 
-    [data-enhanced][data-visible] .figure[data-active] .tile {
-      animation: rise 480ms both;
-      animation-delay: calc(var(--i) * 110ms);
+    [data-enhanced] .figure[data-figure='1'] .tile {
+      animation-name: rise;
+      animation-duration: 480ms;
+      animation-delay: calc((var(--i) * 110ms) - var(--elapsed, 0ms));
     }
 
-    [data-enhanced][data-visible] .figure[data-active] .tile-chosen {
-      animation:
-        rise 480ms both,
-        select 620ms 900ms both;
+    [data-enhanced] .figure[data-figure='1'] .tile-chosen {
+      animation-name: rise, select;
+      animation-duration: 480ms, 620ms;
+      animation-delay: calc(330ms - var(--elapsed, 0ms)), calc(900ms - var(--elapsed, 0ms));
     }
 
-    /* The rest step back once the choice is made. */
-    [data-enhanced][data-visible] .figure[data-active] .tile:not(.tile-chosen) {
-      animation:
-        rise 480ms calc(var(--i) * 110ms) both,
-        recede 500ms 1000ms both;
+    [data-enhanced] .figure[data-figure='1'] .tile:not(.tile-chosen) {
+      animation-name: rise, recede;
+      animation-duration: 480ms, 500ms;
+      animation-delay:
+        calc((var(--i) * 110ms) - var(--elapsed, 0ms)), calc(1000ms - var(--elapsed, 0ms));
     }
 
-    [data-enhanced][data-visible] .figure[data-active] .tile-hint {
-      animation: rise 420ms 1300ms both;
+    [data-enhanced] .figure[data-figure='1'] .tile-hint {
+      animation-name: rise;
+      animation-duration: 420ms;
+      animation-delay: calc(1300ms - var(--elapsed, 0ms));
     }
 
     /* --- 2: the address types, is copied, then lands in the field ------- */
 
-    [data-enhanced][data-visible] .figure[data-active] .bar-address {
-      animation:
-        rise 460ms both,
-        flash 700ms 1500ms both;
+    [data-enhanced] .figure[data-figure='2'] .bar-address {
+      animation-name: rise, flash;
+      animation-duration: 460ms, 700ms;
+      animation-delay: calc(0ms - var(--elapsed, 0ms)), calc(1500ms - var(--elapsed, 0ms));
     }
 
-    [data-enhanced][data-visible] .figure[data-active] .url {
-      animation: type 1100ms 320ms steps(26, end) both;
+    [data-enhanced] .figure[data-figure='2'] .url {
+      animation-name: type;
+      animation-duration: 1100ms;
+      animation-timing-function: steps(26, end);
+      animation-delay: calc(320ms - var(--elapsed, 0ms));
     }
 
-    [data-enhanced][data-visible] .figure[data-active] .flag-copied {
-      animation: pop 340ms 1600ms both, rise 400ms 2300ms reverse both;
+    [data-enhanced] .figure[data-figure='2'] .flag-copied {
+      animation-name: pop, rise;
+      animation-duration: 340ms, 400ms;
+      animation-direction: normal, reverse;
+      animation-delay: calc(1600ms - var(--elapsed, 0ms)), calc(2300ms - var(--elapsed, 0ms));
     }
 
-    [data-enhanced][data-visible] .figure[data-active] .bar-paste {
-      animation: rise 460ms 2100ms both;
+    [data-enhanced] .figure[data-figure='2'] .bar-paste {
+      animation-name: rise;
+      animation-duration: 460ms;
+      animation-delay: calc(2100ms - var(--elapsed, 0ms));
     }
 
-    [data-enhanced][data-visible] .figure[data-active] .caret {
-      animation:
-        rise 220ms 2100ms both,
-        blink 280ms 2300ms steps(1) 3;
+    [data-enhanced] .figure[data-figure='2'] .caret {
+      animation-name: rise, blink;
+      animation-duration: 220ms, 280ms;
+      animation-iteration-count: 1, 3;
+      animation-timing-function: ease, steps(1);
+      animation-delay: calc(2100ms - var(--elapsed, 0ms)), calc(2300ms - var(--elapsed, 0ms));
     }
 
-    [data-enhanced][data-visible] .figure[data-active] .chip {
-      animation: pop 400ms 2900ms both;
+    [data-enhanced] .figure[data-figure='2'] .chip {
+      animation-name: pop;
+      animation-duration: 400ms;
+      animation-delay: calc(2900ms - var(--elapsed, 0ms));
     }
 
     /* --- 3: the question, the answer, then the reference resolves ------- */
 
-    [data-enhanced][data-visible] .figure[data-active] .bubble {
-      animation: rise 460ms both;
+    [data-enhanced] .figure[data-figure='3'] .bubble {
+      animation-name: rise;
+      animation-duration: 460ms;
+      animation-delay: calc(0ms - var(--elapsed, 0ms));
     }
 
-    [data-enhanced][data-visible] .figure[data-active] .answer {
-      animation: rise 460ms 600ms both;
+    [data-enhanced] .figure[data-figure='3'] .answer {
+      animation-name: rise;
+      animation-duration: 460ms;
+      animation-delay: calc(600ms - var(--elapsed, 0ms));
     }
 
-    [data-enhanced][data-visible] .figure[data-active] .typed {
-      animation: fill 900ms 1000ms both;
+    [data-enhanced] .figure[data-figure='3'] .typed {
+      animation-name: fill;
+      animation-duration: 900ms;
+      animation-delay: calc(1000ms - var(--elapsed, 0ms));
     }
 
-    [data-enhanced][data-visible] .figure[data-active] .receipt {
-      animation: rise 480ms 2000ms both;
+    [data-enhanced] .figure[data-figure='3'] .receipt {
+      animation-name: rise;
+      animation-duration: 480ms;
+      animation-delay: calc(2000ms - var(--elapsed, 0ms));
     }
 
-    [data-enhanced][data-visible] .figure[data-active] .receipt::before {
+    [data-enhanced] .figure[data-figure='3'] .receipt::before {
       content: '';
       display: block;
       position: relative;
@@ -633,21 +772,27 @@ const CHOSEN = 3;
       margin-bottom: -2px;
       background-color: var(--color-gold);
       transform-origin: left;
-      animation: sweep 700ms 2200ms both;
+      animation-name: sweep;
+      animation-duration: 700ms;
+      animation-delay: calc(2200ms - var(--elapsed, 0ms));
     }
 
-    [data-enhanced][data-visible] .figure[data-active] .reference {
-      animation: rise 440ms 2500ms both;
+    [data-enhanced] .figure[data-figure='3'] .reference {
+      animation-name: rise;
+      animation-duration: 440ms;
+      animation-delay: calc(2500ms - var(--elapsed, 0ms));
     }
 
-    /* The five characters of the reference arrive one at a time. */
-    [data-enhanced][data-visible] .figure[data-active] .mask {
-      animation: pop 300ms both;
-      animation-delay: calc(2800ms + (var(--i) * 130ms));
+    [data-enhanced] .figure[data-figure='3'] .mask {
+      animation-name: pop;
+      animation-duration: 300ms;
+      animation-delay: calc((2800ms + (var(--i) * 130ms)) - var(--elapsed, 0ms));
     }
 
-    [data-enhanced][data-visible] .figure[data-active] .promise {
-      animation: rise 440ms 3500ms both;
+    [data-enhanced] .figure[data-figure='3'] .promise {
+      animation-name: rise;
+      animation-duration: 440ms;
+      animation-delay: calc(3500ms - var(--elapsed, 0ms));
     }
   }
 
@@ -677,25 +822,39 @@ const CHOSEN = 3;
 
 <script>
   /*
-   * One observer, three sentinels, no scroll listener: whichever sentinel is
-   * crossing the middle of the viewport decides the active step.
+   * The sequence is scrubbed by the scroll rather than played on a clock.
    *
-   * Everything it touches is presentational — `data-active` attributes and a
-   * width — so if this never runs, the section is still the three-column
-   * list it is without JavaScript.
+   * One passive scroll listener, read inside a rAF, works out two things:
+   * which step the reader is on, and how far through that step they are.
+   * The second becomes `--elapsed` on the active figure, and because every
+   * animation in the figure is paused with `--elapsed` subtracted from its
+   * delay, the figure renders exactly that frame of its sequence.
+   *
+   * The reader therefore sets the pace. Scroll slowly and every beat is
+   * visible; scroll quickly and it all happens quickly, but it still
+   * happens in front of you. Nothing is ever blocked or hijacked, which the
+   * earlier attempt at holding the page did do — and which cost the reader
+   * control on a page whose whole job is getting them to the enquiry form.
+   *
+   * Without JavaScript, or below `lg`, none of this exists: the section is
+   * a plain three-column list.
    */
   const stage = document.querySelector<HTMLElement>('[data-stage]');
   const sentinels = stage?.querySelectorAll<HTMLElement>('[data-sentinel]');
 
-  if (stage && sentinels?.length && 'IntersectionObserver' in window) {
+  if (stage && sentinels?.length) {
     const steps = stage.querySelectorAll<HTMLElement>('[data-step]');
     const figures = stage.querySelectorAll<HTMLElement>('[data-figure]');
     const numbers = stage.querySelectorAll<HTMLElement>('[data-number]');
     const fill = stage.querySelector<HTMLElement>('[data-fill]');
+    const track = sentinels[0]?.parentElement;
 
     // Only now does the CSS switch to the sticky stage, so anything failing
     // above this line leaves the plain list rather than a broken half-state.
     stage.dataset.enhanced = '';
+
+    const desktop = window.matchMedia('(min-width: 64rem)');
+    const stillness = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     let current = 0;
 
@@ -712,43 +871,53 @@ const CHOSEN = 3;
       mark(steps, 'step', step);
       mark(figures, 'figure', step);
       mark(numbers, 'number', step);
-      if (fill) fill.style.width = `${(step / steps.length) * 100}%`;
     };
 
-    show(1);
+    /** Where the reader is, as a fraction of the whole three-step track. */
+    const progress = () => {
+      const height = track?.offsetHeight ?? 0;
+      if (height <= 0) return 0;
+      const top = stage.getBoundingClientRect().top + window.scrollY;
+      return Math.min(Math.max((window.scrollY - top) / height, 0), 1);
+    };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const step = Number((entry.target as HTMLElement).dataset.sentinel);
-          if (step) show(step);
-        }
-      },
-      /*
-       * A line across the top of the viewport, not the middle. The sentinels
-       * tile the sticky range, so the one crossing the top edge is exactly
-       * as far through the sequence as the reader is. Using the middle put
-       * the steps half a screen out of phase — step 2 was showing before the
-       * panel had finished arriving.
-       */
-      { rootMargin: '0px 0px -100% 0px', threshold: 0 },
-    );
+    const render = () => {
+      const overall = progress();
+      const step = Math.min(Math.floor(overall * steps.length) + 1, steps.length);
+      show(step);
 
-    for (const sentinel of sentinels) observer.observe(sentinel);
+      // How far through this step alone, 0 to 1.
+      const within = Math.min(Math.max(overall * steps.length - (step - 1), 0), 1);
 
-    /*
-     * Whether the section is on screen at all. The figures' own animations
-     * are gated on this, so step one plays when the reader arrives rather
-     * than while the page is still at the top — and plays again if they
-     * scroll away and come back.
-     */
-    new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) stage.dataset.visible = '';
-        else delete stage.dataset.visible;
-      },
-      { threshold: 0 },
-    ).observe(stage);
+      const figure = figures[step - 1];
+      if (figure) {
+        const length = Number(figure.dataset.length ?? 0);
+        /*
+         * Reduced motion gets the finished frame and nothing in between:
+         * the information is all there, none of it moves.
+         */
+        const elapsed = stillness.matches ? length : within * length;
+        figure.style.setProperty('--elapsed', `${Math.round(elapsed)}ms`);
+      }
+
+      // The rail fills continuously rather than in thirds, so it reads as a
+      // position in the sequence rather than a counter.
+      if (fill) fill.style.width = `${Math.max(overall, 0.02) * 100}%`;
+    };
+
+    let queued = false;
+    const onScroll = () => {
+      if (queued || !desktop.matches) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        render();
+      });
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    desktop.addEventListener('change', render);
+    render();
   }
 </script>
