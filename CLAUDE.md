@@ -509,7 +509,8 @@ Track these; do not guess answers.
 - [ ] WhatsApp Business number
 - [ ] Opening hours for the footer (the response promise is fixed at 24 hours)
 - [ ] Confirmed list of served European countries for the selector
-- [ ] Company registration details and VAT number
+- [x] Trading name — **Princes Electronics**
+- [ ] Registered company name, company registration number and VAT number
 - [ ] Privacy policy covering both UK and EU GDPR — client supplying, or in scope?
 - [ ] Domain, registrar access, and **existing MX records** (changing DNS carelessly will break their email)
 - [ ] Analytics preference confirmed as cookieless

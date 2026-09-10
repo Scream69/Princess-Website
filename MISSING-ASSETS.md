@@ -131,16 +131,16 @@ All in `src/data/copy.json` and `src/data/site.json`.
       accreditations. Each is a sentence the page would be stronger for, and
       each is a business fact that has to come from the client rather than be
       inferred. Send them and they go straight into `copy.home.about`.
-- [ ] **Trading name.** Now the last placeholder visible on the home page: it
-      is the nav, the footer and the copyright line. `info@princeselectronics.com`
-      implies it, but a name on a legal footer is stated by the business, not
-      guessed from a domain.
+- [x] **Trading name — Princes Electronics**, confirmed 2026-09-10. It lives
+      in `site.json` alone: page titles append it in `Base.astro` and the
+      footer byline resolves to it, so copy.json never spells it out and a
+      change of name stays a one-line change.
 - [ ] Footer note (e.g. an authorised-dealer statement)
 - [ ] Title tag and meta description for `/` and `/order`
-- [ ] Trading name and registered company name. The enquiry address is
-      `info@princeselectronics.com`, but the trading name has not been
-      confirmed in writing and is **not** inferred from the domain — it stays
-      `[AWAITING COPY]` until the client states it.
+- [ ] **Registered company name** — a different thing from the trading name,
+      and the one that belongs on a legal footer. Until it lands, the
+      copyright line falls back to "Princes Electronics", which says nothing
+      untrue, while the Company block keeps its markers.
 
 The fixed 24-hour response promise is written and lives in `site.json`
 (`responsePromise`). It is a flat string and is never computed from the
