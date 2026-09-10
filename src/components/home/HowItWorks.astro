@@ -47,7 +47,7 @@ const CHOSEN = 3;
       <p class="mt-4 max-w-content text-ink-muted">{howItWorks.intro}</p>
     </header>
 
-    <div class="stage mt-14" data-stage>
+    <div class="stage mt-10" data-stage>
       {/* Sentinels: something for the observer to cross. They add no height
           of their own — the track's height comes from the CSS. */}
       <div class="sentinels" aria-hidden="true">
@@ -79,7 +79,10 @@ const CHOSEN = 3;
               <div class="tiles">
                 {
                   tiles.map((brand, index) => (
-                    <div class:list={['tile', index === CHOSEN && 'tile-chosen']}>
+                    <div
+                      class:list={['tile', index === CHOSEN && 'tile-chosen']}
+                      style={`--i:${index}`}
+                    >
                       <span>{brand.name}</span>
                       {index === CHOSEN && <em class="tile-hint">{figures.brandHint}</em>}
                     </div>
@@ -90,7 +93,7 @@ const CHOSEN = 3;
 
             <div class="figure" data-figure="2">
               <p class="figure-label">{figures.addressLabel}</p>
-              <div class="bar">
+              <div class="bar bar-address">
                 <span class="dot"></span>
                 <span class="url">
                   {tiles[CHOSEN]?.url.replace('https://', '')}<span class="path"
@@ -100,7 +103,7 @@ const CHOSEN = 3;
               </div>
 
               <p class="figure-label mt-6">{figures.pasteLabel}</p>
-              <div class="bar">
+              <div class="bar bar-paste">
                 <span class="caret"></span>
                 <span class="chip">{figures.recognised}</span>
               </div>
@@ -194,11 +197,16 @@ const CHOSEN = 3;
 
     [data-enhanced] .viewport {
       position: sticky;
-      /* Clear the fixed nav, then centre the stage in what is left. */
+      /* Clear the fixed nav. */
       top: 6rem;
       display: grid;
-      align-content: center;
-      min-height: calc(100vh - 10rem);
+      /*
+       * Packed to the top, not centred. Centring in a box this tall left a
+       * third of a screen of white between the section heading and step one
+       * before the panel had stuck to anything.
+       */
+      align-content: start;
+      min-height: calc(100vh - 11rem);
     }
 
     /* The three texts share one cell and cross-fade. */
@@ -243,6 +251,8 @@ const CHOSEN = 3;
 
     [data-enhanced] .rail {
       display: block;
+      /* Bottom of the sticky box, not trailing the content. */
+      align-self: end;
       margin-top: 3.5rem;
     }
   }
@@ -411,6 +421,124 @@ const CHOSEN = 3;
     color: var(--color-ink);
   }
 
+  /* --- each figure plays its step ---------------------------------------
+   *
+   * The animations hang off `[data-active]`, so they restart every time a
+   * step is scrolled back to: removing the attribute cancels them, adding it
+   * runs them again. Only opacity and transform, so none of it costs layout.
+   */
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+  }
+
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.94);
+    }
+  }
+
+  @keyframes select {
+    from {
+      border-color: var(--color-line);
+      transform: none;
+    }
+  }
+
+  @keyframes sweep {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    /* 1 — the tiles land one after another, then one is chosen. */
+    [data-enhanced] .figure[data-active] .tile {
+      animation: rise 420ms both;
+      animation-delay: calc(var(--i) * 70ms);
+    }
+
+    [data-enhanced] .figure[data-active] .tile-chosen {
+      animation:
+        rise 420ms both,
+        select 500ms 620ms both;
+    }
+
+    [data-enhanced] .figure[data-active] .tile-hint {
+      animation: rise 400ms 900ms both;
+    }
+
+    /* 2 — the address arrives, then the paste is recognised. */
+    [data-enhanced] .figure[data-active] .bar-address {
+      animation: rise 420ms both;
+    }
+
+    [data-enhanced] .figure[data-active] .url {
+      display: inline-block;
+      animation: rise 500ms 180ms both;
+    }
+
+    [data-enhanced] .figure[data-active] .bar-paste {
+      animation: rise 420ms 620ms both;
+    }
+
+    [data-enhanced] .figure[data-active] .caret {
+      animation:
+        rise 200ms 620ms both,
+        /* Two blinks, finishing as the chip lands — a caret still blinking
+           beside "Link recognised" reads as though nothing happened. */
+        blink 260ms 640ms steps(1) 2;
+    }
+
+    [data-enhanced] .figure[data-active] .chip {
+      animation: pop 380ms 1150ms both;
+    }
+
+    /* 3 — the question, the answer, then the reference. */
+    [data-enhanced] .figure[data-active] .bubble {
+      animation: rise 420ms both;
+    }
+
+    [data-enhanced] .figure[data-active] .answer {
+      animation: rise 420ms 400ms both;
+    }
+
+    [data-enhanced] .figure[data-active] .receipt {
+      animation: rise 460ms 780ms both;
+    }
+
+    [data-enhanced] .figure[data-active] .receipt::before {
+      content: '';
+      display: block;
+      height: 2px;
+      margin-bottom: -2px;
+      /* Redraws the gold rule left to right as the receipt arrives. */
+      background-color: var(--color-gold);
+      transform-origin: left;
+      animation: sweep 600ms 900ms both;
+      position: relative;
+      top: -1rem;
+    }
+
+    [data-enhanced] .figure[data-active] .reference {
+      animation: rise 420ms 1050ms both;
+    }
+  }
+
+  /*
+   * Reduced motion keeps the sequence — the steps still change as you
+   * scroll — but nothing moves or replays on its own.
+   */
   @media (prefers-reduced-motion: reduce) {
     .step,
     .figure,
@@ -422,6 +550,11 @@ const CHOSEN = 3;
     .step,
     .figure {
       transform: none !important;
+    }
+
+    .figure *,
+    .figure {
+      animation: none !important;
     }
   }
 </style>
