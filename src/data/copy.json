@@ -20,10 +20,16 @@
     "title": "Appliance, TV and audio quotes by email",
     "description": "Choose any appliance, television or audio product on the manufacturer’s own website, send us the model, and we will email you a price within 24 hours.",
     "hero": {
-      "headline": "Find it anywhere. Buy it through us.",
-      "supporting": "Kitchen appliances, laundry, televisions and audio — Miele, Smeg, Sony, LG and dozens more, every one of them priced by hand.",
+      "eyebrow": "Every major brand, at speed",
+      "headline": "Fast delivery isn't an upgrade. It's our standard.",
+      "supporting": "Kitchen appliances, laundry, televisions and audio — Miele, Smeg, Sony, LG and dozens more.",
       "process": "Choose your appliance on the manufacturer's website, send us the model number, and we will email you a quote within 24 hours.",
-      "cta": "See how it works"
+      "cta": "See how it works",
+      "facts": {
+        "brands": "brands we can quote",
+        "group": "Euronics",
+        "groupLabel": "buying group member"
+      }
     },
     "howItWorks": {
       "heading": "How it works",

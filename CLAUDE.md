@@ -399,7 +399,11 @@ Target: generous white space, one restrained accent colour, confident typography
 Avoid: gradients, everything-rounded, drop shadows on cards, more than one accent colour, emoji in UI copy, exclamation marks.
 
 ### 9.2 Tokens
-All in the `@theme` block at the top of `src/styles/global.css` — Tailwind 4 is configured in CSS, not in a JS config file. No arbitrary hex values in components, no magic numbers — add a token instead. Await the client's brand colours; until then use a documented neutral palette with a single accent and note it in `MISSING-ASSETS.md`.
+All in the `@theme` block at the top of `src/styles/global.css` — Tailwind 4 is configured in CSS, not in a JS config file. No arbitrary hex values in components, no magic numbers — add a token instead.
+
+**Brand colours supplied 2026-09-10: blue, white and gold.** Deep navy rather than a bright blue, antique gold rather than a bright one — the muting is what separates this from the navy-and-yellow volume retail the client's own reference uses.
+
+Gold is a documented exception to "one accent only" below. It is decoration, never an action: a hairline, a rule, a numeral. Two gold tokens exist because one cannot do both jobs — `--color-gold` is 3:1 and may only draw lines, `--color-gold-ink` is 4.6:1 and is the only gold a customer ever reads. `src/styles/tokens.test.ts` enforces both, and fails the build if either drifts.
 
 ### 9.3 Type
 One family, or a serif for headings paired with a clean sans for body if the brand allows. Self-host the fonts (`woff2`, `font-display: swap`) — no Google Fonts CDN, since that carries a GDPR data-transfer question.
@@ -503,7 +507,8 @@ Track these; do not guess answers.
 - [ ] Access to the Euronics brand asset pack (logos)
 - [ ] Positioning: premium specialist or general electricals (`MISSING-ASSETS.md` 1.2)
 - [ ] Logo files (vector) for the client and for each manufacturer
-- [ ] Brand colours, fonts, and any guidelines
+- [x] Brand colours — **blue, white and gold**
+- [ ] Fonts and any brand guidelines
 - [ ] Home page copy: hero, about, how-it-works
 - [x] Enquiry destination email address — `info@princeselectronics.com`
 - [ ] WhatsApp Business number

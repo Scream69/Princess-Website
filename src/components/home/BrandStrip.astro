@@ -22,7 +22,10 @@ const { brands } = copy.home;
 
 <section id="brands" class="mx-auto max-w-page px-gutter py-section">
   <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-    <h2 class="font-serif text-heading text-ink">{brands.heading}</h2>
+    <div>
+      <span aria-hidden="true" class="mb-5 block h-0.5 w-10 bg-gold"></span>
+      <h2 class="font-serif text-heading text-ink">{brands.heading}</h2>
+    </div>
     <a
       href={site.cta.href}
       class="inline-flex min-h-touch items-center text-sm text-accent underline underline-offset-4"

@@ -1,37 +1,65 @@
 ---
+import { brands as allBrands } from '../../data/brands';
 import copy from '../../data/copy.json';
 import site from '../../data/site.json';
 
 /*
  * The home page has five seconds to explain a model no other retailer uses:
  * you shop on the manufacturer's website, and we quote (CLAUDE.md 7). The
- * headline and supporting line are the client's to write — they carry
- * [AWAITING COPY] markers until then — but the process line below them is
- * real copy and does the explaining on its own, so the page is not misleading
- * while the rest is outstanding.
+ * headline carries the client's promise, and the process line under it does
+ * the explaining, so nobody has to infer how this works from a slogan.
+ *
+ * The right-hand column exists because a left-aligned hero leaves half the
+ * screen empty at desktop width. Both figures in it are facts already on
+ * record — the brand count is derived from brands.json so it cannot drift,
+ * and Euronics membership is confirmed — and the promise beneath them comes
+ * from site.json, never computed (CLAUDE.md 8.5).
  */
 const { hero } = copy.home;
 ---
 
-<section class="mx-auto max-w-page px-gutter pt-section pb-section">
-  <h1 class="max-w-content font-serif text-display text-ink">{hero.headline}</h1>
+<section
+  class="mx-auto grid max-w-page gap-12 px-gutter pt-section pb-section lg:grid-cols-[1fr_16rem] lg:gap-16"
+>
+  <div>
+    {/* The tagline, sized as a kicker rather than a second headline. Gold-ink
+        rather than gold: this is read, not just seen. */}
+    <p class="text-sm font-medium tracking-[0.14em] text-gold-ink uppercase">{hero.eyebrow}</p>
 
-  <p class="mt-6 max-w-content text-lg text-ink-muted">{hero.supporting}</p>
+    <h1 class="mt-5 max-w-content font-serif text-display text-ink">{hero.headline}</h1>
 
-  <p class="mt-8 max-w-content border-l-2 border-accent pl-4 text-ink">{hero.process}</p>
+    <p class="mt-6 max-w-content text-lg text-ink-muted">{hero.supporting}</p>
 
-  <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
-    <a
-      href={site.cta.href}
-      class="inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
-    >
-      {site.cta.label}
-    </a>
-    <a
-      href="#how-it-works"
-      class="inline-flex min-h-touch items-center text-sm text-accent underline underline-offset-4"
-    >
-      {hero.cta} &#8595;
-    </a>
+    <p class="mt-8 max-w-content border-l-2 border-gold pl-4 text-ink">{hero.process}</p>
+
+    <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
+      <a
+        href={site.cta.href}
+        class="inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+      >
+        {site.cta.label}
+      </a>
+      <a
+        href="#how-it-works"
+        class="inline-flex min-h-touch items-center text-sm text-accent underline underline-offset-4"
+      >
+        {hero.cta} &#8595;
+      </a>
+    </div>
   </div>
+
+  <aside class="lg:pt-2">
+    <dl class="m-0">
+      <div class="border-t-2 border-gold pt-4">
+        <dt class="font-serif text-display-sm text-ink">{allBrands.length}</dt>
+        <dd class="m-0 text-sm text-ink-muted">{hero.facts.brands}</dd>
+      </div>
+      <div class="mt-8 border-t-2 border-gold pt-4">
+        <dt class="font-serif text-2xl text-ink">{hero.facts.group}</dt>
+        <dd class="m-0 text-sm text-ink-muted">{hero.facts.groupLabel}</dd>
+      </div>
+    </dl>
+
+    <p class="mt-8 border-t border-line pt-4 text-sm text-ink-muted">{site.responsePromise}</p>
+  </aside>
 </section>

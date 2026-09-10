@@ -40,7 +40,7 @@ const CANVAS = 'canvas';
 const SURFACE = 'surface';
 
 /** Every colour used for text, against both backgrounds it can sit on. */
-const TEXT: string[] = ['ink', 'ink-muted', 'ink-subtle', 'accent', 'error'];
+const TEXT: string[] = ['ink', 'ink-muted', 'ink-subtle', 'accent', 'error', 'gold-ink'];
 
 for (const name of TEXT) {
   test(`${name} text meets AA on both backgrounds`, () => {
@@ -77,6 +77,25 @@ test('input borders meet the 3:1 minimum for UI components', () => {
       `line-strong on ${background} is ${ratio.toFixed(2)}:1, below the 3:1 minimum`,
     );
   }
+});
+
+/*
+ * Gold comes in two weights on purpose. The light one cannot carry text at
+ * any size — it is 3:1, which is a rule or a border and nothing else — so
+ * this pins the distinction rather than trusting everyone to remember it.
+ */
+test('the decorative gold is strong enough to be seen as a line', () => {
+  for (const background of [CANVAS, SURFACE]) {
+    const ratio = contrast(token('gold'), token(background));
+    assert.ok(ratio >= 3, `gold on ${background} is ${ratio.toFixed(2)}:1`);
+  }
+});
+
+test('the decorative gold is never mistaken for a text colour', () => {
+  assert.ok(
+    contrast(token('gold'), token(SURFACE)) < 4.5,
+    'gold now passes as text — if that is deliberate, fold it into gold-ink and delete one of them',
+  );
 });
 
 test('the focus ring is visible against every background it lands on', () => {

@@ -97,10 +97,15 @@ this is verified in `npm test`.
 ## 2. Brand and design
 
 - [ ] Client logo, vector, for the nav and footer
-- [ ] Brand colours. **Placeholder palette in use** — a neutral warm-grey set
-      with a single deep-green accent (`--color-accent: #2f4a3f`), defined in
-      `src/styles/global.css`. All text pairings meet WCAG AA. Chosen to read
-      as premium rather than volume retail; replace once brand colours land.
+- [x] Brand colours — **blue, white and gold**, supplied 2026-09-10 and in
+      `src/styles/global.css`. Deep navy `#123a75` carries every action;
+      antique gold appears only as a rule, a hairline or a numeral, never as
+      a button. Every pairing meets WCAG AA and is enforced by
+      `src/styles/tokens.test.ts`.
+      - [ ] Worth confirming with the client: exact hex values, if they have
+            them from anything printed. These were chosen to sit in the
+            blue/white/gold brief while passing contrast — a bright gold
+            cannot carry text at all, which is why there are two.
 - [ ] Typefaces. The token stacks reference `PrincessSans` / `PrincessSerif`
       and fall back to system faces, so nothing shifts once the real files
       arrive. Fonts must be **self-hosted `woff2`** with `font-display: swap`

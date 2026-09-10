@@ -7,29 +7,43 @@
  * CLAUDE.md 9.2 and the note in MISSING-ASSETS.md). The rule is unchanged:
  * no arbitrary hex values or magic numbers in components — add a token here.
  *
- * PLACEHOLDER PALETTE. The client's brand colours have not been supplied.
- * These are a deliberately restrained neutral set with a single accent,
- * chosen to read as premium rather than volume retail (CLAUDE.md 9.1).
- * All pairings used for text meet WCAG AA (4.5:1) on their backgrounds.
+ * BRAND PALETTE — blue, white and gold, supplied by the client 2026-09-10.
+ *
+ * Deep navy rather than a bright blue, and an antique gold rather than a
+ * bright one: the reference the client gave for the *category* is navy-and-
+ * yellow volume retail, and CLAUDE.md 9.1 says to take its structure and
+ * reject its aesthetic. Muting both is what separates the two.
+ *
+ * Gold is the one place this departs from "a single accent" (9.1). It earns
+ * its place only as a hairline, a rule or a numeral — never as a filled
+ * button, never competing with blue for an action. Two golds exist because
+ * one cannot do both jobs: the light one is legible as a *line* but not as
+ * text, so anything a customer has to read uses `gold-ink`.
+ *
+ * Every pairing below is enforced by src/styles/tokens.test.ts.
  */
 @theme {
-  /* Neutrals — warm-tinted greys, not pure black or blue-grey */
-  --color-ink: #17191c; /* body text, headings        — 16.4:1 on canvas */
-  --color-ink-muted: #5c6167; /* secondary text       —  5.9:1 on canvas */
-  --color-ink-subtle: #6f747a; /* meta text, captions —  4.5:1, AA for text */
-  --color-canvas: #fbfaf8; /* page background */
+  /* Neutrals — cool, tinted towards the blue rather than neutral grey */
+  --color-ink: #0f1b2d; /* body text, headings        — 16.4:1 on canvas */
+  --color-ink-muted: #4a5a72; /* secondary text       —  6.6:1 on canvas */
+  --color-ink-subtle: #66738a; /* meta text, captions —  4.5:1, AA for text */
+  --color-canvas: #f7f9fc; /* page background */
   --color-surface: #ffffff; /* cards, brand tiles */
-  --color-line: #e4e1dc; /* 1px borders — subtle, no shadows */
-  --color-line-strong: #8f8b83; /* input borders — 3.3:1, AA for UI components */
+  --color-line: #e3e8f0; /* 1px borders — subtle, no shadows */
+  --color-line-strong: #828b9d; /* input borders — 3.3:1, AA for UI components */
 
-  /* Single accent — deep green. One accent only (CLAUDE.md 9.1). */
-  --color-accent: #2f4a3f; /*                          — 9.1:1 on canvas */
-  --color-accent-hover: #24382f;
-  --color-accent-contrast: #ffffff; /* text on accent   — 9.1:1 */
+  /* Blue — the accent that carries every action */
+  --color-accent: #123a75; /*                          — 10.6:1 on canvas */
+  --color-accent-hover: #0d2b58;
+  --color-accent-contrast: #ffffff; /* text on accent  — 11.1:1 */
+
+  /* Gold — decoration only. `gold` draws lines, `gold-ink` is for reading. */
+  --color-gold: #b8860b; /* rules and marks            —  3.1:1, UI only */
+  --color-gold-ink: #8c6d1f; /* gold text              —  4.6:1, AA for text */
 
   /* Feedback — used only for form validation, never decoration */
-  --color-error: #a3282d; /*                            — 6.1:1 on canvas */
-  --color-success: #2f4a3f;
+  --color-error: #a3282d; /*                            — 6.9:1 on canvas */
+  --color-success: #123a75;
 
   /* Type — self-hosted only, no Google Fonts CDN (CLAUDE.md 9.3).
      Font files not yet supplied; the stacks below fall back to system
@@ -43,6 +57,8 @@
   --text-display: clamp(2.25rem, 1.5rem + 3.2vw, 3.75rem);
   --text-display--line-height: 1.08;
   --text-display--letter-spacing: -0.02em;
+  --text-display-sm: clamp(2rem, 1.6rem + 1.6vw, 2.75rem);
+  --text-display-sm--line-height: 1.1;
   --text-heading: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
   --text-heading--line-height: 1.2;
   --text-heading--letter-spacing: -0.01em;
