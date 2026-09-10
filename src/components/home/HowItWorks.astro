@@ -41,21 +41,27 @@ const CHOSEN = 3;
 
 <section id="how-it-works" class="border-y border-line bg-surface">
   <div class="mx-auto max-w-page px-gutter py-section">
-    <header>
-      <span aria-hidden="true" class="mb-5 block h-0.5 w-10 bg-gold"></span>
-      <h2 class="max-w-content font-serif text-heading text-ink">{howItWorks.heading}</h2>
-      <p class="mt-4 max-w-content text-ink-muted">{howItWorks.intro}</p>
-    </header>
-
-    <div class="stage mt-10" data-stage>
+    <div class="stage" data-stage>
       {/* Sentinels: something for the observer to cross. They add no height
           of their own — the track's height comes from the CSS. */}
       <div class="sentinels" aria-hidden="true">
         {process.steps.map((_step, index) => <div data-sentinel={index + 1} />)}
       </div>
 
+      {/*
+        Everything is inside the sticky panel: the heading above, the button
+        below, and only the band between them changes. Previously the heading
+        scrolled away and the button slid up into view part-way through the
+        sequence — the section has to hold still and let its middle move.
+      */}
       <div class="viewport">
-        <div class="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
+        <header class="band-head">
+          <span aria-hidden="true" class="mb-5 block h-0.5 w-10 bg-gold"></span>
+          <h2 class="max-w-content font-serif text-heading text-ink">{howItWorks.heading}</h2>
+          <p class="mt-4 max-w-content text-ink-muted">{howItWorks.intro}</p>
+        </header>
+
+        <div class="band grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
           <ol class="steps m-0 list-none p-0">
             {
               process.steps.map((step, index) => (
@@ -131,15 +137,15 @@ const CHOSEN = 3;
             {process.steps.map((_step, index) => <span data-number={index + 1}>0{index + 1}</span>)}
           </div>
         </div>
+
+        <a
+          href={site.cta.href}
+          class="cta mt-10 inline-flex min-h-touch items-center justify-self-start rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+        >
+          {howItWorks.cta}
+        </a>
       </div>
     </div>
-
-    <a
-      href={site.cta.href}
-      class="mt-10 inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
-    >
-      {howItWorks.cta}
-    </a>
   </div>
 </section>
 
@@ -167,18 +173,17 @@ const CHOSEN = 3;
 
   @media (min-width: 64rem) {
     /*
-     * The panel is a fixed 24rem, not a screen tall. A full-height panel put
-     * a third of a screen of white above the step and another below the
-     * rail, and made the section read as though the animation *was* the
-     * section rather than a band inside it.
-     *
-     * Everything below depends on that number: the track is the panel plus
-     * three steps' worth of scrolling, and the sentinels stop one panel
-     * short of the bottom, which is where the panel releases.
+     * `--panel` is the height of the whole composition — heading, band, rail
+     * and button — because all of it is sticky now. Everything else derives
+     * from it: the track is the panel plus three steps' worth of scrolling,
+     * and the sentinels stop one panel short of the bottom, which is where
+     * the panel releases.
      */
     [data-enhanced].stage {
-      --panel: 24rem;
-      --step-scroll: 26vh;
+      --panel: 37rem;
+      /* Scroll distance per step. Much less than this and the three steps
+         flick past in a single flick of a trackpad. */
+      --step-scroll: 38vh;
 
       position: relative;
       min-height: calc(var(--panel) + (var(--step-scroll) * 3));
@@ -196,7 +201,10 @@ const CHOSEN = 3;
       top: 0;
       right: 0;
       left: 0;
-      bottom: var(--panel);
+      /* The panel plus the offset it sticks at: that sum is where it lets
+         go, and the sentinels must not run past it or the last step
+         activates after the panel has left. */
+      bottom: calc(var(--panel) + 5.5rem);
     }
 
     [data-enhanced] .sentinels > div {
@@ -206,16 +214,30 @@ const CHOSEN = 3;
     [data-enhanced] .viewport {
       position: sticky;
       /* Clear the fixed nav. */
-      top: 7rem;
+      top: 5.5rem;
       display: grid;
       align-content: start;
       min-height: var(--panel);
+    }
+
+    /* The two fixed ends of the composition. Neither moves while the band
+       between them cycles. */
+    [data-enhanced] .band-head {
+      margin-bottom: 3rem;
+    }
+
+    [data-enhanced] .cta {
+      align-self: end;
     }
 
     /* The three texts share one cell and cross-fade. */
     [data-enhanced] .steps {
       grid-template-columns: 1fr;
       gap: 0;
+    }
+
+    [data-enhanced] .band {
+      min-height: 13rem;
     }
 
     [data-enhanced] .step {
@@ -234,7 +256,7 @@ const CHOSEN = 3;
 
     [data-enhanced] .figures {
       display: grid;
-      min-height: 15rem;
+      min-height: 13rem;
     }
 
     [data-enhanced] .figure {
