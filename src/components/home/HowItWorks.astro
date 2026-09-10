@@ -136,7 +136,7 @@ const CHOSEN = 3;
 
     <a
       href={site.cta.href}
-      class="mt-14 inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+      class="mt-10 inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
     >
       {howItWorks.cta}
     </a>
@@ -166,14 +166,22 @@ const CHOSEN = 3;
   /* --- the scroll sequence ---------------------------------------------- */
 
   @media (min-width: 64rem) {
+    /*
+     * The panel is a fixed 24rem, not a screen tall. A full-height panel put
+     * a third of a screen of white above the step and another below the
+     * rail, and made the section read as though the animation *was* the
+     * section rather than a band inside it.
+     *
+     * Everything below depends on that number: the track is the panel plus
+     * three steps' worth of scrolling, and the sentinels stop one panel
+     * short of the bottom, which is where the panel releases.
+     */
     [data-enhanced].stage {
+      --panel: 24rem;
+      --step-scroll: 26vh;
+
       position: relative;
-      /*
-       * Half a screen of scrolling per step, plus one screen for the panel
-       * to arrive and leave. Longer than this and the reader spends several
-       * hundred pixels watching a panel they have already read.
-       */
-      min-height: 240vh;
+      min-height: calc(var(--panel) + (var(--step-scroll) * 3));
     }
 
     /*
@@ -188,7 +196,7 @@ const CHOSEN = 3;
       top: 0;
       right: 0;
       left: 0;
-      bottom: calc(100vh - 10rem);
+      bottom: var(--panel);
     }
 
     [data-enhanced] .sentinels > div {
@@ -198,15 +206,10 @@ const CHOSEN = 3;
     [data-enhanced] .viewport {
       position: sticky;
       /* Clear the fixed nav. */
-      top: 6rem;
+      top: 7rem;
       display: grid;
-      /*
-       * Packed to the top, not centred. Centring in a box this tall left a
-       * third of a screen of white between the section heading and step one
-       * before the panel had stuck to anything.
-       */
       align-content: start;
-      min-height: calc(100vh - 11rem);
+      min-height: var(--panel);
     }
 
     /* The three texts share one cell and cross-fade. */
@@ -231,7 +234,7 @@ const CHOSEN = 3;
 
     [data-enhanced] .figures {
       display: grid;
-      min-height: 22rem;
+      min-height: 15rem;
     }
 
     [data-enhanced] .figure {
@@ -244,16 +247,15 @@ const CHOSEN = 3;
         transform 450ms ease;
     }
 
-    [data-enhanced] .figure[data-active] {
+    [data-enhanced][data-visible] .figure[data-active] {
       opacity: 1;
       transform: none;
     }
 
     [data-enhanced] .rail {
       display: block;
-      /* Bottom of the sticky box, not trailing the content. */
       align-self: end;
-      margin-top: 3.5rem;
+      margin-top: 2.5rem;
     }
   }
 
@@ -426,12 +428,18 @@ const CHOSEN = 3;
    * The animations hang off `[data-active]`, so they restart every time a
    * step is scrolled back to: removing the attribute cancels them, adding it
    * runs them again. Only opacity and transform, so none of it costs layout.
+   *
+   * They are also gated on `[data-visible]`, which the script sets when the
+   * section reaches the screen. Without that, step one is marked active at
+   * page load and its sequence plays to an empty room — by the time anyone
+   * scrolls down to look, it finished long ago and the figure appears to be
+   * a static picture. That is exactly what it looked like.
    */
 
   @keyframes rise {
     from {
       opacity: 0;
-      transform: translateY(0.5rem);
+      transform: translateY(0.875rem);
     }
   }
 
@@ -446,6 +454,9 @@ const CHOSEN = 3;
     from {
       border-color: var(--color-line);
       transform: none;
+    }
+    60% {
+      transform: translateY(-6px);
     }
   }
 
@@ -463,36 +474,36 @@ const CHOSEN = 3;
 
   @media (min-width: 64rem) {
     /* 1 — the tiles land one after another, then one is chosen. */
-    [data-enhanced] .figure[data-active] .tile {
+    [data-enhanced][data-visible] .figure[data-active] .tile {
       animation: rise 420ms both;
       animation-delay: calc(var(--i) * 70ms);
     }
 
-    [data-enhanced] .figure[data-active] .tile-chosen {
+    [data-enhanced][data-visible] .figure[data-active] .tile-chosen {
       animation:
         rise 420ms both,
         select 500ms 620ms both;
     }
 
-    [data-enhanced] .figure[data-active] .tile-hint {
+    [data-enhanced][data-visible] .figure[data-active] .tile-hint {
       animation: rise 400ms 900ms both;
     }
 
     /* 2 — the address arrives, then the paste is recognised. */
-    [data-enhanced] .figure[data-active] .bar-address {
+    [data-enhanced][data-visible] .figure[data-active] .bar-address {
       animation: rise 420ms both;
     }
 
-    [data-enhanced] .figure[data-active] .url {
+    [data-enhanced][data-visible] .figure[data-active] .url {
       display: inline-block;
       animation: rise 500ms 180ms both;
     }
 
-    [data-enhanced] .figure[data-active] .bar-paste {
+    [data-enhanced][data-visible] .figure[data-active] .bar-paste {
       animation: rise 420ms 620ms both;
     }
 
-    [data-enhanced] .figure[data-active] .caret {
+    [data-enhanced][data-visible] .figure[data-active] .caret {
       animation:
         rise 200ms 620ms both,
         /* Two blinks, finishing as the chip lands — a caret still blinking
@@ -500,24 +511,24 @@ const CHOSEN = 3;
         blink 260ms 640ms steps(1) 2;
     }
 
-    [data-enhanced] .figure[data-active] .chip {
+    [data-enhanced][data-visible] .figure[data-active] .chip {
       animation: pop 380ms 1150ms both;
     }
 
     /* 3 — the question, the answer, then the reference. */
-    [data-enhanced] .figure[data-active] .bubble {
+    [data-enhanced][data-visible] .figure[data-active] .bubble {
       animation: rise 420ms both;
     }
 
-    [data-enhanced] .figure[data-active] .answer {
+    [data-enhanced][data-visible] .figure[data-active] .answer {
       animation: rise 420ms 400ms both;
     }
 
-    [data-enhanced] .figure[data-active] .receipt {
+    [data-enhanced][data-visible] .figure[data-active] .receipt {
       animation: rise 460ms 780ms both;
     }
 
-    [data-enhanced] .figure[data-active] .receipt::before {
+    [data-enhanced][data-visible] .figure[data-active] .receipt::before {
       content: '';
       display: block;
       height: 2px;
@@ -530,7 +541,7 @@ const CHOSEN = 3;
       top: -1rem;
     }
 
-    [data-enhanced] .figure[data-active] .reference {
+    [data-enhanced][data-visible] .figure[data-active] .reference {
       animation: rise 420ms 1050ms both;
     }
   }
@@ -620,5 +631,19 @@ const CHOSEN = 3;
     );
 
     for (const sentinel of sentinels) observer.observe(sentinel);
+
+    /*
+     * Whether the section is on screen at all. The figures' own animations
+     * are gated on this, so step one plays when the reader arrives rather
+     * than while the page is still at the top — and plays again if they
+     * scroll away and come back.
+     */
+    new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) stage.dataset.visible = '';
+        else delete stage.dataset.visible;
+      },
+      { threshold: 0 },
+    ).observe(stage);
   }
 </script>
