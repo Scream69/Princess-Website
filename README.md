@@ -61,8 +61,8 @@ Phases, per CLAUDE.md 12. Each is committed working before the next begins.
 - [x] 4. Step 2 — paste handling, parsing, tray, add-another loop
 - [x] 5. Step 3 — chat-styled details, validation (**UK-only** until served countries confirmed)
 - [x] 6. Submission, retry, queue, WhatsApp fallback, step 4 (**needs the form key and WhatsApp number** — see MISSING-ASSETS.md 4 and 5)
-- [x] 7. Home page (**hero and about copy outstanding** — rendered as [AWAITING COPY] markers)
-- [x] 8. Analytics, SEO, privacy page, 404 (**provider and domain outstanding** — both switched off until then)
+- [x] 7. Home page (**trading name outstanding** — the last placeholder on it)
+- [x] 8. Analytics, SEO, privacy page, 404 (**analytics provider and domain outstanding** — both switched off until then)
 - [x] 9. Accessibility and performance pass (**real iOS Safari and a screen-reader run still outstanding**)
 - [x] 10. Link checker, README, deployment (**hosting account and domain outstanding**)
 
