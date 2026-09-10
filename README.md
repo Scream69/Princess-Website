@@ -98,6 +98,18 @@ A rejection is not a lost enquiry: the wizard queues it, shows the customer an
 honest failure with a retry, and delivers it on their next visit once the
 cause is fixed. That is worth testing deliberately rather than discovering.
 
+**Web3Forms also sits behind Cloudflare bot protection, which challenges
+headless browsers.** A submission driven by automation gets a "Just a moment"
+challenge and a 403 even from the correct origin, while the same request from
+an ordinary browser succeeds. Nothing is wrong with the site when that
+happens. It is why `npm run test:e2e` stubs the endpoint rather than posting
+for real, and why the one genuine end-to-end check was run with the harness
+reporting an ordinary User-Agent.
+
+Verified live on 2026-09-10: enquiry `ENQ-4UVF6` submitted through
+princess-website.pages.dev, delivered, confirmation screen shown, storage
+cleared, nothing left queued.
+
 Free tier is 250 submissions a month. Leave the dashboard's Subject and Sender
 Name blank — the site sends its own per-enquiry subject carrying the reference
 and the country, and sets the sender to the customer.
