@@ -1,33 +1,49 @@
 {
+  "process": {
+    "heading": "How this works",
+    "steps": [
+      {
+        "title": "Choose the brand",
+        "detail": "Pick the manufacturer you are shopping for. Their site opens in a new tab, and this page stays open behind it."
+      },
+      {
+        "title": "Copy the appliance link",
+        "detail": "On their site, copy the link to the appliance you want, then paste it into the enquiry box."
+      },
+      {
+        "title": "Fill in your details",
+        "detail": "Your name, phone, email and where you are. Then we price it and reply."
+      }
+    ]
+  },
   "home": {
     "title": "[AWAITING COPY: home page title tag]",
     "description": "[AWAITING COPY: home page meta description, 150-160 chars]",
     "hero": {
       "headline": "[AWAITING COPY: hero headline]",
       "supporting": "[AWAITING COPY: hero supporting line]",
-      "process": "Choose your appliance on the manufacturer's website, send us the model number, and we will email you a quote within 24 hours."
+      "process": "Choose your appliance on the manufacturer's website, send us the model number, and we will email you a quote within 24 hours.",
+      "cta": "See how it works"
+    },
+    "howItWorks": {
+      "heading": "How it works",
+      "intro": "We do not sell online. You choose the exact appliance on the manufacturer’s own website, send us the model, and we come back with a price.",
+      "cta": "Start your enquiry"
+    },
+    "brands": {
+      "heading": "Brands",
+      "allBrands": "See all brands",
+      "start": "Start here"
+    },
+    "about": {
+      "heading": "About us",
+      "body": "[AWAITING COPY: about — who you are, how long you have traded, why buy through you]",
+      "credentials": "[AWAITING COPY: credentials — memberships, showroom, delivery and installation]"
     }
   },
   "order": {
     "title": "[AWAITING COPY: order page title tag]",
     "description": "[AWAITING COPY: order page meta description, 150-160 chars]",
-    "process": {
-      "heading": "How this works",
-      "steps": [
-        {
-          "title": "Choose the brand",
-          "detail": "Pick the manufacturer below. Their site opens in a new tab, and this page stays open behind it."
-        },
-        {
-          "title": "Copy the appliance link",
-          "detail": "On their site, copy the link to the appliance you want, then paste it into the box here."
-        },
-        {
-          "title": "Fill in your details",
-          "detail": "Your name, phone, email and where you are. Then we price it and reply."
-        }
-      ]
-    },
     "step1": {
       "heading": "Choose a brand",
       "intro": "Most of this happens on the manufacturer’s own website — you come back here with the link to the appliance you want.",

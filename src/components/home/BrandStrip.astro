@@ -1,0 +1,59 @@
+---
+import { featuredBrands } from '../../data/brands';
+import copy from '../../data/copy.json';
+import site from '../../data/site.json';
+
+/*
+ * Featured brands only, and every one links to `/order?brand=<slug>` rather
+ * than out to the manufacturer (CLAUDE.md 7). From the home page we want the
+ * customer entering the wizard: it records the brand, then opens the
+ * manufacturer's site itself, so the enquiry survives the trip.
+ *
+ * No logo files have been supplied, so each card carries the documented text
+ * fallback (CLAUDE.md 9.4). Nothing here states a supply relationship — the
+ * heading is a plain "Brands" and the dealer statement, if there is one, is
+ * the client's to write (MISSING-ASSETS.md 1.1).
+ *
+ * The featured six are a placeholder set, chosen only so this row is
+ * buildable; the client picks the real ones.
+ */
+const { brands } = copy.home;
+---
+
+<section id="brands" class="mx-auto max-w-page px-gutter py-section">
+  <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+    <h2 class="font-serif text-heading text-ink">{brands.heading}</h2>
+    <a href={site.cta.href} class="text-sm text-accent underline underline-offset-4">
+      {brands.allBrands} &#8594;
+    </a>
+  </div>
+
+  <ul class="mt-8 grid list-none grid-cols-2 gap-4 p-0 sm:grid-cols-3 lg:grid-cols-6">
+    {
+      featuredBrands.map((brand) => (
+        <li>
+          <a
+            href={`/order?brand=${brand.slug}`}
+            aria-label={`Start an enquiry for ${brand.name}`}
+            class="group flex min-h-28 flex-col items-center justify-center gap-2 rounded-sm border border-line bg-surface px-3 py-5 transition-[transform,border-color] duration-150 hover:-translate-y-0.5 hover:border-line-strong focus-visible:-translate-y-0.5"
+            style={`--optical-scale:${brand.opticalScale}`}
+          >
+            <span
+              aria-hidden="true"
+              class="origin-center text-center font-serif text-lg leading-tight text-ink"
+              style="scale: var(--optical-scale)"
+            >
+              {brand.name}
+            </span>
+            <span
+              aria-hidden="true"
+              class="text-xs text-ink-muted opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+            >
+              {brands.start} &#8594;
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>

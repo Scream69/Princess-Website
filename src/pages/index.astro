@@ -1,47 +1,29 @@
 ---
 import Base from '../layouts/Base.astro';
+import Hero from '../components/home/Hero.astro';
+import HowItWorks from '../components/home/HowItWorks.astro';
+import BrandStrip from '../components/home/BrandStrip.astro';
+import About from '../components/home/About.astro';
 import copy from '../data/copy.json';
-import site from '../data/site.json';
 
-// Phase 1 shell. The Hero, HowItWorks, About and BrandStrip components
-// are Phase 7 (CLAUDE.md 12); this page currently establishes the
-// landmarks, heading hierarchy and section anchors only.
+/*
+ * Phase 7. Sells the service; the wizard does the work. Section ids match the
+ * anchors in `site.nav`, and the footer carries #contact.
+ *
+ * Ships no JavaScript of its own — the nav toggle and the WhatsApp button are
+ * the whole budget for this page (CLAUDE.md 10.2).
+ *
+ * The hero headline, supporting line and the About paragraphs are the client's
+ * to write and render as [AWAITING COPY] markers until they land. The
+ * positioning question (premium specialist or general electricals) is also
+ * still open, so the restrained direction holds — it degrades gracefully
+ * either way (CLAUDE.md 9.1, MISSING-ASSETS.md 1.2).
+ */
 ---
 
 <Base title={copy.home.title} description={copy.home.description}>
-  <section class="mx-auto max-w-page px-gutter pt-section pb-section">
-    <h1 class="max-w-content font-serif text-display text-ink">
-      {copy.home.hero.headline}
-    </h1>
-    <p class="mt-6 max-w-content text-lg text-ink-muted">
-      {copy.home.hero.supporting}
-    </p>
-    <p class="mt-4 max-w-content text-ink-muted">
-      {copy.home.hero.process}
-    </p>
-    <a
-      href={site.cta.href}
-      class="mt-8 inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
-    >
-      {site.cta.label}
-    </a>
-  </section>
-
-  <section id="how-it-works" class="mx-auto max-w-page px-gutter pb-section">
-    <h2 class="font-serif text-heading text-ink">How it works</h2>
-    <p class="mt-4 max-w-content text-ink-muted">[AWAITING COPY: how it works steps]</p>
-  </section>
-
-  <section id="brands" class="mx-auto max-w-page px-gutter pb-section">
-    <h2 class="font-serif text-heading text-ink">Brands</h2>
-    <p class="mt-4 max-w-content text-ink-muted">
-      [BLOCKED: brand strip needs confirmed authorised-dealer status per brand
-      — see MISSING-ASSETS.md]
-    </p>
-  </section>
-
-  <section id="about" class="mx-auto max-w-page px-gutter pb-section">
-    <h2 class="font-serif text-heading text-ink">About</h2>
-    <p class="mt-4 max-w-content text-ink-muted">[AWAITING COPY: about]</p>
-  </section>
+  <Hero />
+  <HowItWorks />
+  <BrandStrip />
+  <About />
 </Base>

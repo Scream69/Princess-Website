@@ -1,0 +1,32 @@
+---
+import copy from '../../data/copy.json';
+import site from '../../data/site.json';
+
+/*
+ * Who they are and why buy through them (CLAUDE.md 7). Both paragraphs are
+ * business facts only the client can supply, so they carry [AWAITING COPY]
+ * markers rather than invented credentials, trading history or memberships
+ * (CLAUDE.md 12). The response promise beside them is real and comes from
+ * site.json, never computed from the clock (8.5).
+ */
+const { about } = copy.home;
+---
+
+<section id="about" class="border-t border-line bg-surface">
+  <div class="mx-auto grid max-w-page gap-10 px-gutter py-section lg:grid-cols-[1fr_20rem]">
+    <div>
+      <h2 class="max-w-content font-serif text-heading text-ink">{about.heading}</h2>
+      <p class="mt-6 max-w-content text-ink-muted">{about.body}</p>
+      <p class="mt-4 max-w-content text-ink-muted">{about.credentials}</p>
+    </div>
+
+    <aside class="border-t border-line pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10">
+      <p class="font-serif text-xl text-ink">{site.responsePromise}</p>
+      <p class="mt-4 text-sm text-ink-muted">
+        <a class="text-accent underline underline-offset-4" href={`mailto:${site.contact.email}`}>
+          {site.contact.email}
+        </a>
+      </p>
+    </aside>
+  </div>
+</section>

@@ -61,7 +61,7 @@ Phases, per CLAUDE.md 12. Each is committed working before the next begins.
 - [x] 4. Step 2 — paste handling, parsing, tray, add-another loop
 - [x] 5. Step 3 — chat-styled details, validation (**UK-only** until served countries confirmed)
 - [x] 6. Submission, retry, queue, WhatsApp fallback, step 4 (**needs the form key and WhatsApp number** — see MISSING-ASSETS.md 4 and 5)
-- [ ] 7. Home page
+- [x] 7. Home page (**hero and about copy outstanding** — rendered as [AWAITING COPY] markers)
 - [ ] 8. Analytics, SEO, privacy page, 404
 - [ ] 9. Accessibility and performance pass
 - [ ] 10. Link checker, README, deployment
@@ -87,7 +87,9 @@ retry, queue and spam rules.
 `npm run test:e2e` drives the whole wizard in a real headless Chrome or Edge
 over the DevTools Protocol — cold load, filtering, choosing a brand, adding and
 removing appliances, refresh mid-flow, the back button, deep links, discard,
-and submission including the offline path. It uses Node's built-in WebSocket,
+submission including the offline path, and the home page's two rules — the
+brand strip must enter the wizard, and the page must ship no JS but the nav
+toggle. It uses Node's built-in WebSocket,
 so there is no browser-automation dependency. Start `npm run dev` first; set
 `CHROME_PATH` if neither browser is in the usual place.
 

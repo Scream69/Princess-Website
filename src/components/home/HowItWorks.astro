@@ -1,0 +1,42 @@
+---
+import copy from '../../data/copy.json';
+import site from '../../data/site.json';
+
+/*
+ * The same three steps the wizard's step 1 shows, from the same `copy.process`
+ * — one sequence, described once (CLAUDE.md 2.9). Only the scale differs: the
+ * home page is expressive, the order page is quiet.
+ *
+ * On a surface band with borders rather than a shadow or a tint, to give the
+ * page structure without decoration (CLAUDE.md 9.1).
+ */
+const { process } = copy;
+const { howItWorks } = copy.home;
+---
+
+<section id="how-it-works" class="border-y border-line bg-surface">
+  <div class="mx-auto max-w-page px-gutter py-section">
+    <h2 class="max-w-content font-serif text-heading text-ink">{howItWorks.heading}</h2>
+    <p class="mt-4 max-w-content text-ink-muted">{howItWorks.intro}</p>
+
+    <ol class="mt-12 grid list-none gap-x-10 gap-y-10 p-0 md:grid-cols-3">
+      {
+        process.steps.map((step, index) => (
+          <li class="border-t border-line pt-5">
+            {/* Decorative: the ordered list already carries the sequence. */}
+            <span aria-hidden="true" class="font-serif text-3xl text-accent">{index + 1}</span>
+            <h3 class="mt-3 font-serif text-xl text-ink">{step.title}</h3>
+            <p class="mt-2 text-ink-muted">{step.detail}</p>
+          </li>
+        ))
+      }
+    </ol>
+
+    <a
+      href={site.cta.href}
+      class="mt-12 inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+    >
+      {howItWorks.cta}
+    </a>
+  </div>
+</section>

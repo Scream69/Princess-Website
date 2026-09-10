@@ -809,4 +809,13 @@ export function initWizard() {
       }
     },
   });
+
+  /*
+   * Marks that the step shells are now under this module's control. Nothing in
+   * the wizard reads it: it exists so the e2e harness can tell a page whose
+   * markup has parsed from one whose listeners are attached. Waiting on a fixed
+   * timer instead made the suite flaky — the dev server compiles on demand, so
+   * a click can land in the gap and silently do nothing.
+   */
+  root.dataset.ready = 'true';
 }

@@ -133,9 +133,35 @@ async function evaluate(expression) {
   return response.result?.result?.value;
 }
 
+/*
+ * A fixed sleep after navigating was flaky: the dev server compiles TypeScript
+ * on demand, so the wizard's listeners can attach well after the markup is
+ * parsed, and a click sent in between silently does nothing.
+ *
+ * Two signals are needed, and both matter. `window.__stale` proves the old
+ * document has gone — without it the poll answers from the page we are
+ * navigating away from. Then `[data-wizard][data-ready]`, set at the end of
+ * initWizard, proves this document's listeners are attached. `history.state`
+ * looks like it would do the job and does not: a reload restores it, so it is
+ * already set before any of our code runs.
+ */
 async function goto(path) {
+  await evaluate('window.__stale = true; return 1;').catch(() => {});
   await send('Page.navigate', { url: `${BASE}${path}` });
-  await wait(900);
+
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const state = await evaluate(`
+      if (window.__stale) return 'old-document';
+      if (document.readyState === 'loading') return 'parsing';
+      const wizard = document.querySelector('[data-wizard]');
+      if (!wizard) return 'ready';
+      return wizard.dataset.ready === 'true' ? 'ready' : 'initialising';
+    `).catch(() => 'navigating');
+
+    if (state === 'ready') return;
+    await wait(100);
+  }
+  throw new Error(`the wizard never initialised at ${path}`);
 }
 
 const results = [];
@@ -740,6 +766,30 @@ s = await evaluate(`
   return focusable.filter((el) => el.closest('section[data-step-panel][hidden]')).length;
 `);
 check('a hidden step traps nothing in the tab order', s, 0);
+
+// --- the home page's way in -------------------------------------------------
+// Not the wizard, but these two are rules about it: the brand strip must feed
+// the wizard rather than leave the site (CLAUDE.md 7), and the home page's JS
+// budget is the nav toggle and the WhatsApp button, nothing more (10.2).
+await goto('/');
+s = await evaluate(`
+  return {
+    brandLinks: [...document.querySelectorAll('#brands ul a')].map((a) => a.getAttribute('href')),
+    // Dev-server injections (Vite client, dev toolbar) are not ours; project
+    // modules are. Stylesheets arrive as scripts in dev, hence the .css filter.
+    own: [...document.scripts]
+      .map((script) => script.src)
+      .filter((src) => src.includes('/src/') || src.includes('/_astro/'))
+      .filter((src) => !src.includes('.css')),
+    headings: [...document.querySelectorAll('h1')].length,
+  };
+`);
+check('the featured brands enter the wizard, never the manufacturer', [
+  s.brandLinks.length > 0,
+  s.brandLinks.every((href) => href.startsWith('/order?brand=')),
+], [true, true]);
+check('the home page ships only the nav toggle', [s.own.length, /Nav\.astro/.test(s.own[0] ?? '')], [1, true]);
+check('one h1 per page', s.headings, 1);
 
 check('the wizard logs no console errors', consoleErrors, []);
 

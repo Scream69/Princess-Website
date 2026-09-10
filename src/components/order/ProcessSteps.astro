@@ -11,10 +11,10 @@ import copy from '../../data/copy.json';
  * in that step's own explanation, and the brand grid is the centrepiece of
  * this page (CLAUDE.md 9.4) so it must not be pushed far down on a phone.
  *
- * Phase 7's home-page "How it works" mirrors the same sequence and should read
- * from `copy.order.process` rather than restating it.
+ * The home page's "How it works" renders the same three steps from the same
+ * `copy.process`, at a different scale — one sequence, described once.
  */
-const { process } = copy.order;
+const { process } = copy;
 ---
 
 <section aria-labelledby="process-heading" class="mt-8 border-t border-line pt-6">

@@ -1,0 +1,34 @@
+---
+import copy from '../../data/copy.json';
+import site from '../../data/site.json';
+
+/*
+ * The home page has five seconds to explain a model no other retailer uses:
+ * you shop on the manufacturer's website, and we quote (CLAUDE.md 7). The
+ * headline and supporting line are the client's to write — they carry
+ * [AWAITING COPY] markers until then — but the process line below them is
+ * real copy and does the explaining on its own, so the page is not misleading
+ * while the rest is outstanding.
+ */
+const { hero } = copy.home;
+---
+
+<section class="mx-auto max-w-page px-gutter pt-section pb-section">
+  <h1 class="max-w-content font-serif text-display text-ink">{hero.headline}</h1>
+
+  <p class="mt-6 max-w-content text-lg text-ink-muted">{hero.supporting}</p>
+
+  <p class="mt-8 max-w-content border-l-2 border-accent pl-4 text-ink">{hero.process}</p>
+
+  <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
+    <a
+      href={site.cta.href}
+      class="inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+    >
+      {site.cta.label}
+    </a>
+    <a href="#how-it-works" class="text-sm text-accent underline underline-offset-4">
+      {hero.cta} &#8595;
+    </a>
+  </div>
+</section>

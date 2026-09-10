@@ -104,9 +104,14 @@ this is verified in `npm test`.
 
 All in `src/data/copy.json` and `src/data/site.json`.
 
-- [ ] Home: hero headline, hero supporting line
-- [ ] Home: how-it-works steps
-- [ ] Home: about section, credentials
+- [ ] Home: hero headline, hero supporting line. **Blocks the home page.**
+      Both render as `[AWAITING COPY]` markers on the live layout, so the page
+      is buildable and reviewable but not launchable.
+- [x] Home: how-it-works steps — written, and shared with the order page's
+      step 1 from `copy.process` so the two can never drift apart.
+- [ ] Home: about section, and credentials (memberships, showroom, delivery
+      and installation). Nothing here is inferred: `[AWAITING COPY]` rather
+      than an invented trading history.
 - [ ] Footer note (e.g. an authorised-dealer statement)
 - [ ] Title tag and meta description for `/` and `/order`
 - [ ] Trading name and registered company name. The enquiry address is
