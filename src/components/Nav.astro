@@ -17,7 +17,7 @@ const { showLinks = true } = Astro.props;
   >
     <a
       href="/"
-      class="min-w-0 truncate font-serif text-lg tracking-tight text-ink hover:text-accent"
+      class="inline-flex min-h-touch min-w-0 items-center truncate font-serif text-lg tracking-tight text-ink hover:text-accent"
     >
       {site.name}
     </a>
@@ -30,7 +30,7 @@ const { showLinks = true } = Astro.props;
               <li>
                 <a
                   href={item.href}
-                  class="text-sm text-ink-muted transition-colors hover:text-ink"
+                  class="inline-flex min-h-touch items-center text-sm text-ink-muted transition-colors hover:text-ink"
                 >
                   {item.label}
                 </a>

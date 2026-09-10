@@ -1,0 +1,94 @@
+{
+  "title": "Privacy policy",
+  "description": "How enquiry details submitted through this site are collected, used, shared and kept, under UK GDPR and EU GDPR.",
+  "heading": "Privacy policy",
+  "updated": "[AWAITING: date this policy takes effect]",
+  "review": "This is a generic policy drafted to match exactly what the site does. The controller's identity, retention period and supervisory-authority details are marked below and must be completed, and the finished text should be checked by whoever advises the business on data protection before launch.",
+  "intro": "This policy explains what happens to the information you send through this website. It applies to visitors in the United Kingdom and in the European Union, and is written to meet both UK GDPR and EU GDPR.",
+  "sections": [
+    {
+      "heading": "Who is responsible for your information",
+      "paragraphs": [
+        "The data controller is [AWAITING: registered company name], trading as [AWAITING: trading name], of [AWAITING: registered office address], company number [AWAITING: company registration number].",
+        "For anything in this policy, including any of the requests described under \"Your rights\", write to <a href=\"mailto:info@princeselectronics.com\">info@princeselectronics.com</a>."
+      ]
+    },
+    {
+      "heading": "What we collect",
+      "listIntro": "When you send an enquiry, we collect only what we need in order to reply with a price:",
+      "list": [
+        "your name, phone number and email address",
+        "the country and postcode you want the appliance delivered to",
+        "the appliances you asked about — the link or model number you sent, and any note you added",
+        "a record that you ticked the consent box, and when",
+        "context about the enquiry itself: which brands you opened, the page you arrived on, and how long the form took to complete"
+      ],
+      "paragraphs": [
+        "We do not ask for your full address, your date of birth, or any payment details, and there is no marketing sign-up. If you accept a quote, we will ask for a delivery address by email at that point.",
+        "We also count page views and a small number of actions — which step of the enquiry form people reach, which brands they open, whether sending an enquiry succeeded — so we can see where the site is failing people. This is measured with a cookieless tool, [AWAITING: analytics provider name]. It sets no cookie, stores no identifier on your device, and none of it includes your name, your contact details or what you asked about."
+      ]
+    },
+    {
+      "heading": "Why we collect it, and our lawful basis",
+      "listIntro": "We use your information for three things, and nothing else:",
+      "list": [
+        "<strong>To answer your enquiry.</strong> Our lawful basis is your consent, which you give by ticking the box before you send the form, together with the steps you have asked us to take before entering into a contract.",
+        "<strong>To keep the form working and free of abuse.</strong> Our lawful basis is our legitimate interest in a form that reaches us and is not flooded with automated submissions.",
+        "<strong>To understand how the site is used.</strong> Our lawful basis is our legitimate interest in knowing where visitors get stuck, measured without cookies and without identifying anyone."
+      ],
+      "paragraphs": [
+        "We will not use your details to market anything to you, and we will not sell, rent or share them with anyone for their own purposes."
+      ]
+    },
+    {
+      "heading": "Who else handles it",
+      "listIntro": "A small number of service providers process this information on our behalf, and only on our instructions:",
+      "list": [
+        "<a href=\"https://web3forms.com\" target=\"_blank\" rel=\"noopener noreferrer\">Web3Forms</a>, which takes the completed form from your browser and delivers it to us as an email.",
+        "<a href=\"https://postcodes.io\" target=\"_blank\" rel=\"noopener noreferrer\">postcodes.io</a>, which we ask to confirm the town a UK postcode belongs to, so you can see you typed it correctly. Only the postcode is sent — never your name, contact details or enquiry — and no street address is looked up or stored.",
+        "our analytics provider, as described above.",
+        "our email and website hosting providers, which necessarily handle the message once it reaches us."
+      ],
+      "paragraphs": [
+        "If you choose to send your enquiry to us on WhatsApp instead of through the form, that message is handled by WhatsApp under their own terms rather than ours.",
+        "Some of these providers may process information outside the United Kingdom or the European Economic Area. [AWAITING: confirm each provider's location and the transfer safeguards relied on — usually the UK Addendum or Standard Contractual Clauses in their terms.]"
+      ]
+    },
+    {
+      "heading": "Where it is kept, and for how long",
+      "paragraphs": [
+        "An enquiry you have started but not sent is held in your own browser so that you can come back to it. It is discarded 30 days after you last touched it, or as soon as it has been sent, and you can clear it at any time with \"Start again\" on the enquiry page. It is never sent anywhere until you press send.",
+        "If an enquiry cannot be delivered — because you are offline, or the service is down — it stays in your browser and we try again the next time you open the page, so that it is not lost. It is removed as soon as it goes through, and in any case after 30 days.",
+        "Once an enquiry reaches us it is held in our email system for [AWAITING: retention period — 24 months from the last contact is a common choice], after which it is deleted. If your enquiry becomes an order, the records that go with that order are kept for as long as tax and consumer law require."
+      ]
+    },
+    {
+      "heading": "Cookies",
+      "paragraphs": [
+        "This site sets no cookies. It uses no advertising tags, no social media tags and no cross-site tracking of any kind, which is why you have not been asked to accept anything. The enquiry you are part-way through is stored in your browser's local storage rather than in a cookie, is readable only by this site, and is never sent to us until you press send."
+      ]
+    },
+    {
+      "heading": "Your rights",
+      "listIntro": "Under UK GDPR and EU GDPR you have the right to:",
+      "list": [
+        "ask for a copy of the information we hold about you",
+        "ask us to correct anything that is wrong",
+        "ask us to delete it",
+        "ask us to restrict what we do with it, or object to us using it",
+        "ask us to send it to you, or to someone else, in a portable form",
+        "withdraw your consent at any time, which stops us using it from that point on"
+      ],
+      "paragraphs": [
+        "Write to <a href=\"mailto:info@princeselectronics.com\">info@princeselectronics.com</a> and we will respond within one month. There is no charge.",
+        "If you are not satisfied with how we have handled your information, you can complain to the Information Commissioner's Office at <a href=\"https://ico.org.uk\" target=\"_blank\" rel=\"noopener noreferrer\">ico.org.uk</a>. If you are in the European Union, you can complain to the supervisory authority in the country where you live or work."
+      ]
+    },
+    {
+      "heading": "Changes to this policy",
+      "paragraphs": [
+        "If we change how the site handles your information, we will update this page and the date at the top of it. The version in force is always the one published here."
+      ]
+    }
+  ]
+}

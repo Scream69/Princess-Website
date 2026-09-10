@@ -104,14 +104,27 @@ this is verified in `npm test`.
 
 All in `src/data/copy.json` and `src/data/site.json`.
 
-- [ ] Home: hero headline, hero supporting line. **Blocks the home page.**
-      Both render as `[AWAITING COPY]` markers on the live layout, so the page
-      is buildable and reviewable but not launchable.
+- [x] Home: hero headline, hero supporting line — written. Deliberately makes
+      no claim that has not been confirmed: no years trading, no showroom, no
+      delivery or installation promise, no "authorised dealer".
+- [x] Home and order page title tags and meta descriptions — written, 146-150
+      characters.
+- [x] Footer note — a trademark notice rather than the authorised-dealer
+      statement, which cannot be written until dealer status is confirmed in
+      writing (section 1.1).
 - [x] Home: how-it-works steps — written, and shared with the order page's
       step 1 from `copy.process` so the two can never drift apart.
-- [ ] Home: about section, and credentials (memberships, showroom, delivery
-      and installation). Nothing here is inferred: `[AWAITING COPY]` rather
-      than an invented trading history.
+- [x] Home: about section — written from the two facts on record, Euronics
+      membership and quoting by hand. Publishable as it stands.
+- [ ] **Worth adding to the About section, if true:** how long the business
+      has traded, a showroom, delivery, installation, aftercare, and any
+      accreditations. Each is a sentence the page would be stronger for, and
+      each is a business fact that has to come from the client rather than be
+      inferred. Send them and they go straight into `copy.home.about`.
+- [ ] **Trading name.** Now the last placeholder visible on the home page: it
+      is the nav, the footer and the copyright line. `info@princeselectronics.com`
+      implies it, but a name on a legal footer is stated by the business, not
+      guessed from a domain.
 - [ ] Footer note (e.g. an authorised-dealer statement)
 - [ ] Title tag and meta description for `/` and `/order`
 - [ ] Trading name and registered company name. The enquiry address is
@@ -168,9 +181,21 @@ clock (CLAUDE.md 8.5).
 
 ## 6. Legal
 
-- [ ] Privacy policy covering **both UK and EU GDPR**, since the business
-      serves customers across Europe. Required before launch. Confirm whether
-      the client is supplying it or it is in scope for this build.
+- [x] Privacy policy covering **both UK and EU GDPR** — written, in
+      `src/data/privacy.json`. It is a generic policy drafted against what the
+      code actually does: every processor the site talks to is named
+      (Web3Forms, postcodes.io, the analytics tool), the lawful bases are
+      stated, and the browser-side storage and retry queue are described.
+- [ ] **Four fields inside the policy still to complete**, each a commitment
+      in law rather than copy, so none is guessed:
+      - the controller's registered name, address and company number
+      - the date the policy takes effect
+      - how long enquiries are kept once received (24 months from last
+        contact is a common choice)
+      - each provider's location and the transfer safeguard relied on
+- [ ] A read-through by whoever advises the business on data protection.
+      The draft is accurate to the build; it has not been reviewed by anyone
+      qualified to sign it off.
 - [ ] Confirm the client is registered as data controller
 
 ---

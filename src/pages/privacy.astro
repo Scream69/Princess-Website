@@ -1,107 +1,67 @@
 ---
 import Base from '../layouts/Base.astro';
-import site from '../data/site.json';
+import privacy from '../data/privacy.json';
 
 /*
- * Placeholder. The consent checkbox in step 3 links here, so this page must
- * exist — a consent control pointing at a 404 is worse than no link at all.
+ * A generic policy, written to describe exactly what this site does rather
+ * than a template of clauses it does not need (CLAUDE.md 11). Every third
+ * party the code actually talks to is named — the form-delivery service, the
+ * postcode lookup, the analytics tool — because naming them is the point of
+ * the exercise.
  *
- * This is deliberately NOT a privacy policy. Writing one would mean inventing
- * the controller's identity, retention periods and legal basis (CLAUDE.md 12).
- * What follows is only a factual statement of what the form collects, which is
- * verifiable from the code. The real policy must cover BOTH UK and EU GDPR,
- * because the business serves customers across Europe (CLAUDE.md 11), and the
- * site must not launch without it.
+ * What is left as `[AWAITING …]` is the handful of things only the business
+ * can state: who the controller is, how long enquiries are kept, and which
+ * transfer safeguards its providers rely on. Guessing those would be
+ * inventing business facts, and they are commitments in law, not copy.
+ *
+ * The prose lives in `privacy.json` so the client can edit it without
+ * touching a component (rule 2.9). Paragraphs and list items are rendered as
+ * HTML so a sentence can carry a link — the source is our own data file, not
+ * anything a visitor can supply.
  */
+const isPlaceholder = (value: string) => value.startsWith('[AWAITING');
 ---
 
-<Base
-  title="Privacy — [AWAITING COPY: trading name]"
-  description="How enquiry details submitted through this site are used."
->
+<Base title={privacy.title} description={privacy.description}>
   <div class="mx-auto max-w-page px-gutter pt-section pb-section">
-    <h1 class="max-w-content font-serif text-heading text-ink">Privacy</h1>
+    <h1 class="max-w-content font-serif text-display text-ink">{privacy.heading}</h1>
 
+    <p class="mt-4 max-w-content text-sm text-ink-subtle">
+      {isPlaceholder(privacy.updated) ? privacy.updated : `In force from ${privacy.updated}`}
+    </p>
+
+    {/* Visible on purpose: the page is a draft until the business completes
+        the marked fields, and a policy that looks finished but is not is the
+        one thing worse than an obvious draft. */}
     <div class="mt-6 max-w-content rounded-sm border border-line-strong bg-surface p-6">
-      <p class="font-medium text-ink">
-        [AWAITING: full privacy policy, covering both UK GDPR and EU GDPR.]
-      </p>
-      <p class="mt-2 text-sm text-ink-muted">
-        This site must not go live until this page carries a real policy. See
-        MISSING-ASSETS.md section 6.
-      </p>
+      <p class="text-sm text-ink">{privacy.review}</p>
     </div>
 
-    <h2 class="mt-10 font-serif text-xl text-ink">What the enquiry form collects</h2>
-    <p class="mt-4 max-w-content text-ink-muted">
-      Accurate as of the current build, and limited to what is needed to reply with a quote:
-    </p>
-    <ul class="mt-4 max-w-content list-disc space-y-1 pl-5 text-ink-muted">
-      <li>Your name, phone number and email address</li>
-      <li>Your country and postcode, so we can quote for delivery</li>
-      <li>The appliances you asked about — the link or model number you sent, and any note</li>
-      <li>
-        Context about the enquiry itself: which brands you opened, the page you arrived on, and how
-        long it took to fill in
-      </li>
-    </ul>
-    <p class="mt-4 max-w-content text-ink-muted">
-      No full address, no date of birth, and no marketing sign-up. The site sets no cookies and
-      uses no advertising or tracking tags, which is why you have not been asked to accept any.
-    </p>
+    <p class="mt-10 max-w-content text-ink-muted">{privacy.intro}</p>
 
-    <h2 class="mt-10 font-serif text-xl text-ink">Counting visits</h2>
-    <p class="mt-4 max-w-content text-ink-muted">
-      We count page views and a small number of actions — which step of the enquiry form people
-      reach, which brands they open, whether sending an enquiry succeeded — so we can see where
-      the site is failing people. It is measured with a cookieless tool
-      [AWAITING: analytics provider name]: no cookie is set, no identifier is stored on your
-      device, and nothing measured here includes your name, contact details or what you asked
-      about.
-    </p>
+    {
+      privacy.sections.map((section) => (
+        <section class="mt-10">
+          <h2 class="max-w-content font-serif text-xl text-ink">{section.heading}</h2>
 
-    <h2 class="mt-10 font-serif text-xl text-ink">Checking your postcode</h2>
-    <p class="mt-4 max-w-content text-ink-muted">
-      If you give a UK postcode, your browser sends it to
-      <a
-        href="https://postcodes.io"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-accent underline underline-offset-4">postcodes.io</a
-      >, a free service built on Office for National Statistics open data, so we can show you the
-      town it belongs to and confirm you typed it correctly. Only the postcode is sent — never your
-      name, contact details or enquiry. We do not look up or store your street address.
-    </p>
+          {'listIntro' in section && (
+            <p class="mt-4 max-w-content text-ink-muted">{section.listIntro}</p>
+          )}
 
-    <h2 class="mt-10 font-serif text-xl text-ink">Sending your enquiry</h2>
-    <p class="mt-4 max-w-content text-ink-muted">
-      When you press send, your browser passes the enquiry to
-      <a
-        href="https://web3forms.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-accent underline underline-offset-4">Web3Forms</a
-      >, a form-delivery service, which forwards it to us as an email. It is the only third party
-      that handles your contact details.
-    </p>
-    <p class="mt-4 max-w-content text-ink-muted">
-      If you choose to send your enquiry on WhatsApp instead, that message is handled by WhatsApp
-      under their own terms, not ours.
-    </p>
+          {'list' in section && (
+            <ul class="mt-4 max-w-content list-disc space-y-2 pl-5 text-ink-muted [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-4">
+              {section.list?.map((item) => <li set:html={item} />)}
+            </ul>
+          )}
 
-    <h2 class="mt-10 font-serif text-xl text-ink">Where it is held</h2>
-    <p class="mt-4 max-w-content text-ink-muted">
-      Your unfinished enquiry is kept in your own browser so you can come back to it, and is
-      discarded after 30 days or as soon as it is sent. You can clear it at any time with
-      &ldquo;Start again&rdquo; on the enquiry page.
-    </p>
-    <p class="mt-4 max-w-content text-ink-muted">
-      If an enquiry cannot be sent — you are offline, or the service is down — it stays in your
-      browser and we try again the next time you open the page, so that it is not lost. It is
-      removed as soon as it goes through, and in any case after 30 days.
-    </p>
-
-    <h2 class="mt-10 font-serif text-xl text-ink">Contact</h2>
-    <p class="mt-4 max-w-content text-ink-muted">{site.contact.email}</p>
+          {section.paragraphs?.map((paragraph) => (
+            <p
+              class="mt-4 max-w-content text-ink-muted [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-4"
+              set:html={paragraph}
+            />
+          ))}
+        </section>
+      ))
+    }
   </div>
 </Base>

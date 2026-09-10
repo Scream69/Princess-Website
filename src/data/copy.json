@@ -17,11 +17,11 @@
     ]
   },
   "home": {
-    "title": "[AWAITING COPY: home page title tag]",
-    "description": "[AWAITING COPY: home page meta description, 150-160 chars]",
+    "title": "Appliance, TV and audio quotes, sent by email",
+    "description": "Choose any appliance, television or audio product on the manufacturer’s own website, send us the model, and we will email you a price within 24 hours.",
     "hero": {
-      "headline": "[AWAITING COPY: hero headline]",
-      "supporting": "[AWAITING COPY: hero supporting line]",
+      "headline": "Find it anywhere. Buy it through us.",
+      "supporting": "Kitchen appliances, laundry, televisions and audio — Miele, Smeg, Sony, LG and dozens more, every one of them priced by hand.",
       "process": "Choose your appliance on the manufacturer's website, send us the model number, and we will email you a quote within 24 hours.",
       "cta": "See how it works"
     },
@@ -37,13 +37,13 @@
     },
     "about": {
       "heading": "About us",
-      "body": "[AWAITING COPY: about — who you are, how long you have traded, why buy through you]",
-      "credentials": "[AWAITING COPY: credentials — memberships, showroom, delivery and installation]"
+      "body": "We are an independent electrical retailer and a member of Euronics, the buying group behind independent retailers across Europe. That is how a shop like ours can supply the brands listed on this page.",
+      "credentials": "Every enquiry is priced by a person who knows the range, so you can ask about anything a manufacturer makes — not only the models that happen to be listed on a website."
     }
   },
   "order": {
-    "title": "[AWAITING COPY: order page title tag]",
-    "description": "[AWAITING COPY: order page meta description, 150-160 chars]",
+    "title": "Request a quote",
+    "description": "Pick a brand, send us the model number or a link from the manufacturer’s website, and add your details. We reply to every enquiry within 24 hours.",
     "step1": {
       "heading": "Choose a brand",
       "intro": "Most of this happens on the manufacturer’s own website — you come back here with the link to the appliance you want.",
@@ -128,7 +128,7 @@
     "trayHeading": "Your enquiry"
   },
   "footer": {
-    "note": "[AWAITING COPY: footer note, e.g. authorised dealer statement]"
+    "note": "All brand names and logos are the trademarks of their respective owners. We confirm every model, price and delivery date by email before an order is placed."
   },
   "notFound": {
     "title": "Page not found",

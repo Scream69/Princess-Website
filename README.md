@@ -63,7 +63,7 @@ Phases, per CLAUDE.md 12. Each is committed working before the next begins.
 - [x] 6. Submission, retry, queue, WhatsApp fallback, step 4 (**needs the form key and WhatsApp number** — see MISSING-ASSETS.md 4 and 5)
 - [x] 7. Home page (**hero and about copy outstanding** — rendered as [AWAITING COPY] markers)
 - [x] 8. Analytics, SEO, privacy page, 404 (**provider and domain outstanding** — both switched off until then)
-- [ ] 9. Accessibility and performance pass
+- [x] 9. Accessibility and performance pass (**real iOS Safari and a screen-reader run still outstanding**)
 - [ ] 10. Link checker, README, deployment
 
 ## Analytics
@@ -88,6 +88,35 @@ live domain. Until `site` is set in `astro.config.mjs`:
 - `LocalBusiness` structured data is omitted until the business facts in
   `site.json` are real — placeholder markers are never emitted as machine-
   readable claims
+
+## Quality budgets
+
+Measured 2026-09-10 with Lighthouse 12.8.2, mobile emulation, against
+`npm run build && npm run preview`:
+
+| Page | Performance | Accessibility | Best practices | SEO | LCP | CLS |
+|---|---|---|---|---|---|---|
+| `/` | 100 | 100 | 100 | 100 | 1.0s | 0 |
+| `/order` | 100 | 100 | 100 | 100 | 1.0s | 0 |
+| `/privacy` | 100 | 100 | 100 | 100 | 0.9s | 0 |
+
+Against 4x CPU throttling and Slow 4G the home page is 9.6KB over the wire in
+3 requests, and `/order` is 21.6KB. Total JS is 11.8KB gzipped against the
+40KB budget; the home page ships 351 bytes inline, being the nav toggle.
+
+Two parts of section 10 cannot be verified here and remain open:
+
+- **Real iOS Safari.** It is primary traffic, and the clipboard behaviour in
+  particular has to be checked by hand on a device (CLAUDE.md 10.3).
+- **A screen-reader run through the whole wizard.** The mechanical parts are
+  asserted in `npm run test:e2e` — focus moves to each step heading, the step
+  is announced, every control has an accessible name, errors are linked with
+  `aria-describedby`, a failed submission moves focus to the reason — but
+  those are not the same as listening to it.
+
+Colour contrast is a unit test rather than a note: `src/styles/tokens.test.ts`
+parses the tokens out of `global.css` and fails the build if any text pairing
+drops below 4.5:1 or any UI border below 3:1.
 
 ## Maintenance
 

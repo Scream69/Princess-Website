@@ -16,11 +16,11 @@
   /* Neutrals — warm-tinted greys, not pure black or blue-grey */
   --color-ink: #17191c; /* body text, headings        — 16.4:1 on canvas */
   --color-ink-muted: #5c6167; /* secondary text       —  5.9:1 on canvas */
-  --color-ink-subtle: #82878d; /* meta text, captions —  3.5:1, non-text only */
+  --color-ink-subtle: #6f747a; /* meta text, captions —  4.5:1, AA for text */
   --color-canvas: #fbfaf8; /* page background */
   --color-surface: #ffffff; /* cards, brand tiles */
   --color-line: #e4e1dc; /* 1px borders — subtle, no shadows */
-  --color-line-strong: #c9c5be; /* input borders — 3:1 for UI components */
+  --color-line-strong: #8f8b83; /* input borders — 3.3:1, AA for UI components */
 
   /* Single accent — deep green. One accent only (CLAUDE.md 9.1). */
   --color-accent: #2f4a3f; /*                          — 9.1:1 on canvas */

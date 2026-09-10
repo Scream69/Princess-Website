@@ -887,6 +887,89 @@ s = await evaluate(`return {
 check('the 404 offers the enquiry rather than dead-ending', s.quote, true);
 check('and keeps itself out of the index', s.robots, 'noindex, follow');
 
+// --- accessibility the audits cannot reach (CLAUDE.md 10.1) -----------------
+// Lighthouse scores the markup as it loads. None of what follows exists at
+// load: it is what happens as the wizard moves, which is the part a screen
+// reader user actually has to get through.
+await reset();
+await goto('/order');
+
+s = await evaluate(`
+  const named = (el) => {
+    if (el.getAttribute('aria-label')?.trim()) return true;
+    if (el.getAttribute('aria-labelledby')) return true;
+    if (el.labels?.length) return true;
+    if (el.title?.trim()) return true;
+    return (el.textContent ?? '').trim() !== '';
+  };
+  const visible = [...document.querySelectorAll('a[href], button, input, select, textarea')]
+    .filter((el) => el.checkVisibility() && !el.closest('[data-step-panel][hidden]'));
+  return visible.filter((el) => !named(el)).map((el) => el.tagName + '.' + el.className.slice(0, 30));
+`);
+check('every control on step 1 has an accessible name', s, []);
+
+await clickBrand('miele');
+s = await evaluate(`
+  const active = document.activeElement;
+  return {
+    tag: active?.tagName,
+    isHeading: active?.hasAttribute('data-step-heading') ?? false,
+    step: active?.closest('[data-step-panel]')?.dataset.stepPanel,
+    announced: document.querySelector('[data-announce]')?.textContent,
+  };
+`);
+check('advancing moves focus to the new step heading', [s.isHeading, s.step], [true, '2']);
+check('and announces where they are', s.announced, 'Step 2 of 3. Add your appliance');
+
+s = await evaluate(`
+  const named = (el) => el.getAttribute('aria-label')?.trim() || el.labels?.length ||
+    (el.textContent ?? '').trim() !== '';
+  const visible = [...document.querySelectorAll('a[href], button, input, select, textarea')]
+    .filter((el) => el.checkVisibility() && !el.closest('[data-step-panel][hidden]'));
+  return visible.filter((el) => !named(el)).length;
+`);
+check('every control on step 2 has an accessible name', s, 0);
+
+await addItem('H7860BPX');
+await evaluate(`document.querySelector('[data-continue-details]').click(); return 1;`);
+s = await evaluate(`
+  const input = document.querySelector('[data-detail-input]');
+  return {
+    labelled: input.labels.length > 0 && document.querySelector('[data-detail-label]').textContent.trim() !== '',
+    describedBy: input.getAttribute('aria-describedby'),
+    errorLive: document.getElementById(input.getAttribute('aria-describedby'))?.getAttribute('role'),
+    transcriptLive: document.querySelector('[data-transcript]')?.getAttribute('aria-live'),
+  };
+`);
+check('the question field has a real label', s.labelled, true);
+check('and its error is linked, not just adjacent', [s.describedBy, s.errorLive], ['detail-error', 'alert']);
+check('answered questions are announced as they are added', s.transcriptLive, 'polite');
+
+// A failure the customer cannot see is a failure they cannot fix.
+await evaluate(`
+  const box = document.querySelector('[data-honeypot]');
+  box.checked = true;
+  return 1;
+`);
+for (const value of ['Jane Doe', '+44 7700 900123', 'jane@example.co.uk', 'GB', 'SW1A 1AA']) {
+  await answer(value);
+}
+await evaluate(`
+  const consent = document.querySelector('[data-consent]');
+  consent.checked = true; consent.dispatchEvent(new Event('change'));
+  return 1;
+`);
+await settle();
+await evaluate(`document.querySelector('[data-submit-enquiry]').click(); return 1;`);
+await settle();
+s = await evaluate(`
+  return {
+    focused: document.activeElement?.hasAttribute('data-failure-heading') ?? false,
+    heading: document.activeElement?.textContent,
+  };
+`);
+check('a failed submission moves focus to the reason', s.focused, true);
+
 check('the wizard logs no console errors', consoleErrors, []);
 
 const failed = results.filter((ok) => !ok).length;
