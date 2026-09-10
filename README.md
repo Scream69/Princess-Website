@@ -77,6 +77,31 @@ Events are listed in `src/scripts/analytics.ts` and cover the funnel from step
 view to submit success. No event carries personal data or enquiry content —
 `npm run test:e2e` asserts that.
 
+## Enquiry delivery
+
+Web3Forms, keyed by `PUBLIC_WEB3FORMS_KEY`. The key is public by design — it
+ships in the bundle and can only deliver to the address verified on the form.
+
+**Web3Forms rejects any request whose `Origin` is not the Website URL
+registered on the form.** Verified 2026-09-10: the same payload returns 403
+from `http://localhost:4321` and 200 from the registered
+`https://princess-website.pages.dev`, with the message *"This method is not
+allowed. Use our API in client side"*. Two things follow:
+
+- **Submitting from `npm run dev` fails** unless `http://localhost:4321` is
+  added as an allowed URL in the Web3Forms dashboard. It looks like a broken
+  build and is not one.
+- **The registered URL must be updated when the domain changes**, or the first
+  live enquiry after go-live is rejected.
+
+A rejection is not a lost enquiry: the wizard queues it, shows the customer an
+honest failure with a retry, and delivers it on their next visit once the
+cause is fixed. That is worth testing deliberately rather than discovering.
+
+Free tier is 250 submissions a month. Leave the dashboard's Subject and Sender
+Name blank — the site sends its own per-enquiry subject carrying the reference
+and the country, and sets the sender to the customer.
+
 ## SEO
 
 `robots.txt` and `sitemap.xml` are generated, not static, because both need the

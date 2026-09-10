@@ -171,15 +171,18 @@ clock (CLAUDE.md 8.5).
       guessed; `robots.txt` is served without a `Sitemap:` line; and
       `sitemap.xml` is not emitted at all. Setting `site` turns all three on
       with no code change.
-- [ ] Web3Forms access key (or Netlify Forms, if hosting there). **Blocks
-      launch.** Now unblocked to set up: create the account against
-      `info@princeselectronics.com` and paste the key into `.env`. With
-      `PUBLIC_WEB3FORMS_KEY` empty, `postEnquiry` reports `unconfigured`
+- [x] Web3Forms access key — set up 2026-09-10 against
+      `info@princeselectronics.com`, verified working. Still to do: set
+      `PUBLIC_WEB3FORMS_KEY` in the host's environment variables and
+      **redeploy**, and update the form's registered Website URL when the
+      real domain lands, or the first live enquiry is rejected.
+      With `PUBLIC_WEB3FORMS_KEY` empty, `postEnquiry` reports `unconfigured`
       rather than posting: the enquiry is queued on the device and the
-      customer is told honestly that it has not gone yet — never that it
-      has. A later build with the key delivers whatever is queued.
-      For local work, any non-empty value enables the delivery checks in
-      `npm run test:e2e`, which stub every request.
+      customer is told honestly that it has not gone yet — never that it has.
+      A later build with the key delivers whatever is queued.
+      Web3Forms also **refuses any request whose origin is not the registered
+      Website URL** — see the README, it is a 403 that looks like a broken
+      build.
 - [ ] Analytics: Plausible or Umami, confirmed as cookieless, under the
       client's account. The wiring is built and switched off: set
       `PUBLIC_ANALYTICS_DOMAIN` and `PUBLIC_ANALYTICS_SRC` and it starts
