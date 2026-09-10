@@ -1,0 +1,130 @@
+---
+import { brands as allBrands } from '../../data/brands';
+
+/*
+ * The brand names, drifting. Two rows, opposite directions, slow enough that
+ * you notice the movement only if you look for it.
+ *
+ * Why names and not logos: no logo files have been supplied, and drawing,
+ * tracing or approximating a manufacturer's mark is forbidden outright
+ * (CLAUDE.md 2.3). Names set in the display face are honest, and they are
+ * read from brands.json, so this strip can never advertise a brand the
+ * client has stopped carrying.
+ *
+ * Why CSS and not JavaScript: the home page's entire JS budget is the nav
+ * toggle (CLAUDE.md 10.2). Two transform animations on the compositor cost
+ * nothing, and the strip has a fixed height, so it cannot shift the layout
+ * as it loads.
+ *
+ * `aria-hidden` because it is decoration that repeats itself — the real,
+ * navigable brand list is the grid on /order. The colour still meets AA
+ * anyway, since a screen reader ignoring it does not make it unreadable.
+ */
+const names = allBrands.map((brand) => brand.name);
+const half = Math.ceil(names.length / 2);
+const rows = [names.slice(0, half), names.slice(half)];
+---
+
+<div class="marquee" aria-hidden="true">
+  {
+    rows.map((row, index) => (
+      <div class:list={['row', index === 1 && 'row-reverse']}>
+        {/* Twice, so the second copy is already in place when the first
+            finishes travelling and the loop has no visible seam. */}
+        {[0, 1].map(() => (
+          <ul class="track">
+            {row.map((name) => (
+              <li>{name}</li>
+            ))}
+          </ul>
+        ))}
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  /*
+   * One variable for the spacing, because the animation has to travel
+   * exactly one copy of the list plus one gap. Hard-coding the distance in
+   * the keyframe and the gap separately is how a marquee ends up with a
+   * visible jump every ninety seconds.
+   */
+  .marquee {
+    --gap: 2rem;
+
+    border-top: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-line);
+    background-color: var(--color-surface);
+    padding-block: 1.75rem;
+    display: grid;
+    gap: 1.25rem;
+    overflow: hidden;
+
+    /* Fade both ends so names enter and leave rather than being cut off.
+       A mask, not a painted gradient — the surface underneath stays flat.
+       In percent, not rems: a 6rem fade either side of a 375px phone leaves
+       barely two names legible in the middle. */
+    -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  }
+
+  .row {
+    display: flex;
+    width: max-content;
+    gap: var(--gap);
+  }
+
+  .track {
+    display: flex;
+    flex-shrink: 0;
+    gap: var(--gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    animation: drift 90s linear infinite;
+  }
+
+  .row-reverse .track {
+    /* A different speed as well as a different direction: matched rows read
+       as one block sliding, which looks mechanical. */
+    animation-duration: 112s;
+    animation-direction: reverse;
+  }
+
+  .track li {
+    font-family: var(--font-serif);
+    font-size: 1.125rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    color: var(--color-ink-subtle);
+  }
+
+  @media (min-width: 48rem) {
+    .marquee {
+      --gap: 3.5rem;
+    }
+
+    .track li {
+      font-size: 1.375rem;
+    }
+  }
+
+  @keyframes drift {
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+
+  /*
+   * Reduced motion stops it dead rather than letting the global rule in
+   * global.css collapse the duration — that would run the animation to its
+   * end state and leave the row parked half off-screen.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .track {
+      animation: none !important;
+      transform: none !important;
+    }
+  }
+</style>

@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Hero from '../components/home/Hero.astro';
+import BrandMarquee from '../components/home/BrandMarquee.astro';
 import HowItWorks from '../components/home/HowItWorks.astro';
 import BrandStrip from '../components/home/BrandStrip.astro';
 import About from '../components/home/About.astro';
@@ -23,6 +24,7 @@ import copy from '../data/copy.json';
 
 <Base title={copy.home.title} description={copy.home.description}>
   <Hero />
+  <BrandMarquee />
   <HowItWorks />
   <BrandStrip />
   <About />

@@ -134,9 +134,15 @@ Measured 2026-09-10 with Lighthouse 12.8.2, mobile emulation, against
 
 | Page | Performance | Accessibility | Best practices | SEO | LCP | CLS |
 |---|---|---|---|---|---|---|
-| `/` | 100 | 100 | 100 | 100 | 1.0s | 0 |
-| `/order` | 100 | 100 | 100 | 100 | 1.0s | 0 |
-| `/privacy` | 100 | 100 | 100 | 100 | 0.9s | 0 |
+| `/` | 100 | 100 | 100 | 63\* | 0.9s | 0 |
+| `/order` | 100 | 100 | 100 | 63\* | 1.0s | 0 |
+| `/privacy` | 100 | 100 | 100 | 63\* | 0.9s | 0 |
+
+\* **SEO is 63 on purpose, and only until launch.** The single failing audit
+is `is-crawlable`, because `robots.txt` serves `Disallow: /` while no live
+domain is configured — see the SEO section below. Setting `site` in
+`astro.config.mjs` flips it and the score returns to 100. Every other SEO
+audit passes today.
 
 Against 4x CPU throttling and Slow 4G the home page is 9.6KB over the wire in
 3 requests, and `/order` is 21.6KB. Total JS is 11.8KB gzipped against the
@@ -151,6 +157,11 @@ Two parts of section 10 cannot be verified here and remain open:
   is announced, every control has an accessible name, errors are linked with
   `aria-describedby`, a failed submission moves focus to the reason — but
   those are not the same as listening to it.
+
+The brand marquee on the home page is CSS only — two `transform` animations
+on the compositor, no JavaScript, fixed height so it cannot shift the layout,
+and `animation: none` under `prefers-reduced-motion` rather than the global
+duration collapse, which would have parked a row half off-screen.
 
 Colour contrast is a unit test rather than a note: `src/styles/tokens.test.ts`
 parses the tokens out of `global.css` and fails the build if any text pairing
