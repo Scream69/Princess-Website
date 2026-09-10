@@ -1,0 +1,45 @@
+---
+import site from '../data/site.json';
+
+/*
+ * LocalBusiness structured data (CLAUDE.md 10.4).
+ *
+ * Every field here is a business fact, so the block is emitted only once the
+ * facts are real: anything still carrying an `[AWAITING …]` marker is left
+ * out, and if the essentials are missing the whole script is omitted. Search
+ * engines penalise structured data that contradicts the page, and a
+ * placeholder company name in machine-readable form is worse than none at all
+ * (rule 2.2).
+ *
+ * Address and telephone are the two fields that make this worth having for
+ * local search, and both are outstanding (MISSING-ASSETS.md 4).
+ */
+const supplied = (value: string): string | null =>
+  value && !value.startsWith('[AWAITING') && !value.startsWith('[BLOCKED') ? value : null;
+
+const name = supplied(site.name);
+const legalName = supplied(site.legalName);
+const email = supplied(site.contact.email);
+const telephone = supplied(site.contact.phone);
+const address = supplied(site.company.registeredAddress);
+const vat = supplied(site.company.vatNumber);
+
+// A name and a way to reach them is the minimum that says anything true.
+const ready = Boolean(name && (email || telephone));
+
+const data = ready
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'LocalBusiness',
+      name,
+      ...(legalName ? { legalName } : {}),
+      ...(email ? { email } : {}),
+      ...(telephone ? { telephone } : {}),
+      ...(address ? { address: { '@type': 'PostalAddress', streetAddress: address } } : {}),
+      ...(vat ? { vatID: vat } : {}),
+      ...(Astro.site ? { url: Astro.site.href } : {}),
+    }
+  : null;
+---
+
+{data && <script type="application/ld+json" is:inline set:html={JSON.stringify(data)} />}

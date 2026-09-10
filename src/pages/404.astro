@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+import copy from '../data/copy.json';
+import site from '../data/site.json';
+
+/*
+ * A 404 is a customer who was on their way somewhere. The two things worth
+ * offering are the enquiry they were probably heading for and the way home —
+ * not a search box or a sitemap.
+ *
+ * `noindex, follow`: the page must not rank, but its links should still be
+ * crawled (CLAUDE.md 10.4). Nothing here touches stored enquiry state, which
+ * is why it can promise that a saved enquiry is untouched.
+ */
+const { notFound } = copy;
+---
+
+<Base title={notFound.title} description={notFound.description} noindex>
+  <section class="mx-auto max-w-page px-gutter pt-section pb-section">
+    <p class="font-serif text-ink-subtle">404</p>
+    <h1 class="mt-2 max-w-content font-serif text-display text-ink">{notFound.heading}</h1>
+    <p class="mt-6 max-w-content text-ink-muted">{notFound.body}</p>
+
+    <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
+      <a
+        href={site.cta.href}
+        class="inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+      >
+        {site.cta.label}
+      </a>
+      <a href="/" class="text-sm text-accent underline underline-offset-4">
+        {notFound.home} &#8594;
+      </a>
+    </div>
+  </section>
+</Base>

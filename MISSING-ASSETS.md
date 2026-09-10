@@ -145,7 +145,9 @@ clock (CLAUDE.md 8.5).
       recorded before any DNS change, or the client's email will break
 - [ ] `site` in `astro.config.mjs` is commented out until the domain is
       confirmed. Canonical and Open Graph URLs are omitted rather than
-      guessed, and `sitemap.xml` cannot be generated without it.
+      guessed; `robots.txt` is served without a `Sitemap:` line; and
+      `sitemap.xml` is not emitted at all. Setting `site` turns all three on
+      with no code change.
 - [ ] Web3Forms access key (or Netlify Forms, if hosting there). **Blocks
       launch.** Now unblocked to set up: create the account against
       `info@princeselectronics.com` and paste the key into `.env`. With
@@ -155,7 +157,13 @@ clock (CLAUDE.md 8.5).
       has. A later build with the key delivers whatever is queued.
       For local work, any non-empty value enables the delivery checks in
       `npm run test:e2e`, which stub every request.
-- [ ] Analytics: Plausible or Umami, confirmed as cookieless
+- [ ] Analytics: Plausible or Umami, confirmed as cookieless, under the
+      client's account. The wiring is built and switched off: set
+      `PUBLIC_ANALYTICS_DOMAIN` and `PUBLIC_ANALYTICS_SRC` and it starts
+      reporting. The provider also has to be **named in the privacy page**,
+      where it currently reads `[AWAITING: analytics provider name]`.
+- [ ] Open Graph share image (1200x630). No `og:image` tag is emitted until
+      one exists — a broken share card is worse than none.
 - [ ] Hosting account, under the client's own ownership
 
 ## 6. Legal

@@ -20,6 +20,8 @@
  *   3. The text input, always visible, never hidden behind either of the above.
  */
 
+import { track } from './analytics.ts';
+
 export interface ClipboardOptions {
   input: HTMLInputElement;
   /** Revealed only after a return to the tab, and only when the field is empty. */
@@ -43,11 +45,14 @@ function isEditable(node: EventTarget | null): boolean {
 export function initClipboard({ input, button, onText }: ClipboardOptions): () => void {
   let leftThePage = false;
 
-  const accept = (text: string): void => {
+  /** Marks how the value arrived, so the wizard can tell a paste from typing. */
+  const accept = (text: string, route: 'document' | 'button'): void => {
     const value = text.trim();
     if (value === '') return;
     input.value = value;
+    input.dataset.entry = 'paste';
     hideButton();
+    track('paste_success', { route });
     onText(value);
   };
 
@@ -69,7 +74,11 @@ export function initClipboard({ input, button, onText }: ClipboardOptions): () =
     if (event.target === input) {
       // Let the browser do its own paste, then read the result — this way the
       // caret and any partial selection behave exactly as the customer expects.
-      queueMicrotask(() => onText(input.value.trim()));
+      queueMicrotask(() => {
+        input.dataset.entry = 'paste';
+        track('paste_success', { route: 'field' });
+        onText(input.value.trim());
+      });
       hideButton();
       return;
     }
@@ -77,7 +86,7 @@ export function initClipboard({ input, button, onText }: ClipboardOptions): () =
     if (isEditable(event.target)) return;
 
     event.preventDefault();
-    accept(text);
+    accept(text, 'document');
     input.focus();
   };
 
@@ -98,22 +107,33 @@ export function initClipboard({ input, button, onText }: ClipboardOptions): () =
     try {
       const text = await navigator.clipboard.readText();
       if (text.trim() === '') {
+        // Nothing to paste: not a permission problem, so not a failure.
+        track('paste_failure', { reason: 'empty' });
         input.focus();
         return;
       }
-      accept(text);
+      accept(text, 'button');
       input.focus();
     } catch {
       // Permission refused, or the API is missing entirely. Fall through to
       // layer 3 rather than pretending: hide the button and hand them the field.
+      // Worth counting — if this is common on iOS the guided path is not
+      // working and the field is carrying the whole step (CLAUDE.md 8.1).
+      track('paste_failure', { reason: 'refused' });
       hideButton();
       input.focus();
     }
   };
 
   // --- layer 3 needs no wiring: the input is always in the DOM ---------------
-  const onInput = (): void => {
+  const onInput = (event: Event): void => {
     if (input.value.trim() !== '') hideButton();
+    /*
+     * Typing over a pasted value makes it a typed value. `inputType` is what
+     * separates the two: a paste into the focused field fires `input` as well,
+     * and clearing the marker on that would count every paste as manual entry.
+     */
+    if ((event as InputEvent).inputType !== 'insertFromPaste') delete input.dataset.entry;
     onText(input.value.trim());
   };
 

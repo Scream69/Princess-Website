@@ -3,15 +3,19 @@ import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import WhatsAppButton from '../components/WhatsAppButton.astro';
+import Analytics from '../components/Analytics.astro';
+import StructuredData from '../components/StructuredData.astro';
 
 interface Props {
   title: string;
   description: string;
   /** Set false on /order so the wizard page keeps a quieter chrome. */
   showNavLinks?: boolean;
+  /** 404 only: keep it out of the index without touching the other pages. */
+  noindex?: boolean;
 }
 
-const { title, description, showNavLinks = true } = Astro.props;
+const { title, description, showNavLinks = true, noindex = false } = Astro.props;
 
 // Astro.site is unset until the live domain is confirmed; canonical and
 // Open Graph URLs are emitted only once it is, rather than guessed.
@@ -25,6 +29,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
     {canonical && <link rel="canonical" href={canonical} />}
 
     <meta property="og:type" content="website" />
@@ -34,6 +39,11 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
     <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    {/* No og:image tag until a real 1200x630 share image exists — a broken
+        one renders worse in a share card than none (MISSING-ASSETS.md 2). */}
+    <StructuredData />
+    <Analytics />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to main content</a>

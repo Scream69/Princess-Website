@@ -62,9 +62,32 @@ Phases, per CLAUDE.md 12. Each is committed working before the next begins.
 - [x] 5. Step 3 — chat-styled details, validation (**UK-only** until served countries confirmed)
 - [x] 6. Submission, retry, queue, WhatsApp fallback, step 4 (**needs the form key and WhatsApp number** — see MISSING-ASSETS.md 4 and 5)
 - [x] 7. Home page (**hero and about copy outstanding** — rendered as [AWAITING COPY] markers)
-- [ ] 8. Analytics, SEO, privacy page, 404
+- [x] 8. Analytics, SEO, privacy page, 404 (**provider and domain outstanding** — both switched off until then)
 - [ ] 9. Accessibility and performance pass
 - [ ] 10. Link checker, README, deployment
+
+## Analytics
+
+Cookieless, so there is no consent banner (CLAUDE.md 2.6). Set both
+`PUBLIC_ANALYTICS_DOMAIN` and `PUBLIC_ANALYTICS_SRC` in `.env` to switch it on;
+with either blank no provider script is requested and `track()` is a no-op, so
+an unconfigured build ships nothing third-party.
+
+Events are listed in `src/scripts/analytics.ts` and cover the funnel from step
+view to submit success. No event carries personal data or enquiry content —
+`npm run test:e2e` asserts that.
+
+## SEO
+
+`robots.txt` and `sitemap.xml` are generated, not static, because both need the
+live domain. Until `site` is set in `astro.config.mjs`:
+
+- `robots.txt` is served without a `Sitemap:` line
+- `sitemap.xml` is not emitted at all, rather than published against a guess
+- canonical and Open Graph URLs are omitted
+- `LocalBusiness` structured data is omitted until the business facts in
+  `site.json` are real — placeholder markers are never emitted as machine-
+  readable claims
 
 ## Maintenance
 

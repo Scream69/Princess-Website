@@ -129,5 +129,12 @@
   },
   "footer": {
     "note": "[AWAITING COPY: footer note, e.g. authorised dealer statement]"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "That page does not exist. Start a quote enquiry or return to the home page.",
+    "heading": "That page does not exist",
+    "body": "The link may be out of date, or we may have moved the page. Nothing is wrong with your enquiry — anything you had saved is still here.",
+    "home": "Back to the home page"
   }
 }

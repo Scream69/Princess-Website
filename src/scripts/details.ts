@@ -7,6 +7,7 @@
  * postcode because it sets that field's label (CLAUDE.md 8.6).
  */
 import copy from '../data/copy.json' with { type: 'json' };
+import { track } from './analytics.ts';
 import countries from '../data/countries.json' with { type: 'json' };
 import { isLookupSupported, lookupPostcode, type PostcodeArea } from './postcode-lookup.ts';
 import type { EnquiryContact } from './storage.ts';
@@ -273,6 +274,9 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
     const result = VALIDATORS[field](raw);
 
     if (!result.ok) {
+      // The field, never the value: which question people get wrong is the
+      // useful signal, and the value is personal data (CLAUDE.md 2.7, 8.10).
+      track('validation_error', { field });
       error.textContent = result.message;
       (field === 'country' ? select : input).setAttribute('aria-invalid', 'true');
       (field === 'country' ? select : input).focus();

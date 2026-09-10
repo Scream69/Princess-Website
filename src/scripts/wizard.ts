@@ -10,6 +10,7 @@
  * is no subscriber list: at four steps, one render function is enough.
  */
 import copy from '../data/copy.json' with { type: 'json' };
+import { track, trackAbandonment } from './analytics.ts';
 import { whatsappHref } from '../data/site.ts';
 import { initClipboard } from './clipboard.ts';
 import { countryName, initDetails, isComplete } from './details.ts';
@@ -269,6 +270,7 @@ export function initWizard() {
     if (changed) {
       // Focus the new heading, and announce separately: a screen reader user
       // who tabs rather than reads needs the step number too (CLAUDE.md 10.1).
+      track('step_view', { step: state.step });
       el.headings.get(state.step)?.focus();
       if (el.announce) {
         el.announce.textContent =
@@ -483,6 +485,7 @@ export function initWizard() {
 
   function removeItem(id: string): void {
     const items = state.items.filter((item) => item.id !== id);
+    track('item_removed', { remaining: items.length });
     // Dropping the last item must also drop them back out of step 3, or they
     // are looking at a details form for an empty enquiry.
     update({ items, step: clampStep(state.step, { ...guard(), itemCount: items.length }) });
@@ -512,6 +515,7 @@ export function initWizard() {
         break;
       case 'add-another':
         event.preventDefault();
+        track('add_another', { items: state.items.length });
         update({ draftBrandSlug: null }, { push: true });
         goToStep(1);
         break;
@@ -562,6 +566,10 @@ export function initWizard() {
     if (!session.brandsClicked.includes(card.dataset.slug)) {
       session.brandsClicked.push(card.dataset.slug);
     }
+    // Which brands drive enquiries — the funnel question the client cares
+    // most about (CLAUDE.md 8.10). Fired before the step advances, so it
+    // survives the new tab stealing focus (8.2).
+    track('brand_click', { brand: card.dataset.slug });
     update({ draftBrandSlug: card.dataset.slug });
     goToStep(2);
   });
@@ -589,7 +597,10 @@ export function initWizard() {
   addForm?.addEventListener('submit', (event) => {
     event.preventDefault();
     if (!productInput) return;
+    // `entry` is set by clipboard.ts; absent means they typed it themselves.
+    if (productInput.dataset.entry !== 'paste') track('manual_entry');
     addItem(productInput.value);
+    delete productInput.dataset.entry;
     productInput.value = '';
     showEcho('');
     productInput.focus();
@@ -711,10 +722,14 @@ export function initWizard() {
     // queues: a submission we refuse must not then be delivered by the queue
     // on the next page load.
     if (isHoneypotTripped(el.honeypot) || !passesTimeCheck({ now, loadedAt, startedAt })) {
+      // Counted: if this ever starts firing in volume it is catching people,
+      // not bots, and the guards need loosening.
+      track('submit_failure', { reason: 'blocked' });
       showFailure('blocked', payload);
       return;
     }
     if (!withinRateLimit(readSubmissionTimes(now), now)) {
+      track('submit_failure', { reason: 'rate_limited' });
       showFailure('limit', payload);
       return;
     }
@@ -722,6 +737,7 @@ export function initWizard() {
     sending = true;
     setSubmitBusy(true);
     hideFailure();
+    track('submit_attempt', { items: state.items.length, country: state.contact.country });
 
     const result = await postEnquiry({ accessKey: ACCESS_KEY, payload });
 
@@ -729,6 +745,7 @@ export function initWizard() {
     setSubmitBusy(false);
 
     if (result.ok) {
+      track('submit_success', { items: state.items.length });
       completeEnquiry(payload.reference);
       return;
     }
@@ -736,6 +753,7 @@ export function initWizard() {
     // Queue before telling them, so the enquiry is safe on the device even if
     // the render below throws.
     queueEnquiry(payload);
+    track('submit_failure', { reason: result.reason });
     showFailure('failure', payload);
   }
 
@@ -786,6 +804,13 @@ export function initWizard() {
   history.replaceState({ step: state.step }, '', stepUrl(state.step));
   // previousStep === state.step, so the first paint moves no focus.
   render(state.step, false);
+  // ...and fires no step_view either, so the entry step is recorded here.
+  track('step_view', { step: state.step });
+  trackAbandonment(() => ({
+    step: state.step,
+    items: state.items.length,
+    submitted: state.submitted,
+  }));
   if (backfilled.changed) save(state);
 
   if (resumable && el.resume) {

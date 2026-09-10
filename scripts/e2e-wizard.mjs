@@ -791,6 +791,102 @@ check('the featured brands enter the wizard, never the manufacturer', [
 check('the home page ships only the nav toggle', [s.own.length, /Nav\.astro/.test(s.own[0] ?? '')], [1, true]);
 check('one h1 per page', s.headings, 1);
 
+// --- analytics events (CLAUDE.md 8.10) --------------------------------------
+// No provider script is loaded in this build, so `track` is a no-op against a
+// missing global. Standing in a recorder proves the wiring underneath it: the
+// events fire, in order, carrying the slug and step numbers the client's
+// funnel needs — and carrying nothing personal (rule 2.7).
+const recorder = await send('Page.addScriptToEvaluateOnNewDocument', {
+  source: `
+    window.__events = [];
+    window.plausible = (event, options) => window.__events.push([event, options?.props ?? null]);
+  `,
+});
+
+await goto('/order');
+await reset();
+await goto('/order');
+await clickBrand('miele');
+
+await evaluate(`
+  const data = new DataTransfer();
+  data.setData('text/plain', 'https://www.miele.co.uk/ovens/h7860bpx');
+  document.body.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+  return 1;
+`);
+await evaluate(`
+  const input = document.querySelector('input[name=product]');
+  input.value = ''; input.dispatchEvent(new Event('input'));
+  return 1;
+`);
+await addItem('H7860BPX');
+await evaluate(`document.querySelector('[data-continue-details]').click(); return 1;`);
+await answer('');
+
+s = await evaluate(`return window.__events.map(([name]) => name);`);
+check('the funnel is recorded in order', s, [
+  'step_view',
+  'brand_click',
+  'step_view',
+  'paste_success',
+  'manual_entry',
+  'step_view',
+  'validation_error',
+]);
+
+s = await evaluate(`
+  const find = (name) => window.__events.find(([event]) => event === name)?.[1] ?? null;
+  return {
+    brand: find('brand_click'),
+    paste: find('paste_success'),
+    invalid: find('validation_error'),
+    entry: find('step_view'),
+  };
+`);
+check('the brand click names the brand', s.brand, { brand: 'miele' });
+check('the paste records which of the three routes worked', s.paste, { route: 'document' });
+check('a validation error names the field, never the value', s.invalid, { field: 'name' });
+check('a step view is just a number', s.entry, { step: 1 });
+
+s = await evaluate(`
+  const text = JSON.stringify(window.__events);
+  return ['H7860BPX', 'miele.co.uk', 'Jane'].filter((secret) => text.includes(secret));
+`);
+check('no enquiry content and no personal data reaches a property', s, []);
+
+await evaluate(`document.querySelector('[data-action="go-step"][data-step="2"]').click(); return 1;`);
+await evaluate(`document.querySelector('[data-tray-list] button[aria-label^="Remove"]').click(); return 1;`);
+await settle();
+s = await evaluate(`return window.__events.filter(([e]) => e === 'item_removed').map(([, p]) => p);`);
+check('removals are counted', s, [{ remaining: 0 }]);
+
+await send('Page.removeScriptToEvaluateOnNewDocument', { identifier: recorder.result.identifier });
+
+// --- the rest of the routes -------------------------------------------------
+s = await evaluate(`
+  const [notFound, robots, sitemap] = await Promise.all([
+    fetch('/no-such-page'), fetch('/robots.txt'), fetch('/sitemap.xml'),
+  ]);
+  return {
+    notFound: notFound.status,
+    robots: (await robots.text()).startsWith('User-agent: *'),
+    // Absent until the live domain is set, rather than emitted against a guess.
+    sitemap: sitemap.status,
+  };
+`);
+check('an unknown page 404s rather than silently rendering', s.notFound, 404);
+check('robots.txt is served', s.robots, true);
+check('no sitemap is published while the domain is unknown', s.sitemap, 404);
+
+await goto('/no-such-page');
+s = await evaluate(`return {
+  heading: document.querySelector('h1')?.textContent,
+  robots: document.querySelector('meta[name=robots]')?.content,
+  quote: document.querySelector('a[href="/order"]') !== null,
+};`);
+check('the 404 offers the enquiry rather than dead-ending', s.quote, true);
+check('and keeps itself out of the index', s.robots, 'noindex, follow');
+
 check('the wizard logs no console errors', consoleErrors, []);
 
 const failed = results.filter((ok) => !ok).length;

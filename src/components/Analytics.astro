@@ -1,0 +1,46 @@
+---
+/*
+ * The provider script, and nothing else (CLAUDE.md 2.6, 3).
+ *
+ * Rendered only when both env vars are set, so an unconfigured build — which
+ * is every build until the client's account exists — ships no third-party
+ * request and no extra bytes. Both providers are cookieless, and each reads
+ * only its own attribute: Plausible takes `data-domain`, Umami takes
+ * `data-website-id`. PUBLIC_ANALYTICS_DOMAIN holds whichever identifier the
+ * chosen provider issued, so one tag serves either without a second variable.
+ *
+ * `defer` and no inline configuration: nothing here may delay the wizard.
+ *
+ * Adding any tag that is not cookieless changes the legal position and needs
+ * a consent banner — flag it, do not add it (rule 2.6, section 11).
+ */
+const domain = import.meta.env.PUBLIC_ANALYTICS_DOMAIN;
+const src = import.meta.env.PUBLIC_ANALYTICS_SRC;
+const enabled = Boolean(domain && src);
+---
+
+{
+  enabled && (
+    <>
+      <script is:inline defer data-domain={domain} data-website-id={domain} src={src} />
+
+      {/* Clicks that leave the page for WhatsApp, counted where they happen.
+          Delegated from the document so it costs one listener, and it loads
+          only alongside the provider — with analytics off, both pages stay at
+          zero extra JavaScript (CLAUDE.md 10.2). */}
+      <script is:inline>
+        document.addEventListener('click', (event) => {
+          const link = event.target instanceof Element
+            ? event.target.closest('a[href^="https://wa.me/"]')
+            : null;
+          if (!link) return;
+          const plausible = window.plausible;
+          const umami = window.umami;
+          const props = { where: link.dataset.whatsapp ?? 'floating' };
+          if (typeof plausible === 'function') plausible('whatsapp_click', { props });
+          else if (typeof umami?.track === 'function') umami.track('whatsapp_click', props);
+        });
+      </script>
+    </>
+  )
+}
