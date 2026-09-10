@@ -58,9 +58,19 @@ Recorded here so they can be checked back with the client:
   list says "sold via retailers only"). Both set `"active": false`: a card that
   opens nothing is a dead end in the middle of the funnel. They need either a
   destination or a decision to drop them.
-- **AEG** and **Zanussi** — both refused connection from the dev machine during
-  the link check. Almost certainly Electrolux bot protection rather than a dead
-  site, but unverified. Worth a manual look.
+- **AEG** and **Zanussi** — refused connection during the Phase 2 check.
+  Both answer 200 on the Phase 10 run, so this has resolved itself.
+- **Belling, Liebherr, Stoves and Woods** — all four redirected to a locale
+  path (`/en-gb`). Updated to the destination the redirect actually returned,
+  so customers skip the hop. Verified, not guessed.
+- **Humax** — `uk.humaxdigital.com` serves an incomplete certificate chain.
+  Browsers repair that themselves by fetching the missing intermediate, so
+  customers are unaffected and the link works; scripted checks cannot, which
+  is why the checker reports it separately from a dead link. Worth mentioning
+  to Humax, nothing to fix here.
+- **Seven brands answer 403/405 to scripts** (ASKO, Dyson, Hisense, Loewe,
+  Rangemaster, Russell Hobbs, Sebo) and load normally in a browser. Bot
+  protection, reported as such rather than as failures.
 - **Display names** lightly corrected to the registered trademark styling:
   `Fisher & Paykel`, `IceKing`, `Lenco`, `NutriBullet`, `Schönhaus`, `TP-Link`.
 - **`featured`** is a placeholder six (Miele, Samsung, LG, Smeg, Dyson,

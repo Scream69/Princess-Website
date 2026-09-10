@@ -1,0 +1,20 @@
+# Read by both Cloudflare Pages and Netlify, so the same headers apply
+# wherever the client's account ends up being. Netlify also has these in
+# netlify.toml; duplicated deliberately, because whichever host is chosen has
+# to work on its own.
+#
+# Deliberately no Content-Security-Policy yet. A CSP has to name the form
+# endpoint and the analytics host, and the analytics provider is not chosen
+# (MISSING-ASSETS.md 5). A CSP written against a guess would block the
+# enquiry POST, which is the one failure this codebase must never have
+# (rule 2.4). It is a launch task, listed in the README.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+
+# Fingerprinted by Astro, so these can never go stale.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable

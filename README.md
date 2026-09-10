@@ -64,7 +64,7 @@ Phases, per CLAUDE.md 12. Each is committed working before the next begins.
 - [x] 7. Home page (**hero and about copy outstanding** — rendered as [AWAITING COPY] markers)
 - [x] 8. Analytics, SEO, privacy page, 404 (**provider and domain outstanding** — both switched off until then)
 - [x] 9. Accessibility and performance pass (**real iOS Safari and a screen-reader run still outstanding**)
-- [ ] 10. Link checker, README, deployment
+- [x] 10. Link checker, README, deployment (**hosting account and domain outstanding**)
 
 ## Analytics
 
@@ -120,15 +120,30 @@ drops below 4.5:1 or any UI border below 3:1.
 
 ## Maintenance
 
-**Brand link check — quarterly.** Manufacturer URLs rot. Run:
+**Brand link check — quarterly.** Manufacturer URLs rot quietly, and a brand
+card that opens nothing is a dead end in the middle of the funnel. Run:
 
 ```sh
 npm run check:links
 ```
 
-It reads `src/data/brands.json`, requests each `url`, and reports non-200
-responses and redirects. Update `brands.json` with any URL that has moved.
-The script lands in Phase 10.
+It reads `src/data/brands.json`, requests each active brand's URL with a real
+browser User-Agent, follows redirects, and falls back to GET when HEAD is
+refused. Exit code 1 means something is genuinely broken.
+
+Three of its five verdicts are *not* failures, and that is the point of it:
+
+| Verdict | What to do |
+|---|---|
+| `ok` | Nothing. |
+| `moved` | The link works but redirects. Update `brands.json` so customers skip the hop. |
+| `block` | 403/405/429 to scripts, fine in a browser. Bot protection, not rot. Ignore. |
+| `tls` | The site omits an intermediate certificate. Browsers repair this themselves; Node cannot. Worth mentioning to the brand, harmless to customers. |
+| `BROKE` | A real dead link. Fix the URL, or set the brand `"active": false`. |
+
+Last run 2026-09-10: 57 ok, 7 blocked to scripts, 1 certificate chain
+(Humax), 0 broken. Belling, Liebherr, Stoves and Woods had moved and are
+updated.
 
 ## Testing
 
@@ -153,12 +168,60 @@ confirmation — and says so.
 Neither covers **iOS Safari**, which is primary traffic. The clipboard
 behaviour in particular has to be checked by hand on a real device.
 
+## Deployment
+
+Static output, so any static host works. Both options below are free tier,
+and **the account must be the client's, not ours** — a site the client cannot
+log into is a site they do not own.
+
+**Netlify.** Settings are committed in `netlify.toml`, so connecting the
+repository is enough: build `npm run build`, publish `dist`.
+
+**Cloudflare Pages.** No repo file needed. In the dashboard: framework preset
+*Astro*, build command `npm run build`, output directory `dist`, Node version
+`24`. `public/_headers` is picked up automatically.
+
+Set these three build-time environment variables in whichever dashboard, and
+**redeploy after changing any of them** — they are baked into the bundle:
+
+| Variable | Effect if unset |
+|---|---|
+| `PUBLIC_WEB3FORMS_KEY` | Nothing is posted. Enquiries queue in the browser and the customer is told honestly that it has not been sent. |
+| `PUBLIC_ANALYTICS_DOMAIN` | No provider script is requested; `track()` is a no-op. |
+| `PUBLIC_ANALYTICS_SRC` | As above. |
+
+### DNS
+
+**Record the existing MX records before touching anything.** Pointing the
+domain at a new host without carrying the mail records across takes the
+client's email down, and they will notice that long before they notice the
+website.
+
 ## Before launch
 
-- Privacy policy in place, covering **both UK and EU GDPR**
-- `site` set in `astro.config.mjs` to the live domain
-- **Existing MX records recorded** before any DNS change, or the client's
-  email will break
-- Hosting and analytics accounts owned by the client
-- Quality budgets in CLAUDE.md 10 verified, including the wizard end to end
-  on real iOS Safari
+Blocking:
+
+- [ ] **Trading name and company details** in `site.json` — the nav, footer
+      and copyright line still read `[AWAITING COPY: trading name]`
+- [ ] **Privacy policy completed** — four marked fields in
+      `src/data/privacy.json`, then a read-through by whoever advises the
+      business on data protection
+- [ ] **`PUBLIC_WEB3FORMS_KEY` set**, against `info@princeselectronics.com`.
+      Without it no enquiry can be delivered
+- [ ] **WhatsApp Business number** in `site.json` — until it is set, the
+      failure path offers only "Try again", with no second route out
+- [ ] **`site` set in `astro.config.mjs`** to the live domain, which turns on
+      canonical URLs, Open Graph URLs and `sitemap.xml`
+- [ ] **Existing MX records recorded** before any DNS change
+- [ ] Hosting and analytics accounts owned by the client
+- [ ] Authorised-dealer status confirmed in writing (CLAUDE.md 11)
+
+Worth doing, not blocking:
+
+- [ ] **A Content-Security-Policy** in `public/_headers`, once the analytics
+      host is known. It has to allow `connect-src` to
+      `https://api.web3forms.com` and `https://api.postcodes.io`, or it will
+      silently break the enquiry
+- [ ] Open Graph share image, real favicon, client logo
+- [ ] Brand logos and their `opticalScale` values
+- [ ] The wizard end to end on **real iOS Safari**, and a screen-reader run
