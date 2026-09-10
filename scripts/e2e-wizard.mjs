@@ -788,7 +788,17 @@ check('the featured brands enter the wizard, never the manufacturer', [
   s.brandLinks.length > 0,
   s.brandLinks.every((href) => href.startsWith('/order?brand=')),
 ], [true, true]);
-check('the home page ships only the nav toggle', [s.own.length, /Nav\.astro/.test(s.own[0] ?? '')], [1, true]);
+/*
+ * The home page's JavaScript budget, named module by module (CLAUDE.md
+ * 10.2). Two is the agreed number: the nav toggle, and the observer that
+ * drives the how-it-works sequence. A third arriving unnoticed is exactly
+ * what this is here to stop.
+ */
+check(
+  'the home page ships the nav toggle and the how-it-works observer, and nothing else',
+  s.own.map((src) => src.replace(/^.*\/src\/components\//, '').replace(/\?.*$/, '')).sort(),
+  ['Nav.astro', 'home/HowItWorks.astro'],
+);
 check('one h1 per page', s.headings, 1);
 
 // --- analytics events (CLAUDE.md 8.10) --------------------------------------

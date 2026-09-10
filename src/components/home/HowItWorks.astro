@@ -1,46 +1,491 @@
 ---
+import { featuredBrands } from '../../data/brands';
 import copy from '../../data/copy.json';
 import site from '../../data/site.json';
 
 /*
- * The same three steps the wizard's step 1 shows, from the same `copy.process`
- * — one sequence, described once (CLAUDE.md 2.9). Only the scale differs: the
- * home page is expressive, the order page is quiet.
+ * The three steps, as a scroll-driven sequence at desktop width: the text
+ * column holds still while the figure beside it changes, and a rail along
+ * the bottom counts 01 / 02 / 03.
  *
- * On a surface band with borders rather than a shadow or a tint, to give the
- * page structure without decoration (CLAUDE.md 9.1).
+ * Deliberate decisions, in roughly the order they will be questioned:
+ *
+ * **It ships JavaScript, and the home page was meant not to.** CLAUDE.md
+ * 10.2 says the home page ships effectively nothing beyond the nav toggle.
+ * This adds one IntersectionObserver — around thirty lines, no scroll
+ * listener, firing only when a sentinel crosses the middle of the viewport.
+ * The cost is measured in the README rather than assumed.
+ *
+ * **Without JavaScript it is the old three-column list.** The sticky stage,
+ * the tall scroll track and the figures exist only under `[data-enhanced]`,
+ * which the script sets once it has found everything it needs. Nothing a
+ * customer must read to understand the model is behind a script.
+ *
+ * **Mobile keeps the list too.** A sticky stage on a short screen means
+ * scrolling a long way past a frozen panel, which is worse than reading
+ * three short blocks, so the whole sequence is gated at `lg`.
+ *
+ * **The figures illustrate our own product, not products we sell.** Real
+ * brand names from brands.json, the real first question from copy.json, the
+ * real reference format. No model number, no price, no specification and no
+ * manufacturer logo — none of which may be invented (rules 2.2, 2.3).
  */
 const { process } = copy;
 const { howItWorks } = copy.home;
+const { figures } = howItWorks;
+
+// Six real names for the step 1 figure; one of them is shown as chosen.
+const tiles = featuredBrands.slice(0, 6);
+const CHOSEN = 3;
 ---
 
 <section id="how-it-works" class="border-y border-line bg-surface">
   <div class="mx-auto max-w-page px-gutter py-section">
-    <span aria-hidden="true" class="mb-5 block h-0.5 w-10 bg-gold"></span>
-    <h2 class="max-w-content font-serif text-heading text-ink">{howItWorks.heading}</h2>
-    <p class="mt-4 max-w-content text-ink-muted">{howItWorks.intro}</p>
+    <header>
+      <span aria-hidden="true" class="mb-5 block h-0.5 w-10 bg-gold"></span>
+      <h2 class="max-w-content font-serif text-heading text-ink">{howItWorks.heading}</h2>
+      <p class="mt-4 max-w-content text-ink-muted">{howItWorks.intro}</p>
+    </header>
 
-    <ol class="mt-12 grid list-none gap-x-10 gap-y-10 p-0 md:grid-cols-3">
-      {
-        process.steps.map((step, index) => (
-          <li>
-            {/* Decorative: the ordered list already carries the sequence. */}
-            <span aria-hidden="true" class="block h-0.5 w-8 bg-gold"></span>
-            <span aria-hidden="true" class="mt-4 block font-serif text-3xl text-gold-ink">
-              {index + 1}
-            </span>
-            <h3 class="mt-3 font-serif text-xl text-ink">{step.title}</h3>
-            <p class="mt-2 text-ink-muted">{step.detail}</p>
-          </li>
-        ))
-      }
-    </ol>
+    <div class="stage mt-14" data-stage>
+      {/* Sentinels: something for the observer to cross. They add no height
+          of their own — the track's height comes from the CSS. */}
+      <div class="sentinels" aria-hidden="true">
+        {process.steps.map((_step, index) => <div data-sentinel={index + 1} />)}
+      </div>
+
+      <div class="viewport">
+        <div class="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
+          <ol class="steps m-0 list-none p-0">
+            {
+              process.steps.map((step, index) => (
+                <li class="step" data-step={index + 1}>
+                  <span aria-hidden="true" class="block h-0.5 w-8 bg-gold" />
+                  <span aria-hidden="true" class="mt-4 block font-serif text-3xl text-gold-ink">
+                    {index + 1}
+                  </span>
+                  <h3 class="mt-3 font-serif text-xl text-ink">{step.title}</h3>
+                  <p class="mt-2 max-w-content text-ink-muted">{step.detail}</p>
+                </li>
+              ))
+            }
+          </ol>
+
+          {/* Decorative: everything here is said properly in the column on
+              the left, so there is nothing for a screen reader to gain. */}
+          <div class="figures" aria-hidden="true">
+            <div class="figure" data-figure="1">
+              <p class="figure-label">{figures.brandsLabel}</p>
+              <div class="tiles">
+                {
+                  tiles.map((brand, index) => (
+                    <div class:list={['tile', index === CHOSEN && 'tile-chosen']}>
+                      <span>{brand.name}</span>
+                      {index === CHOSEN && <em class="tile-hint">{figures.brandHint}</em>}
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+
+            <div class="figure" data-figure="2">
+              <p class="figure-label">{figures.addressLabel}</p>
+              <div class="bar">
+                <span class="dot"></span>
+                <span class="url">
+                  {tiles[CHOSEN]?.url.replace('https://', '')}<span class="path"
+                    >{figures.addressPath}</span
+                  >
+                </span>
+              </div>
+
+              <p class="figure-label mt-6">{figures.pasteLabel}</p>
+              <div class="bar">
+                <span class="caret"></span>
+                <span class="chip">{figures.recognised}</span>
+              </div>
+            </div>
+
+            <div class="figure" data-figure="3">
+              <p class="figure-label">{figures.detailsLabel}</p>
+              <div class="bubble">{copy.order.step3.questions.name.question}</div>
+              <div class="answer"></div>
+
+              <div class="receipt">
+                <p class="figure-label">{figures.referenceLabel}</p>
+                <p class="reference">
+                  ENQ-<span class="mask">&#9679;&#9679;&#9679;&#9679;&#9679;</span>
+                </p>
+                <p class="promise">{site.responsePromise}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rail" aria-hidden="true">
+          <div class="rail-line"><span class="rail-fill" data-fill></span></div>
+          <div class="rail-numbers">
+            {process.steps.map((_step, index) => <span data-number={index + 1}>0{index + 1}</span>)}
+          </div>
+        </div>
+      </div>
+    </div>
 
     <a
       href={site.cta.href}
-      class="mt-12 inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+      class="mt-14 inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
     >
       {howItWorks.cta}
     </a>
   </div>
 </section>
+
+<style>
+  /* --- unenhanced, and every screen below lg: three plain blocks -------- */
+
+  .sentinels,
+  .figures,
+  .rail {
+    display: none;
+  }
+
+  .steps {
+    display: grid;
+    gap: 2.5rem;
+  }
+
+  @media (min-width: 48rem) {
+    .steps {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  /* --- the scroll sequence ---------------------------------------------- */
+
+  @media (min-width: 64rem) {
+    [data-enhanced].stage {
+      position: relative;
+      /*
+       * Half a screen of scrolling per step, plus one screen for the panel
+       * to arrive and leave. Longer than this and the reader spends several
+       * hundred pixels watching a panel they have already read.
+       */
+      min-height: 240vh;
+    }
+
+    /*
+     * The sentinels stop one viewport short of the bottom, because that is
+     * where the sticky panel releases. Spanning the full track put step 3's
+     * sentinel past the release point: the text switched after the panel had
+     * already scrolled away, so the last step was never seen in place.
+     */
+    [data-enhanced] .sentinels {
+      display: block;
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      bottom: calc(100vh - 10rem);
+    }
+
+    [data-enhanced] .sentinels > div {
+      height: 33.3333%;
+    }
+
+    [data-enhanced] .viewport {
+      position: sticky;
+      /* Clear the fixed nav, then centre the stage in what is left. */
+      top: 6rem;
+      display: grid;
+      align-content: center;
+      min-height: calc(100vh - 10rem);
+    }
+
+    /* The three texts share one cell and cross-fade. */
+    [data-enhanced] .steps {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    [data-enhanced] .step {
+      grid-area: 1 / 1;
+      opacity: 0;
+      transform: translateY(0.75rem);
+      transition:
+        opacity 400ms ease,
+        transform 400ms ease;
+    }
+
+    [data-enhanced] .step[data-active] {
+      opacity: 1;
+      transform: none;
+    }
+
+    [data-enhanced] .figures {
+      display: grid;
+      min-height: 22rem;
+    }
+
+    [data-enhanced] .figure {
+      grid-area: 1 / 1;
+      align-self: center;
+      opacity: 0;
+      transform: translateY(1rem);
+      transition:
+        opacity 450ms ease,
+        transform 450ms ease;
+    }
+
+    [data-enhanced] .figure[data-active] {
+      opacity: 1;
+      transform: none;
+    }
+
+    [data-enhanced] .rail {
+      display: block;
+      margin-top: 3.5rem;
+    }
+  }
+
+  /* --- the figures ------------------------------------------------------ */
+
+  .figure-label {
+    margin: 0 0 0.75rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-subtle);
+  }
+
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .tile {
+    display: flex;
+    min-height: 4.5rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    padding: 0.75rem 0.5rem;
+    font-family: var(--font-serif);
+    color: var(--color-ink);
+    text-align: center;
+  }
+
+  /* The lift the real brand card does on hover, held still. */
+  .tile-chosen {
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+  }
+
+  .tile-hint {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-style: normal;
+    color: var(--color-ink-subtle);
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    padding: 0.75rem 0.875rem;
+  }
+
+  .dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    background-color: var(--color-gold);
+  }
+
+  .url {
+    overflow: hidden;
+    font-size: 0.875rem;
+    color: var(--color-ink);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .path {
+    color: var(--color-ink-subtle);
+  }
+
+  .caret {
+    width: 1px;
+    height: 1.125rem;
+    flex-shrink: 0;
+    background-color: var(--color-accent);
+  }
+
+  .chip {
+    border-radius: var(--radius-sm);
+    background-color: var(--color-accent);
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    color: var(--color-accent-contrast);
+  }
+
+  .bubble {
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-canvas);
+    padding: 0.75rem 0.875rem;
+    font-size: 0.9375rem;
+    color: var(--color-ink);
+  }
+
+  .answer {
+    margin-top: 0.5rem;
+    margin-left: 20%;
+    height: 2.5rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-sm);
+  }
+
+  .receipt {
+    margin-top: 1.5rem;
+    border-top: 2px solid var(--color-gold);
+    padding-top: 1rem;
+  }
+
+  .reference {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    letter-spacing: 0.08em;
+    color: var(--color-ink);
+  }
+
+  .mask {
+    color: var(--color-ink-subtle);
+  }
+
+  .promise {
+    margin: 0.5rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--color-ink-muted);
+  }
+
+  /* --- the rail --------------------------------------------------------- */
+
+  .rail-line {
+    height: 1px;
+    background-color: var(--color-line);
+  }
+
+  .rail-fill {
+    display: block;
+    height: 1px;
+    width: 33.3333%;
+    background-color: var(--color-accent);
+    transition: width 450ms ease;
+  }
+
+  .rail-numbers {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--color-ink-subtle);
+  }
+
+  .rail-numbers span {
+    text-align: center;
+    transition: color 300ms ease;
+  }
+
+  .rail-numbers span[data-active] {
+    color: var(--color-ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .step,
+    .figure,
+    .rail-fill,
+    .rail-numbers span {
+      transition: none !important;
+    }
+
+    .step,
+    .figure {
+      transform: none !important;
+    }
+  }
+</style>
+
+<script>
+  /*
+   * One observer, three sentinels, no scroll listener: whichever sentinel is
+   * crossing the middle of the viewport decides the active step.
+   *
+   * Everything it touches is presentational — `data-active` attributes and a
+   * width — so if this never runs, the section is still the three-column
+   * list it is without JavaScript.
+   */
+  const stage = document.querySelector<HTMLElement>('[data-stage]');
+  const sentinels = stage?.querySelectorAll<HTMLElement>('[data-sentinel]');
+
+  if (stage && sentinels?.length && 'IntersectionObserver' in window) {
+    const steps = stage.querySelectorAll<HTMLElement>('[data-step]');
+    const figures = stage.querySelectorAll<HTMLElement>('[data-figure]');
+    const numbers = stage.querySelectorAll<HTMLElement>('[data-number]');
+    const fill = stage.querySelector<HTMLElement>('[data-fill]');
+
+    // Only now does the CSS switch to the sticky stage, so anything failing
+    // above this line leaves the plain list rather than a broken half-state.
+    stage.dataset.enhanced = '';
+
+    let current = 0;
+
+    const mark = (nodes: NodeListOf<HTMLElement>, key: string, step: number) => {
+      for (const node of nodes) {
+        if (Number(node.dataset[key]) === step) node.dataset.active = '';
+        else delete node.dataset.active;
+      }
+    };
+
+    const show = (step: number) => {
+      if (step === current) return;
+      current = step;
+      mark(steps, 'step', step);
+      mark(figures, 'figure', step);
+      mark(numbers, 'number', step);
+      if (fill) fill.style.width = `${(step / steps.length) * 100}%`;
+    };
+
+    show(1);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const step = Number((entry.target as HTMLElement).dataset.sentinel);
+          if (step) show(step);
+        }
+      },
+      /*
+       * A line across the top of the viewport, not the middle. The sentinels
+       * tile the sticky range, so the one crossing the top edge is exactly
+       * as far through the sequence as the reader is. Using the middle put
+       * the steps half a screen out of phase — step 2 was showing before the
+       * panel had finished arriving.
+       */
+      { rootMargin: '0px 0px -100% 0px', threshold: 0 },
+    );
+
+    for (const sentinel of sentinels) observer.observe(sentinel);
+  }
+</script>

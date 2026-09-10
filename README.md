@@ -144,9 +144,16 @@ domain is configured — see the SEO section below. Setting `site` in
 `astro.config.mjs` flips it and the score returns to 100. Every other SEO
 audit passes today.
 
-Against 4x CPU throttling and Slow 4G the home page is 9.6KB over the wire in
-3 requests, and `/order` is 21.6KB. Total JS is 11.8KB gzipped against the
-40KB budget; the home page ships 351 bytes inline, being the nav toggle.
+Total JS is 11.8KB gzipped against the 40KB budget. The home page ships
+1,079 bytes of inline script and no bundle: 351 bytes of nav toggle, and 728
+bytes of IntersectionObserver driving the how-it-works sequence. Both are
+named in an e2e check, so a third script cannot arrive unnoticed.
+
+The how-it-works sequence is a deliberate exception to "the home page ships
+effectively no JS" (CLAUDE.md 10.2). It costs one observer with no scroll
+listener, it is gated at `lg`, and with JavaScript off the section is the
+plain three-column list it was before — verified by loading the page with
+script execution disabled.
 
 Two parts of section 10 cannot be verified here and remain open:
 

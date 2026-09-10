@@ -34,7 +34,18 @@
     "howItWorks": {
       "heading": "How it works",
       "intro": "We do not sell online. You choose the exact appliance on the manufacturer’s own website, send us the model, and we come back with a price.",
-      "cta": "Start your enquiry"
+      "cta": "Start your enquiry",
+      "figures": {
+        "brandsLabel": "Brand directory",
+        "brandHint": "View range ↗",
+        "addressLabel": "Manufacturer’s website",
+        "addressPath": "/ovens/…",
+        "pasteLabel": "Paste it here",
+        "recognised": "Link recognised",
+        "detailsLabel": "Your details",
+        "sentLabel": "Enquiry sent",
+        "referenceLabel": "Your reference"
+      }
     },
     "brands": {
       "heading": "Brands",

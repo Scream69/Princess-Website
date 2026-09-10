@@ -437,7 +437,7 @@ Mobile first. Test at 320, 375, 768, 1024, 1440. Touch targets ≥ 44px. The pro
 
 ### 10.2 Performance
 - Lighthouse mobile: performance ≥ 90, accessibility 100, best practices ≥ 95, SEO ≥ 95.
-- Total JS < 40KB gzipped. Home page ships effectively no JS beyond the nav and WhatsApp button.
+- Total JS < 40KB gzipped. Home page ships effectively no JS beyond the nav and WhatsApp button — **plus, since the client asked for the scroll-driven how-it-works sequence, one IntersectionObserver (728 bytes inline, no scroll listener, gated at `lg`, and degrading to a plain list without JavaScript)**. The e2e suite names every script the home page is allowed to load, so a third cannot appear unnoticed.
 - All logos as optimised SVG; lazy-load below the fold.
 - No layout shift on load (CLS < 0.05).
 
