@@ -82,7 +82,8 @@ view to submit success. No event carries personal data or enquiry content —
 `robots.txt` and `sitemap.xml` are generated, not static, because both need the
 live domain. Until `site` is set in `astro.config.mjs`:
 
-- `robots.txt` is served without a `Sitemap:` line
+- `robots.txt` says `Disallow: /`, so the temporary `*.pages.dev` address is
+  not indexed and cannot end up competing with the real domain at launch
 - `sitemap.xml` is not emitted at all, rather than published against a guess
 - canonical and Open Graph URLs are omitted
 - `LocalBusiness` structured data is omitted until the business facts in
@@ -211,8 +212,10 @@ Blocking:
       Without it no enquiry can be delivered
 - [ ] **WhatsApp Business number** in `site.json` — until it is set, the
       failure path offers only "Try again", with no second route out
-- [ ] **`site` set in `astro.config.mjs`** to the live domain, which turns on
-      canonical URLs, Open Graph URLs and `sitemap.xml`
+- [ ] **`site` set in `astro.config.mjs`** to the live domain. This one line
+      turns on canonical URLs, Open Graph URLs and `sitemap.xml`, and flips
+      `robots.txt` from `Disallow: /` to `Allow: /` — until it is set the site
+      is deliberately unindexable
 - [ ] **Existing MX records recorded** before any DNS change
 - [ ] Hosting and analytics accounts owned by the client
 - [ ] Authorised-dealer status confirmed in writing (CLAUDE.md 11)

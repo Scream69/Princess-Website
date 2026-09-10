@@ -869,13 +869,13 @@ s = await evaluate(`
   ]);
   return {
     notFound: notFound.status,
-    robots: (await robots.text()).startsWith('User-agent: *'),
+    robots: (await robots.text()).includes('Disallow: /'),
     // Absent until the live domain is set, rather than emitted against a guess.
     sitemap: sitemap.status,
   };
 `);
 check('an unknown page 404s rather than silently rendering', s.notFound, 404);
-check('robots.txt is served', s.robots, true);
+check('robots.txt keeps the pre-launch build out of the index', s.robots, true);
 check('no sitemap is published while the domain is unknown', s.sitemap, 404);
 
 await goto('/no-such-page');
