@@ -39,24 +39,16 @@ const { hero } = copy.home;
 
       <h1 class="mt-5 max-w-content font-serif text-display text-ink">{hero.headline}</h1>
 
-      <p class="mt-6 max-w-content text-lg text-ink-muted">{hero.supporting}</p>
-
       <p class="mt-8 max-w-content border-l-2 border-gold pl-4 text-ink">{hero.process}</p>
 
-      <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
-        <a
-          href={site.cta.href}
-          class="inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
-        >
-          {site.cta.label}
-        </a>
-        <a
-          href="#how-it-works"
-          class="inline-flex min-h-touch items-center text-sm text-accent underline underline-offset-4"
-        >
-          {hero.cta} &#8595;
-        </a>
-      </div>
+      {/* One call to action. The jump link to how-it-works came out with the
+          supporting line; the nav still carries that anchor. */}
+      <a
+        href={site.cta.href}
+        class="mt-10 inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+      >
+        {site.cta.label}
+      </a>
     </div>
 
     {/* `self-start` so the clearing behind this ends with the promise. A grid
