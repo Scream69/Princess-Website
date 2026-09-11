@@ -67,7 +67,7 @@ const CHOSEN = 3;
               process.steps.map((step, index) => (
                 <li class="step" data-step={index + 1}>
                   <span aria-hidden="true" class="block h-0.5 w-8 bg-gold" />
-                  <span aria-hidden="true" class="mt-4 block font-serif text-3xl text-gold-ink">
+                  <span aria-hidden="true" class="figures mt-4 block text-3xl text-gold-ink">
                     {index + 1}
                   </span>
                   <h3 class="mt-3 font-serif text-xl text-ink">{step.title}</h3>
@@ -523,7 +523,11 @@ const CHOSEN = 3;
 
   .reference {
     margin: 0;
-    font-family: var(--font-serif);
+    /* A reference is read digit by digit and quoted back to us, so it is
+       set in the figure face like the real one on the confirmation screen
+       (see `--font-figure`). */
+    font-family: var(--font-figure);
+    font-variant-numeric: lining-nums tabular-nums;
     font-size: 1.5rem;
     letter-spacing: 0.08em;
     color: var(--color-ink);

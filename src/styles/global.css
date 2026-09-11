@@ -52,6 +52,16 @@
     'PrincessSans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
     Helvetica, Arial, sans-serif;
   --font-serif: 'PrincessSerif', ui-serif, Georgia, Cambria, 'Times New Roman', serif;
+  /* A serif for digits, because the serif above cannot set them level.
+     `ui-serif` resolves to Georgia on Windows, macOS and iOS, and Georgia
+     ships old-style figures only: measured at 44px, `6` rises 30px above the
+     baseline and `5` drops 8px below it. Beautiful inside a sentence, wrong
+     for a figure read on its own — "65" looks like two digits that failed to
+     line up. Georgia carries no lining set, so `lining-nums` has nothing to
+     switch to; the face itself has to change. Cambria covers Windows, Times
+     New Roman covers macOS and iOS, and the generic `serif` covers Android —
+     all three set every digit on the baseline at cap height. */
+  --font-figure: 'PrincessSerif', Cambria, 'Times New Roman', Times, serif;
 
   /* Fluid display sizes — clamped so there is no layout shift on load */
   --text-display: clamp(2.25rem, 1.5rem + 3.2vw, 3.75rem);
@@ -75,6 +85,16 @@
   /* Radii — restrained. Nothing fully rounded (CLAUDE.md 9.1). */
   --radius-sm: 2px;
   --radius-md: 4px;
+}
+
+/* Digits set as digits: on a shared baseline, and all one width so a
+   reference like ENQ-4UVF6 cannot wobble. A `@utility` rather than a plain
+   class so it lands in Tailwind's utilities layer and is not overruled by
+   the `font-serif` it replaces. `lining-nums` is kept for the day a real
+   webfont lands carrying both sets. */
+@utility figures {
+  font-family: var(--font-figure);
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 @layer base {
