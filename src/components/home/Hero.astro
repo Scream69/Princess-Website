@@ -59,15 +59,21 @@ const { hero } = copy.home;
       </div>
     </div>
 
-    <aside class="lg:pt-2">
-      <dl class="m-0">
-        <div class="border-t-2 border-gold pt-4">
+    {/* On its own surface, not straight onto the page. The backdrop behind
+        the hero is moving text, and brand names sliding through a numeral
+        read as a rendering fault rather than as texture — the headline is
+        heavy enough to sit over it, a 44px figure is not. The panel also
+        gives the figure and the promise one edge to share, which is what
+        they lost when the second figure came off. */}
+    <aside class="lg:self-center">
+      <div class="rounded-sm border border-line border-t-2 border-t-gold bg-surface p-6">
+        <dl class="m-0">
           <dt class="font-serif text-display-sm text-ink">{allBrands.length}</dt>
-          <dd class="m-0 text-sm text-ink-muted">{hero.facts.brands}</dd>
-        </div>
-      </dl>
+          <dd class="m-0 mt-2 text-sm text-ink-muted">{hero.facts.brands}</dd>
+        </dl>
 
-      <p class="mt-8 border-t border-line pt-4 text-sm text-ink-muted">{site.responsePromise}</p>
+        <p class="mt-6 border-t border-line pt-4 text-sm text-ink-muted">{site.responsePromise}</p>
+      </div>
     </aside>
   </div>
 </section>
