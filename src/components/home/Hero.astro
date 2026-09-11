@@ -11,10 +11,14 @@ import HeroBackdrop from './HeroBackdrop.astro';
  * the explaining, so nobody has to infer how this works from a slogan.
  *
  * The right-hand column exists because a left-aligned hero leaves half the
- * screen empty at desktop width. Both figures in it are facts already on
- * record — the brand count is derived from brands.json so it cannot drift,
- * and Euronics membership is confirmed — and the promise beneath them comes
- * from site.json, never computed (CLAUDE.md 8.5).
+ * screen empty at desktop width. The figure in it is read from brands.json
+ * so it cannot drift, and the promise beneath it comes from site.json,
+ * never computed (CLAUDE.md 8.5).
+ *
+ * It carried a second figure naming the buying group until the client asked
+ * for that to come off the site — membership is not something they are in a
+ * position to display. The About section made the same claim at greater
+ * length and has been rewritten for the same reason.
  */
 const { hero } = copy.home;
 ---
@@ -60,10 +64,6 @@ const { hero } = copy.home;
         <div class="border-t-2 border-gold pt-4">
           <dt class="font-serif text-display-sm text-ink">{allBrands.length}</dt>
           <dd class="m-0 text-sm text-ink-muted">{hero.facts.brands}</dd>
-        </div>
-        <div class="mt-8 border-t-2 border-gold pt-4">
-          <dt class="font-serif text-2xl text-ink">{hero.facts.group}</dt>
-          <dd class="m-0 text-sm text-ink-muted">{hero.facts.groupLabel}</dd>
         </div>
       </dl>
 

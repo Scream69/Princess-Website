@@ -30,10 +30,16 @@ Until logos land, **every card renders the documented text fallback**
 (CLAUDE.md 9.4). The grid is therefore only half-judgeable: layout, filter,
 A–Z and hover behaviour are final, optical balance is not.
 
-**Assumption on record, needs client sign-off:** every brand is written as
-`"authorised": true` on the basis that Euronics membership confirms dealer
-status for the group's range. CLAUDE.md 11 says not to assume this. If the
-client cannot confirm it in writing, the flag must be revisited before launch.
+**Assumption on record, and now weaker.** Every brand is written as
+`"authorised": true` on the basis that buying-group membership confirms
+dealer status for the group's range. CLAUDE.md 11 says not to assume this.
+
+On 2026-09-11 the client asked for the buying group to be removed from the
+site entirely — "we can't show that" — so the site no longer states the
+relationship the `authorised` flag rests on. That makes written confirmation
+of dealer status more important rather than less: the brand grid displays
+sixty-five manufacturers' names, and section 11 says that is only safe where
+a supply relationship exists. Worth resolving before launch.
 
 ### 1.2 Positioning — premium or general electricals?
 
@@ -165,7 +171,16 @@ clock (CLAUDE.md 8.5).
       again": the second route out required by CLAUDE.md 8.7 step 4 does not
       exist yet.
 - [ ] Opening hours for the footer
-- [ ] Company registration number, VAT number, registered office address
+- [x] Company registration number `07396672`, VAT number `100 906 362`, and
+      registered office `23 Haverford Way, Edgware, Middlesex, HA8 6DJ` —
+      supplied 2026-09-11, in `site.json`, the footer and the privacy policy.
+      They also complete the `LocalBusiness` structured data, which now
+      carries the address and VAT number.
+- [ ] **Registered company name.** The number identifies the company but the
+      registered name is what belongs on a legal footer and in the privacy
+      policy as the data controller. It is deliberately not looked up and
+      filled in for them. Until it lands, the footer's byline falls back to
+      the trading name.
 
 ## 5. Infrastructure
 
@@ -204,9 +219,9 @@ clock (CLAUDE.md 8.5).
       code actually does: every processor the site talks to is named
       (Web3Forms, postcodes.io, the analytics tool), the lawful bases are
       stated, and the browser-side storage and retry queue are described.
-- [ ] **Four fields inside the policy still to complete**, each a commitment
+- [ ] **Three fields inside the policy still to complete**, each a commitment
       in law rather than copy, so none is guessed:
-      - the controller's registered name, address and company number
+      - the controller's registered name (address and company number are in)
       - the date the policy takes effect
       - how long enquiries are kept once received (24 months from last
         contact is a common choice)

@@ -383,7 +383,7 @@ Do not build these. They were considered and rejected.
 ## 9. Design
 
 ### 9.1 Direction
-The client is a **Euronics member** and carries that group's range — 67 brands
+The client is a **buying-group member** and carries that group's range — 67 brands
 spanning premium appliances (Miele, Smeg, Liebherr, Fisher & Paykel), mainstream
 appliances (Beko, Indesit, Hotpoint), and TV/audio (Sony, Samsung, LG, KEF).
 
@@ -501,7 +501,10 @@ Works on mobile Safari · keyboard accessible · handles the failure case · sta
 Track these; do not guess answers.
 
 - [x] Final brand list — 67 Euronics brands, supplied and in `brands.json`
-- [x] Buying group membership — **Euronics**
+- [x] Buying group membership — **confirmed to us, but must not appear on the
+      public site.** The client asked on 2026-09-11 for it to be removed from
+      the hero and the About section. It stays in these notes because it is
+      where `brands.json` came from; it is not something the site may claim.
 - [ ] Authorised-dealer status confirmed **in writing** (currently assumed from
       Euronics membership — see `MISSING-ASSETS.md` 1.1)
 - [ ] Access to the Euronics brand asset pack (logos)
@@ -515,7 +518,8 @@ Track these; do not guess answers.
 - [ ] Opening hours for the footer (the response promise is fixed at 24 hours)
 - [ ] Confirmed list of served European countries for the selector
 - [x] Trading name — **Princes Electronics**
-- [ ] Registered company name, company registration number and VAT number
+- [x] Company registration number `07396672`, VAT `100 906 362`, registered office `23 Haverford Way, Edgware, Middlesex, HA8 6DJ`
+- [ ] Registered company name
 - [ ] Privacy policy covering both UK and EU GDPR — client supplying, or in scope?
 - [ ] Domain, registrar access, and **existing MX records** (changing DNS carelessly will break their email)
 - [ ] Analytics preference confirmed as cookieless

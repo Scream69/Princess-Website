@@ -26,9 +26,7 @@
       "process": "Choose your appliance on the manufacturer's website, send us the model number, and we will email you a quote within 24 hours.",
       "cta": "See how it works",
       "facts": {
-        "brands": "brands we can quote",
-        "group": "Euronics",
-        "groupLabel": "buying group member"
+        "brands": "brands we can quote"
       }
     },
     "howItWorks": {
@@ -55,7 +53,7 @@
     },
     "about": {
       "heading": "About us",
-      "body": "We are an independent electrical retailer and a member of Euronics, the buying group behind independent retailers across Europe. That is how a shop like ours can supply the brands listed on this page.",
+      "body": "We are an independent electrical retailer covering the major appliance, television and audio brands. We do not list prices online — every enquiry is quoted by hand.",
       "credentials": "Every enquiry is priced by a person who knows the range, so you can ask about anything a manufacturer makes — not only the models that happen to be listed on a website."
     }
   },

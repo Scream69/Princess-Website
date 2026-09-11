@@ -10,9 +10,9 @@
   },
   "hours": "[AWAITING DETAIL: opening hours]",
   "company": {
-    "registrationNumber": "[AWAITING DETAIL: company registration number]",
-    "vatNumber": "[AWAITING DETAIL: VAT number]",
-    "registeredAddress": "[AWAITING DETAIL: registered office address]"
+    "registrationNumber": "07396672",
+    "vatNumber": "100 906 362",
+    "registeredAddress": "23 Haverford Way, Edgware, Middlesex, HA8 6DJ"
   },
   "social": [],
   "nav": [
