@@ -102,7 +102,41 @@ this is verified in `npm test`.
 
 ## 2. Brand and design
 
-- [ ] Client logo, vector, for the nav and footer
+- [x] Client logo, vector, for the nav and footer — supplied 2026-09-11 as two
+      CorelDRAW SVG exports, now `src/assets/logo-horizontal.svg` (nav) and
+      `src/assets/logo-stacked.svg` (footer).
+
+      The first export was unusable and had to be redone; recorded here because
+      any future artwork from the same source will arrive the same way. It set
+      the wordmark as live `<text>` against an embedded SVG font — a format no
+      current browser renders — and put every fill in a **separate `.css` file
+      that was never supplied**, so the mark would have drawn as black
+      silhouettes in a fallback face. The working export settings are:
+      **Export Text: As Curves**, **Styling Options: Presentation Attributes**,
+      **Encoding: UTF-8**.
+
+      Two edits were applied to the good export, both recorded so they can be
+      redone if the artwork is ever reissued:
+      - the horizontal lockup arrived on an opaque white backing plate (one
+        full-bleed `<rect fill="#FEFEFE">`), removed so it sits on any ground;
+      - its `viewBox` was cropped from `0 0 40414.65 10103.66` to the measured
+        ink bounds `1087.2 1004.3 37394.5 8082.9`, so a CSS height is the
+        height of the mark rather than of the mark plus 5% dead margin.
+
+      - [ ] **Both lockups are light-background artwork.** "PRINCES" is solid
+            navy `#022346`, so on a dark ground the wordmark disappears and
+            only the crown survives. Harmless today — nav and footer are both
+            light — but a reversed (all-white or outlined) version is needed
+            before any dark section, dark footer or dark-mode treatment. Worth
+            requesting now while the designer has the file open.
+      - [ ] The logo's gold is a CMYK→RGB conversion (`#D0A031`–`#F0D079`) and
+            does not match the `--color-gold` token. Deliberately not
+            recoloured — a brand mark keeps its own colour — but if the two
+            golds ever sit side by side and visibly disagree, the client
+            decides which one moves.
+      - [ ] Favicon still the pre-logo placeholder in `public/favicon.svg`.
+            The crown alone would make a good one; not done, as it needs a
+            square crop the supplied files do not contain.
 - [x] Brand colours — **blue, white and gold**, supplied 2026-09-10 and in
       `src/styles/global.css`. Deep navy `#123a75` carries every action;
       antique gold appears only as a rule, a hairline or a numeral, never as

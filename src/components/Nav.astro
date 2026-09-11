@@ -1,5 +1,10 @@
 ---
 import site from '../data/site.json';
+// `?url` rather than a bare import: Astro would otherwise inline the SVG, and
+// both lockups declare gradient ids id0…idN. Inlined together on one page the
+// footer's gradients would resolve against the nav's. An <img> keeps each SVG
+// its own document, so the ids stay scoped.
+import logoHorizontal from '../assets/logo-horizontal.svg?url';
 
 interface Props {
   showLinks?: boolean;
@@ -17,9 +22,15 @@ const { showLinks = true } = Astro.props;
   >
     <a
       href="/"
-      class="inline-flex min-h-touch min-w-0 items-center truncate font-serif text-lg tracking-tight text-ink hover:text-accent"
+      class="inline-flex min-h-touch min-w-0 items-center transition-opacity hover:opacity-80"
     >
-      {site.name}
+      <img
+        src={logoHorizontal}
+        alt={site.name}
+        class="h-7 w-auto sm:h-8"
+        width="374"
+        height="81"
+      />
     </a>
 
     <div class="flex shrink-0 items-center gap-2">

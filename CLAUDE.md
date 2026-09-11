@@ -509,7 +509,10 @@ Track these; do not guess answers.
       Euronics membership — see `MISSING-ASSETS.md` 1.1)
 - [ ] Access to the Euronics brand asset pack (logos)
 - [ ] Positioning: premium specialist or general electricals (`MISSING-ASSETS.md` 1.2)
-- [ ] Logo files (vector) for the client and for each manufacturer
+- [x] Client logo (vector) — supplied 2026-09-11, in the nav and footer. A
+      reversed version for dark grounds is still outstanding
+      (`MISSING-ASSETS.md` 2)
+- [ ] Logo files (vector) for each manufacturer
 - [x] Brand colours — **blue, white and gold**
 - [ ] Fonts and any brand guidelines
 - [ ] Home page copy: hero, about, how-it-works
