@@ -63,9 +63,12 @@ const rows = Array.from({ length: ROWS }, (_, index) =>
     gap: clamp(0.25rem, 1.5vh, 1rem);
 
     color: var(--color-ink);
-    /* Watermark, not wallpaper. At 0.05 the names competed with the headline
-       for the same eye; at 0.03 they are texture you notice second. */
-    opacity: 0.03;
+    /* Watermark, not wallpaper — but stronger than it was. 0.03 was set when
+       the names ran under the headline, where anything more competed for the
+       same eye. The clearing in Hero.astro now removes them from behind the
+       text entirely, so the only place this ink lands is empty page, and it
+       can afford to be seen. */
+    opacity: 0.05;
 
     /* Nothing inside affects layout outside, and the browser can skip it
        entirely when it is scrolled past. */
@@ -77,7 +80,7 @@ const rows = Array.from({ length: ROWS }, (_, index) =>
 
   @media (min-width: 64rem) {
     .backdrop {
-      opacity: 0.04;
+      opacity: 0.06;
     }
   }
 
