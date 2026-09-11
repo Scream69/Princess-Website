@@ -32,7 +32,7 @@ const { hero } = copy.home;
   <div
     class="relative z-10 mx-auto grid max-w-page gap-12 px-gutter pt-section pb-section lg:grid-cols-[1fr_16rem] lg:gap-16"
   >
-    <div>
+    <div class="clearing">
       {/* The tagline, sized as a kicker rather than a second headline.
           Gold-ink rather than gold: this is read, not just seen. */}
       <p class="text-sm font-medium tracking-[0.14em] text-gold-ink uppercase">{hero.eyebrow}</p>
@@ -59,7 +59,7 @@ const { hero } = copy.home;
       </div>
     </div>
 
-    <aside class="lg:pt-2">
+    <aside class="clearing lg:pt-2">
       <dl class="m-0">
         <div class="border-t-2 border-gold pt-4">
           <dt class="figures text-display-sm text-ink">{allBrands.length}</dt>
@@ -71,3 +71,52 @@ const { hero } = copy.home;
     </aside>
   </div>
 </section>
+
+<style>
+  /*
+   * A clearing in the backdrop, not a panel over it.
+   *
+   * The names behind the hero are drifting, so where they cross a line of
+   * type the eye reads movement it cannot resolve. A bordered box fixes that
+   * but announces itself, and the client rejected it. This instead paints the
+   * page's own colour behind the text and blurs its edges away: the names
+   * dissolve as they travel under the copy and come back the moment they
+   * leave it, with nothing visible marking where.
+   *
+   * Why `filter: blur()` on a solid rather than a masked gradient: the blur
+   * *is* the effect being asked for, it is one declaration rather than three
+   * with `mask-composite` and its Safari prefix, and it feathers all four
+   * corners evenly, which two crossed linear gradients do not.
+   *
+   * The inset has to exceed the blur radius. A CSS blur of `r` spreads
+   * roughly 1.5r in each direction, so at 2rem the shape is still fading
+   * 3rem in from its own edge; -4rem leaves the text sitting on colour that
+   * has reached full opacity rather than part-way through the fade.
+   */
+  .clearing {
+    position: relative;
+  }
+
+  /* Behind the text but inside the wrapper's stacking context, so it clears
+     the backdrop at `z-0` without needing a z-index of its own up there. */
+  .clearing::before {
+    content: '';
+    position: absolute;
+    inset: -3rem -4rem;
+    z-index: -1;
+    background-color: var(--color-canvas);
+    filter: blur(2rem);
+    pointer-events: none;
+  }
+
+  /* Nothing here animates, but the backdrop it covers does: a paint this
+     size is worth keeping off the phone's critical path, and at narrow
+     widths the copy fills the column anyway, so there is little backdrop
+     left beside it to clear. */
+  @media (max-width: 47.99rem) {
+    .clearing::before {
+      inset: -1.5rem -2rem;
+      filter: blur(1.25rem);
+    }
+  }
+</style>
