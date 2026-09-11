@@ -104,10 +104,22 @@ let nextId = 0;
 const pending = new Map();
 /** "No console errors" is part of the definition of done (CLAUDE.md 12). */
 const consoleErrors = [];
+
+/*
+ * The offline checks replace window.fetch for the whole page, and Astro's dev
+ * toolbar runs accessibility audits that fetch as well — so the toolbar reports
+ * its own stubbed failure through the page console. It is dev-only tooling,
+ * absent from every build, and not the wizard this assertion is about. The
+ * signature is matched narrowly: anything else Astro logs still counts.
+ */
+const isDevToolbarAudit = (text) =>
+  text.includes('Astro') && text.includes("audit's match function");
+
 socket.onmessage = (event) => {
   const message = JSON.parse(event.data);
   if (message.method === 'Runtime.consoleAPICalled' && message.params.type === 'error') {
-    consoleErrors.push(message.params.args.map((arg) => arg.description ?? arg.value).join(' '));
+    const text = message.params.args.map((arg) => arg.description ?? arg.value).join(' ');
+    if (!isDevToolbarAudit(text)) consoleErrors.push(text);
   }
   const resolve = pending.get(message.id);
   if (resolve) {
@@ -904,16 +916,27 @@ check('and keeps itself out of the index', s.robots, 'noindex, follow');
 await reset();
 await goto('/order');
 
-s = await evaluate(`
+/*
+ * Accessible-name rules, shared by the step 1 and step 2 checks below so the
+ * two cannot drift apart. `img[alt]` is in the list because a control whose
+ * only content is an image — the nav logo — takes its name from that alt per
+ * the accessible-name spec, and has no text of its own to fall back on.
+ */
+const NAMED = `
   const named = (el) => {
     if (el.getAttribute('aria-label')?.trim()) return true;
     if (el.getAttribute('aria-labelledby')) return true;
     if (el.labels?.length) return true;
     if (el.title?.trim()) return true;
+    if ([...el.querySelectorAll('img[alt]')].some((img) => img.alt.trim())) return true;
     return (el.textContent ?? '').trim() !== '';
   };
   const visible = [...document.querySelectorAll('a[href], button, input, select, textarea')]
     .filter((el) => el.checkVisibility() && !el.closest('[data-step-panel][hidden]'));
+`;
+
+s = await evaluate(`
+  ${NAMED}
   return visible.filter((el) => !named(el)).map((el) => el.tagName + '.' + el.className.slice(0, 30));
 `);
 check('every control on step 1 has an accessible name', s, []);
@@ -932,10 +955,7 @@ check('advancing moves focus to the new step heading', [s.isHeading, s.step], [t
 check('and announces where they are', s.announced, 'Step 2 of 3. Add your appliance');
 
 s = await evaluate(`
-  const named = (el) => el.getAttribute('aria-label')?.trim() || el.labels?.length ||
-    (el.textContent ?? '').trim() !== '';
-  const visible = [...document.querySelectorAll('a[href], button, input, select, textarea')]
-    .filter((el) => el.checkVisibility() && !el.closest('[data-step-panel][hidden]'));
+  ${NAMED}
   return visible.filter((el) => !named(el)).length;
 `);
 check('every control on step 2 has an accessible name', s, 0);
