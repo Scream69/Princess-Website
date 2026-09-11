@@ -519,7 +519,7 @@ Track these; do not guess answers.
 - [ ] Confirmed list of served European countries for the selector
 - [x] Trading name — **Princes Electronics**
 - [x] Company registration number `07396672`, VAT `100 906 362`, registered office `23 Haverford Way, Edgware, Middlesex, HA8 6DJ`
-- [ ] Registered company name
+- [x] Registered company name — **Princes Electronics** (same as the trading name)
 - [ ] Privacy policy covering both UK and EU GDPR — client supplying, or in scope?
 - [ ] Domain, registrar access, and **existing MX records** (changing DNS carelessly will break their email)
 - [ ] Analytics preference confirmed as cookieless

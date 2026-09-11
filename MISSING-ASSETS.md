@@ -135,8 +135,11 @@ All in `src/data/copy.json` and `src/data/site.json`.
       writing (section 1.1).
 - [x] Home: how-it-works steps — written, and shared with the order page's
       step 1 from `copy.process` so the two can never drift apart.
-- [x] Home: about section — written from the two facts on record, Euronics
-      membership and quoting by hand. Publishable as it stands.
+- [x] Home: about section — rewritten 2026-09-11, when the client asked for
+      the buying-group claim to come off the site. It now rests on the two
+      facts that remain sayable: an independent retailer covering the major
+      brands, quoting every enquiry by hand. Publishable as it stands, and
+      thinner than it was — the items below would each thicken it.
 - [ ] **Worth adding to the About section, if true:** how long the business
       has traded, a showroom, delivery, installation, aftercare, and any
       accreditations. Each is a sentence the page would be stronger for, and
@@ -148,10 +151,12 @@ All in `src/data/copy.json` and `src/data/site.json`.
       change of name stays a one-line change.
 - [ ] Footer note (e.g. an authorised-dealer statement)
 - [ ] Title tag and meta description for `/` and `/order`
-- [ ] **Registered company name** — a different thing from the trading name,
-      and the one that belongs on a legal footer. Until it lands, the
-      copyright line falls back to "Princes Electronics", which says nothing
-      untrue, while the Company block keeps its markers.
+- [x] **Registered company name — Princes Electronics**, confirmed
+      2026-09-11. It reads the same as the trading name, so the footer byline
+      and the Company block now say the same thing by fact rather than by
+      fallback. If Companies House records 07396672 with a "Limited" or "Ltd"
+      suffix, that exact form replaces it — the footer and the privacy
+      policy's controller line are legal statements.
 
 The fixed 24-hour response promise is written and lives in `site.json`
 (`responsePromise`). It is a flat string and is never computed from the
@@ -176,11 +181,11 @@ clock (CLAUDE.md 8.5).
       supplied 2026-09-11, in `site.json`, the footer and the privacy policy.
       They also complete the `LocalBusiness` structured data, which now
       carries the address and VAT number.
-- [ ] **Registered company name.** The number identifies the company but the
-      registered name is what belongs on a legal footer and in the privacy
-      policy as the data controller. It is deliberately not looked up and
-      filled in for them. Until it lands, the footer's byline falls back to
-      the trading name.
+- [x] **Registered company name — Princes Electronics**, supplied
+      2026-09-11. It now stands in `site.json` as `legalName`, in the footer's
+      Company block and as the data controller in the privacy policy. See
+      section 3 on the "Limited"/"Ltd" suffix, which is the one thing that
+      could still change it.
 
 ## 5. Infrastructure
 

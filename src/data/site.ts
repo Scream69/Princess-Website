@@ -16,10 +16,16 @@ export function isPlaceholder(value: string): boolean {
 }
 
 /*
- * The registered company name is a different thing from the trading name and
- * only the business can state it, so it stays marked. Where it is used as a
- * byline rather than a legal statement — the copyright line — the trading
- * name reads better than a marker and says nothing untrue.
+ * The registered company name and the trading name are different things even
+ * when they read the same. The client confirmed on 2026-09-11 that both are
+ * "Princes Electronics", so `legalName` now resolves to a supplied fact
+ * rather than to the fallback — but the fallback stays, because this is the
+ * one field a rename would touch and a footer that silently printed a marker
+ * would be worse than one that printed the trading name.
+ *
+ * If Companies House records 07396672 with a "Limited" or "Ltd" suffix, that
+ * exact form is what belongs here: the legal footer and the privacy policy's
+ * controller line are legal statements, not branding.
  */
 export const tradingName = site.name;
 export const legalName = isPlaceholder(site.legalName) ? site.name : site.legalName;
