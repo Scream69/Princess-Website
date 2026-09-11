@@ -22,7 +22,12 @@ The brand list itself is **resolved**: 67 Euronics brands are in
 What is still missing is the artwork:
 
 - [ ] Vector logo (SVG) per brand → `src/assets/brands/<slug>.svg`, ideally
-      from the Euronics brand asset pack rather than sourced individually
+      from the Euronics brand asset pack rather than sourced individually.
+      **`BRAND-LOGOS.md` is the working checklist** — one row per brand with
+      the filename to save and, where one could be found, a link to that
+      brand's own press or trade page. Twelve have a public press page, four
+      a trade route, and the remaining fifty-one need the Euronics library or
+      an account manager.
 - [ ] `opticalScale` per brand — currently `1.0` for all 67 as a placeholder.
       It is tuned by eye against the real logo and cannot be set in advance.
 
