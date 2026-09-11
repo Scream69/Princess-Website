@@ -59,7 +59,10 @@ const { hero } = copy.home;
       </div>
     </div>
 
-    <aside class="clearing lg:pt-2">
+    {/* `self-start` so the clearing behind this ends with the promise. A grid
+        item stretches to its row by default, which made the figure's box as
+        tall as the whole headline column and read as a tall empty panel. */}
+    <aside class="clearing self-start lg:pt-2">
       <dl class="m-0">
         <div class="border-t-2 border-gold pt-4">
           <dt class="figures text-display-sm text-ink">{allBrands.length}</dt>
