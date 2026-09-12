@@ -1,47 +1,82 @@
 ---
-import { brands as allBrands } from '../../data/brands';
-
 /*
- * The same brand names as the strip below the hero, but as texture rather
- * than as a list: larger, far slower, and faint enough that you read the
- * headline first and notice the names second.
+ * Fluting, not a word list.
  *
- * Three things keep it from being wallpaper that ruins the page:
+ * The first version of this drifted the brand names behind the hero. The
+ * client's objection was structural rather than aesthetic: the marquee
+ * directly below already carries two rows of the same names, legibly, so the
+ * backdrop was spending the whole hero saying a thing the next 80px says
+ * better.
  *
- *   - It is masked top and bottom and kept at 3-4% ink, so it is texture
- *     rather than a second headline competing for the same eye.
- *   - It is `ink` at low opacity rather than a tint of its own, so it cannot
- *     introduce a second background colour or a gradient wash (9.1).
- *   - It is `aria-hidden` and `pointer-events: none`: decoration repeating
- *     the strip below is not worth a screen reader's time, and it must never
- *     intercept a click meant for the CTA.
+ * What replaced it is fine vertical lines — reeded glass, the cabinet front
+ * of a good kitchen. It is not a free choice: CLAUDE.md 9.1 rules out
+ * gradients, and 9.2 allows gold only as a hairline, a rule or a numeral.
+ * Between them, a composition of lines is close to the only thing left, and
+ * it happens to suit a premium appliance retailer better than the words did.
  *
- * **Each row is one text node, not one per brand.** The first cut rendered a
- * list item per name — around 260 of them across both layers — and Lighthouse
- * fell from 100 to 71 with 1.15s of blocking time, because a throttled phone
- * has to lay out and paint every one of them behind an animating mask. Joined
- * strings look identical and cost 14 nodes. If this ever needs to become a
- * list again, check the performance budget in CLAUDE.md 10.2 first.
+ * Three things keep it texture rather than wallpaper:
+ *
+ *   - Ink at 4-9%, gold at 20%, and masked away top and bottom. You read the
+ *     headline first and notice the fluting second.
+ *   - Nothing moves sideways. Light travels across it instead: each line
+ *     fades between a third of its weight and its full weight, staggered by
+ *     position, which reads as a reflection passing over glass. Opacity is
+ *     composited, so the whole field costs the GPU one layer and the main
+ *     thread nothing.
+ *   - `aria-hidden` and `pointer-events: none`. It is decoration, and it must
+ *     never intercept a tap meant for the CTA.
+ *
+ * The inner span exists because the wave animates opacity while each line
+ * keeps its own weight. Setting both on one element would mean animating a
+ * value derived from a custom property, which engines interpolate
+ * inconsistently; a static parent and an animated child always works.
+ *
+ * Positions are generated at build time from a fixed seed, never at runtime.
+ * Even spacing reads as a barcode and perfectly random spacing reads as a
+ * mistake, so this is even spacing with a little jitter — the irregularity of
+ * something made rather than printed.
  */
-const ROWS = 7;
-const SEPARATOR = ' · '; // em space, middle dot, em space
+const LINES = 42;
+const SEED = 20260912;
 
-const rows = Array.from({ length: ROWS }, (_, index) =>
-  allBrands
-    .filter((_brand, position) => position % ROWS === index)
-    .map((brand) => brand.name)
-    .join(SEPARATOR),
-);
+/* A tiny deterministic generator, so the pattern is identical in every build
+   and can be reviewed in a diff like any other content. */
+function* jitter(seed: number): Generator<number> {
+  let state = seed;
+  while (true) {
+    state = (state * 1664525 + 1013904223) % 4294967296;
+    yield state / 4294967296;
+  }
+}
+
+const random = jitter(SEED);
+const lines = Array.from({ length: LINES }, (_, index) => {
+  const even = (index / (LINES - 1)) * 100;
+  const drift = (random.next().value - 0.5) * 0.9;
+  const weight = random.next().value;
+  return {
+    /* Clamped so no line lands outside the hero and vanishes. */
+    left: Math.min(99.5, Math.max(0.5, even + drift)),
+    /* Every ninth line is gold. Enough to carry the colour through the
+       field, few enough that it stays an accent (9.1). */
+    gold: index % 9 === 4,
+    /* Two weights of line, as reeded glass has a ridge and a valley. */
+    heavy: weight > 0.62,
+    /* The wave crosses left to right over 14s; the delay is the line's own
+       position in that crossing, so it arrives in order. */
+    delay: (index / LINES) * 14,
+  };
+});
 ---
 
 <div class="backdrop" aria-hidden="true">
   {
-    rows.map((row, index) => (
-      <div class:list={['row', index % 2 === 1 && 'row-reverse']}>
-        {/* Twice, so the second copy is already in place when the first
-            finishes travelling and the loop has no visible seam. */}
-        <span class="track">{row}</span>
-        <span class="track">{row}</span>
+    lines.map((line) => (
+      <div
+        class:list={['flute', line.gold && 'flute-gold', line.heavy && 'flute-heavy']}
+        style={`left:${line.left.toFixed(2)}%`}
+      >
+        <span class="sheen" style={`animation-delay:-${line.delay.toFixed(2)}s`} />
       </div>
     ))
   }
@@ -49,8 +84,6 @@ const rows = Array.from({ length: ROWS }, (_, index) =>
 
 <style>
   .backdrop {
-    --gap: 3rem;
-
     position: absolute;
     inset: 0;
     z-index: 0;
@@ -58,84 +91,66 @@ const rows = Array.from({ length: ROWS }, (_, index) =>
     pointer-events: none;
     user-select: none;
 
-    display: grid;
-    align-content: center;
-    gap: clamp(0.25rem, 1.5vh, 1rem);
+    /* Nothing inside affects layout outside, and the browser can skip the
+       whole field once it is scrolled past. */
+    contain: strict;
 
-    color: var(--color-ink);
-    /* Watermark, not wallpaper — but stronger than it was. 0.03 was set when
-       the names ran under the headline, where anything more competed for the
-       same eye. The clearing in Hero.astro now removes them from behind the
-       text entirely, so the only place this ink lands is empty page, and it
-       can afford to be seen. */
-    opacity: 0.05;
-
-    /* Nothing inside affects layout outside, and the browser can skip it
-       entirely when it is scrolled past. */
-    contain: content;
-
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
   }
 
-  @media (min-width: 64rem) {
-    .backdrop {
-      opacity: 0.06;
+  .flute {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    /* The line's own weight. The child varies from it; it never varies. */
+    opacity: 0.055;
+    background-color: var(--color-ink);
+  }
+
+  .flute-heavy {
+    width: 2px;
+    opacity: 0.1;
+  }
+
+  /* Gold is a stronger pigment than ink at the same opacity, and the first
+     cut set it four times heavier than its neighbours — which read as a
+     stray divider rule beside the figure rather than as part of the field.
+     It is now close enough to the ink lines to belong to them. */
+  .flute-gold {
+    opacity: 0.11;
+    background-color: var(--color-gold);
+  }
+
+  .flute-gold.flute-heavy {
+    opacity: 0.15;
+  }
+
+  .sheen {
+    display: block;
+    height: 100%;
+    background-color: inherit;
+    animation: sheen 14s ease-in-out infinite;
+  }
+
+  /* A reflection crossing the glass: most of the time the line sits at a
+     third of its weight, and briefly comes up to full. */
+  @keyframes sheen {
+    0%,
+    70%,
+    100% {
+      opacity: 0.35;
     }
-  }
-
-  .row {
-    display: flex;
-    width: max-content;
-    gap: var(--gap);
-  }
-
-  .track {
-    flex-shrink: 0;
-    white-space: nowrap;
-    font-family: var(--font-serif);
-    /* Smaller than the first attempt: names the size of the headline read as
-       a competing headline, however faint. */
-    font-size: clamp(1.5rem, 3.2vw, 2.75rem);
-    line-height: 1.15;
-    /* Slower than the strip below by a factor of two, so the two layers
-       never look like they are racing each other. */
-    animation: hero-drift 200s linear infinite;
-  }
-
-  .row:nth-child(2) .track {
-    animation-duration: 260s;
-  }
-  .row:nth-child(3) .track {
-    animation-duration: 170s;
-  }
-  .row:nth-child(4) .track {
-    animation-duration: 300s;
-  }
-  .row:nth-child(5) .track {
-    animation-duration: 220s;
-  }
-  .row:nth-child(6) .track {
-    animation-duration: 280s;
-  }
-  .row:nth-child(7) .track {
-    animation-duration: 190s;
-  }
-
-  .row-reverse .track {
-    animation-direction: reverse;
-  }
-
-  @keyframes hero-drift {
-    to {
-      transform: translateX(calc(-100% - var(--gap)));
+    35% {
+      opacity: 1;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .track {
-      animation: none !important;
-      transform: none !important;
+    .sheen {
+      animation: none;
+      opacity: 0.7;
     }
   }
 </style>
