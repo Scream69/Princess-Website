@@ -19,6 +19,14 @@ import HeroBackdrop from './HeroBackdrop.astro';
  * for that to come off the site — membership is not something they are in a
  * position to display. The About section made the same claim at greater
  * length and has been rewritten for the same reason.
+ *
+ * There were two blurred clearings behind the text for a while, painting the
+ * page's colour back over the backdrop so nothing drifted under the copy.
+ * They existed because the backdrop was brand names at the time, and words
+ * crossing words is unreadable. The backdrop is now five faint arcs on plain
+ * white, which the headline sits over without any help, so the clearings
+ * have gone — along with the coupling that made the hero's background and
+ * their fill one decision.
  */
 const { hero } = copy.home;
 ---
@@ -32,7 +40,7 @@ const { hero } = copy.home;
   <div
     class="relative z-10 mx-auto grid max-w-page gap-12 px-gutter pt-section pb-section lg:grid-cols-[1fr_16rem] lg:gap-16"
   >
-    <div class="clearing">
+    <div>
       {/* The tagline, sized as a kicker rather than a second headline.
           Gold-ink rather than gold: this is read, not just seen. */}
       <p class="text-sm font-medium tracking-[0.14em] text-gold-ink uppercase">{hero.eyebrow}</p>
@@ -51,10 +59,9 @@ const { hero } = copy.home;
       </a>
     </div>
 
-    {/* `self-start` so the clearing behind this ends with the promise. A grid
-        item stretches to its row by default, which made the figure's box as
-        tall as the whole headline column and read as a tall empty panel. */}
-    <aside class="clearing self-start lg:pt-2">
+    {/* `self-start` so the figure sits at the top of its column rather than
+        stretching to the height of the headline beside it. */}
+    <aside class="self-start lg:pt-2">
       <dl class="m-0">
         <div class="border-t-2 border-gold pt-4">
           <dt class="figures text-display-sm text-ink">{allBrands.length}</dt>
@@ -66,59 +73,3 @@ const { hero } = copy.home;
     </aside>
   </div>
 </section>
-
-<style>
-  /*
-   * Two clearings in the backdrop, not one panel over it.
-   *
-   * The names behind the hero are drifting, so where they cross a line of
-   * type the eye reads movement it cannot resolve. A bordered box fixes that
-   * but announces itself, and the client rejected it. This instead paints
-   * the page's own colour behind the text and blurs its edges away: the
-   * names dissolve as they travel under the copy and come back the moment
-   * they leave it, with nothing visible marking where.
-   *
-   * Why `filter: blur()` on a solid rather than a masked gradient: the blur
-   * *is* the effect being asked for, it is one declaration rather than three
-   * with `mask-composite` and its Safari prefix, and it feathers all four
-   * corners evenly, which two crossed linear gradients do not.
-   *
-   * WHY THE HORIZONTAL NUMBERS ARE SO TIGHT. The copy and the figure are
-   * meant to read as two separate clearings with the backdrop alive between
-   * them, and the space available for that is fixed: the page is capped at
-   * 75rem, the figure column is 16rem, and the copy is capped at the 44rem
-   * prose measure — which leaves a 200px band between the end of the text
-   * and the start of the figure at every desktop width. Each clearing eats
-   * into it twice over, once for its inset and once for the blur, which
-   * spreads about 1.5r beyond the shape's own edge. At the previous -4rem
-   * and 2rem the two ate 336px of a 200px band and merged into one wash. At
-   * -1.5rem and 1rem they eat 96px and leave about 104px of backdrop
-   * running between them, while the solid core still reaches the text
-   * exactly (24px of inset against 24px of fade).
-   *
-   * So: change either number and they merge again. The vertical inset is
-   * free of all this and stays generous.
-   */
-  .clearing {
-    position: relative;
-  }
-
-  /* Behind the text but inside the wrapper's stacking context, so it clears
-     the backdrop at `z-0` without needing a z-index of its own up there.
-     Width tracks the prose measure rather than the grid cell: the left
-     column is `1fr` and runs well past where the text stops, and clearing
-     that empty remainder is what closed the gap between the two. */
-  .clearing::before {
-    content: '';
-    position: absolute;
-    inset: -3rem auto -3rem -1.5rem;
-    width: calc(min(100%, var(--container-content)) + 3rem);
-    z-index: -1;
-    /* The hero's own background, painted back over the arcs — so this token
-       and the `bg-surface` on the section above are one decision. Change one
-       and the clearings become a visible rectangle on a different white. */
-    background-color: var(--color-surface);
-    filter: blur(1rem);
-    pointer-events: none;
-  }
-</style>
