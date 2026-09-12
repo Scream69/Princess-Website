@@ -50,19 +50,19 @@ function state(overrides: Partial<EnquiryState> = {}): EnquiryState {
 const context = (overrides: Partial<EnquiryState> = {}) => ({
   state: state(overrides),
   session: { entryUrl: 'https://example.com/order?brand=miele', brandsClicked: ['miele'], msOnPage: 254_000 },
-  countryLabel: 'United Kingdom',
   brandNames: { miele: 'Miele' },
   now,
 });
 
 // --- payload ----------------------------------------------------------------
 
-test('the subject carries the reference, the customer and the country', () => {
-  // The client quotes shipping from the country, so it has to be readable
-  // without opening the email (CLAUDE.md 8.6).
+test('the subject carries the reference, the customer and the count', () => {
+  // Everything the client needs to triage the email without opening it. The
+  // delivery country used to be here too; with UK-only delivery it named the
+  // same country every time and was removed (CLAUDE.md 8.6).
   const payload = buildPayload(context());
-  assert.equal(payload.subject, 'Enquiry ENQ-4CDEF — Jane Doe, United Kingdom (1 appliance)');
-  assert.equal(payload.country, 'United Kingdom (GB)');
+  assert.equal(payload.subject, 'Enquiry ENQ-4CDEF — Jane Doe (1 appliance)');
+  assert.equal('country' in payload, false);
 });
 
 test('the appliance count is pluralised', () => {
@@ -132,7 +132,7 @@ test('the WhatsApp message carries the whole enquiry', () => {
   const message = whatsappMessage(buildPayload(context()));
   assert.match(message, /^Enquiry ENQ-4CDEF/);
   assert.match(message, /Jane Doe · \+44 7700 900123 · jane@example\.co\.uk/);
-  assert.match(message, /United Kingdom \(GB\), WD17 1AA/);
+  assert.match(message, /^WD17 1AA$/m);
   assert.match(message, /Miele — Handleless Oven — H7860BPX/);
 });
 

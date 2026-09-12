@@ -354,7 +354,8 @@ correctly. Hard rules:
 
 If the client ever does want the full address dropdown, that is a rule 7 change
 plus a paid PAF account in their name — raise it, do not just add it.
-- The country is still included in the enquiry payload and in the subject line of the notification email. It is now a constant, so it carries no information; it is left in place because changing an email format the client already receives is their call, not ours.
+- **The country is no longer in the notification email** — not in the subject line, not in the body, not in the WhatsApp fallback. It named the same country every time, which is not information: it is a word in every subject line that has to be read past to reach the parts that differ. The postcode carries the region. Removed on the client's instruction, 2026-09-12.
+- It is still written to the *enquiry record* on the device (5.2), which is what keeps re-adding a second country a data change.
 
 Two knock-on points that **UK-only delivery has now closed**: a customer pasting a `miele.de` link could reference a model number that differs from the UK SKU, and selling to EU consumers would bring EU distance-selling and VAT considerations. Neither needs handling. The first can still happen — nothing stops a UK customer browsing a German site — so parsing must stay a convenience and never a gate (8.3).
 

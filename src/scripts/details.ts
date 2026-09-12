@@ -68,10 +68,6 @@ export function postcodeLabelFor(code: string): { label: string; placeholder: st
   };
 }
 
-export function countryName(code: string): string {
-  return countries.find((entry) => entry.code === code.toUpperCase())?.name ?? code;
-}
-
 export interface DetailsOptions {
   root: ParentNode;
   getContact: () => EnquiryContact;

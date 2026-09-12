@@ -53,7 +53,6 @@ export interface EnquiryPayload {
   name: string;
   email: string;
   phone: string;
-  country: string;
   postcode: string;
   appliance_count: number;
   appliances: string;
@@ -74,8 +73,6 @@ export interface SessionMeta {
 export interface PayloadContext {
   state: EnquiryState;
   session: SessionMeta;
-  /** Display name for the ISO code. Resolved by the caller, which owns countries.json. */
-  countryLabel: string;
   brandNames: Readonly<Record<string, string>>;
   now?: number;
 }
@@ -101,7 +98,7 @@ function itemLines(item: EnquiryItem, brandNames: Readonly<Record<string, string
 }
 
 export function buildPayload(context: PayloadContext): EnquiryPayload {
-  const { state, session, countryLabel, brandNames } = context;
+  const { state, session, brandNames } = context;
   const now = context.now ?? Date.now();
   const { contact, items } = state;
 
@@ -113,16 +110,20 @@ export function buildPayload(context: PayloadContext): EnquiryPayload {
   const noun = count === 1 ? 'appliance' : 'appliances';
 
   return {
-    // The country is in the subject line so the client can judge shipping
-    // before opening the email (CLAUDE.md 8.6).
-    subject: `Enquiry ${state.reference} — ${contact.name}, ${countryLabel} (${count} ${noun})`,
+    /*
+     * The subject named the delivery country, so the client could judge
+     * shipping without opening the email. With UK-only delivery it named the
+     * same country every time, which is not information — it is a word in
+     * every subject line that has to be read past to reach the ones that
+     * differ. The postcode is in the body and carries the region anyway.
+     */
+    subject: `Enquiry ${state.reference} — ${contact.name} (${count} ${noun})`,
     from_name: contact.name,
     replyto: contact.email,
     reference: state.reference,
     name: contact.name,
     email: contact.email,
     phone: contact.phone,
-    country: `${countryLabel} (${contact.country})`,
     postcode: contact.postcode,
     appliance_count: count,
     appliances,
@@ -144,7 +145,7 @@ export function whatsappMessage(payload: EnquiryPayload): string {
   const body = [
     `Enquiry ${payload.reference}`,
     `${payload.name} · ${payload.phone} · ${payload.email}`,
-    `${payload.country}, ${payload.postcode}`,
+    payload.postcode,
     '',
     payload.appliances,
     '',

@@ -13,7 +13,7 @@ import copy from '../data/copy.json' with { type: 'json' };
 import { track, trackAbandonment } from './analytics.ts';
 import { whatsappHref } from '../data/site.ts';
 import { initClipboard } from './clipboard.ts';
-import { countryName, initDetails, isComplete } from './details.ts';
+import { initDetails, isComplete } from './details.ts';
 import { describe, parseInput } from './parse.ts';
 import { createId, createReference } from './reference.ts';
 import {
@@ -637,7 +637,6 @@ export function initWizard() {
     return buildPayload({
       state,
       session: { ...session, msOnPage: Date.now() - loadedAt },
-      countryLabel: countryName(state.contact.country),
       brandNames,
     });
   }
@@ -737,7 +736,7 @@ export function initWizard() {
     sending = true;
     setSubmitBusy(true);
     hideFailure();
-    track('submit_attempt', { items: state.items.length, country: state.contact.country });
+    track('submit_attempt', { items: state.items.length });
 
     const result = await postEnquiry({ accessKey: ACCESS_KEY, payload });
 
