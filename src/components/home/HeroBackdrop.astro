@@ -77,17 +77,25 @@ const lines = Array.from({ length: LINES }, (_, index) => {
  * static no matter how fast it turned.
  *
  * Each is far larger than the hero and centred off its edges, so what you
- * see is a slow curve crossing the page, not a circle spinning on it. The
- * durations are deliberately close but not common multiples: at 61, 83, 47,
- * 97 and 71 seconds the five never return to the same arrangement, so the
- * hero does not visibly loop while anyone is looking at it.
+ * see is a curve crossing the page, not a circle spinning on it. The
+ * durations are primes — 23, 31, 17, 37 and 27 seconds — so the five share
+ * no common multiple, never return to the same arrangement, and the hero
+ * does not visibly loop while anyone is looking at it.
+ *
+ * **They were three times slower than this and the client read the hero as
+ * still.** A rotation about a centre that sits off the page moves the part
+ * you can actually see very little: at 61 seconds the visible curve drifted
+ * about six degrees a second, which is movement a stopwatch can find and an
+ * eye cannot. If these ever need to calm down, the honest lever is opacity,
+ * not duration — a slower arc does not read as more restrained, it reads as
+ * a static line.
  */
 const arcs = [
-  { size: 46, left: -8, top: -30, duration: 61, reverse: false, gold: false, offset: 0 },
-  { size: 62, left: 58, top: -46, duration: 83, reverse: true, gold: true, offset: 14 },
-  { size: 34, left: 22, top: 30, duration: 47, reverse: true, gold: false, offset: 9 },
-  { size: 58, left: 12, top: -44, duration: 97, reverse: false, gold: false, offset: 31 },
-  { size: 40, left: 74, top: 22, duration: 71, reverse: false, gold: true, offset: 22 },
+  { size: 46, left: -8, top: -30, duration: 23, reverse: false, gold: false, offset: 0 },
+  { size: 62, left: 58, top: -46, duration: 31, reverse: true, gold: true, offset: 14 },
+  { size: 34, left: 22, top: 30, duration: 17, reverse: true, gold: false, offset: 9 },
+  { size: 58, left: 12, top: -44, duration: 37, reverse: false, gold: false, offset: 31 },
+  { size: 40, left: 74, top: 22, duration: 27, reverse: false, gold: true, offset: 22 },
 ];
 ---
 
