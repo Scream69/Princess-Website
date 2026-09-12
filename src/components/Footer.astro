@@ -12,17 +12,19 @@ const year = new Date().getFullYear();
   <div class="mx-auto max-w-page px-gutter py-12">
     <div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
       <div>
-        <h2>
-          <img
-            src={logoStacked}
-            alt={site.name}
-            class="h-20 w-auto"
-            width="169"
-            height="166"
-            loading="lazy"
-          />
-        </h2>
-        <p class="mt-3 text-sm text-ink-muted">{site.tagline}</p>
+        {/* The lockup is the mark plus the line under it, sized as one thing.
+            It is `inline-grid`, so its width is the tagline's — and the mark
+            is told to contribute nothing to that measurement and then fill
+            it, which is what keeps the two the same width without a number
+            in the stylesheet. The tagline lives in site.json and the client
+            will change it (rule 9); a hardcoded width would quietly stop
+            matching on the day they do. */}
+        <div class="lockup">
+          <h2>
+            <img src={logoStacked} alt={site.name} width="169" height="166" loading="lazy" />
+          </h2>
+          <p class="mt-3 text-sm text-ink-muted">{site.tagline}</p>
+        </div>
         <p class="mt-4 text-sm text-ink-muted">{site.responsePromise}</p>
       </div>
 
@@ -68,3 +70,25 @@ const year = new Date().getFullYear();
     <p class="mt-6 max-w-content text-xs text-ink-subtle">{copy.footer.note}</p>
   </div>
 </footer>
+
+<style>
+  .lockup {
+    /* `inline-grid` shrinks to fit its widest item. With the mark excluded
+       from that measurement below, the widest item is the tagline. */
+    display: inline-grid;
+    /* A safety rail, not a design decision: the mark is close to square, so
+       a long tagline on a narrow column would otherwise scale it to the full
+       column width and give the footer a logo taller than the address. */
+    max-width: 16rem;
+  }
+
+  .lockup img {
+    /* `width: 0` makes the image contribute nothing when the grid measures
+       itself; `min-width: 100%` then fills whatever width the tagline set.
+       Percentages in `min-width` are ignored during intrinsic sizing, which
+       is exactly why this resolves instead of chasing itself in a circle. */
+    width: 0;
+    min-width: 100%;
+    height: auto;
+  }
+</style>
