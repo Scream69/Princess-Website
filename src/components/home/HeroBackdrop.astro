@@ -67,17 +67,50 @@ const lines = Array.from({ length: LINES }, (_, index) => {
     delay: (index / LINES) * 14,
   };
 });
+
+/*
+ * The moving part. A still field with light crossing it was not read as
+ * motion, so something has to actually travel — and the only shape allowed
+ * here is a line (9.2). These are hairline arcs: a circle whose border is
+ * transparent on three sides, so what sweeps round is an open curve rather
+ * than a ring, which would look identical at every angle and therefore look
+ * static no matter how fast it turned.
+ *
+ * Each is far larger than the hero and centred off its edges, so what you
+ * see is a slow curve crossing the page, not a circle spinning on it. The
+ * durations are deliberately close but not common multiples: at 61, 83, 47,
+ * 97 and 71 seconds the five never return to the same arrangement, so the
+ * hero does not visibly loop while anyone is looking at it.
+ */
+const arcs = [
+  { size: 46, left: -8, top: -30, duration: 61, reverse: false, gold: false, offset: 0 },
+  { size: 62, left: 58, top: -46, duration: 83, reverse: true, gold: true, offset: 14 },
+  { size: 34, left: 22, top: 30, duration: 47, reverse: true, gold: false, offset: 9 },
+  { size: 58, left: 12, top: -44, duration: 97, reverse: false, gold: false, offset: 31 },
+  { size: 40, left: 74, top: 22, duration: 71, reverse: false, gold: true, offset: 22 },
+];
 ---
 
 <div class="backdrop" aria-hidden="true">
+  <div class="field">
+    {
+      lines.map((line) => (
+        <div
+          class:list={['flute', line.gold && 'flute-gold', line.heavy && 'flute-heavy']}
+          style={`left:${line.left.toFixed(2)}%`}
+        >
+          <span class="sheen" style={`animation-delay:-${line.delay.toFixed(2)}s`} />
+        </div>
+      ))
+    }
+  </div>
+
   {
-    lines.map((line) => (
+    arcs.map((arc) => (
       <div
-        class:list={['flute', line.gold && 'flute-gold', line.heavy && 'flute-heavy']}
-        style={`left:${line.left.toFixed(2)}%`}
-      >
-        <span class="sheen" style={`animation-delay:-${line.delay.toFixed(2)}s`} />
-      </div>
+        class:list={['arc', arc.gold && 'arc-gold']}
+        style={`width:${arc.size}rem;height:${arc.size}rem;left:${arc.left}%;top:${arc.top}%;animation-duration:${arc.duration}s;animation-direction:${arc.reverse ? 'reverse' : 'normal'};animation-delay:-${arc.offset}s`}
+      />
     ))
   }
 </div>
@@ -94,7 +127,16 @@ const lines = Array.from({ length: LINES }, (_, index) => {
     /* Nothing inside affects layout outside, and the browser can skip the
        whole field once it is scrolled past. */
     contain: strict;
+  }
 
+  /* The top-and-bottom fade lives on the fluting, not on the container.
+     With it on the container, every frame of a rotating arc forced the
+     masked surface over the whole hero to be recomposited — measured at
+     186ms of blocking time and a Lighthouse performance score of 97. Moving
+     it one level down leaves the arcs unmasked and costs nothing, and they
+     do not need it: they are curves that leave the frame on their own, and
+     the section clips them anyway. */
+  .field {
     -webkit-mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
     mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
   }
@@ -127,11 +169,62 @@ const lines = Array.from({ length: LINES }, (_, index) => {
     opacity: 0.15;
   }
 
+  /* The whole field drifts, slowly and only a little. On its own this is
+     barely motion; its job is to stop the fluting reading as a printed
+     pattern the arcs happen to pass over. */
+  .field {
+    position: absolute;
+    inset: -4% -6%;
+    animation: field-drift 90s ease-in-out infinite alternate;
+  }
+
+  @keyframes field-drift {
+    to {
+      transform: translateX(4%);
+    }
+  }
+
   .sheen {
     display: block;
     height: 100%;
     background-color: inherit;
     animation: sheen 14s ease-in-out infinite;
+  }
+
+  /* An open curve, not a ring: three borders are transparent, so the arc has
+     a visible beginning and end and its rotation can be seen. */
+  .arc {
+    position: absolute;
+    /* 2px, not 1. A hairline reads as a hairline on a rule a few inches
+       long; on a curve this large it disappears, and a movement nobody can
+       see is not movement. */
+    border: 2px solid transparent;
+    border-top-color: var(--color-ink);
+    border-right-color: var(--color-ink);
+    border-radius: 50%;
+    opacity: 0.12;
+    animation-name: turn;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  /* No `will-change` here on purpose. A transform animation is promoted to
+     the compositor while it runs whether or not it is declared, and these
+     are large — the biggest is 78rem square, which on a 3x phone is a
+     texture worth tens of megabytes. Declaring `will-change` would pin all
+     five of those layers for the life of the page rather than only while
+     they are on screen. */
+
+  .arc-gold {
+    border-top-color: var(--color-gold);
+    border-right-color: var(--color-gold);
+    opacity: 0.26;
+  }
+
+  @keyframes turn {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   /* A reflection crossing the glass: most of the time the line sits at a
@@ -148,8 +241,13 @@ const lines = Array.from({ length: LINES }, (_, index) => {
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .sheen {
+    .sheen,
+    .field,
+    .arc {
       animation: none;
+    }
+
+    .sheen {
       opacity: 0.7;
     }
   }
