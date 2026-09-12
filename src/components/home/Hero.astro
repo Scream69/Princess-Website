@@ -2,7 +2,6 @@
 import { brands as allBrands } from '../../data/brands';
 import copy from '../../data/copy.json';
 import site from '../../data/site.json';
-import HeroBackdrop from './HeroBackdrop.astro';
 
 /*
  * The home page has five seconds to explain a model no other retailer uses:
@@ -20,25 +19,25 @@ import HeroBackdrop from './HeroBackdrop.astro';
  * position to display. The About section made the same claim at greater
  * length and has been rewritten for the same reason.
  *
- * There were two blurred clearings behind the text for a while, painting the
- * page's colour back over the backdrop so nothing drifted under the copy.
- * They existed because the backdrop was brand names at the time, and words
- * crossing words is unreadable. The backdrop is now five faint arcs on plain
- * white, which the headline sits over without any help, so the clearings
- * have gone — along with the coupling that made the hero's background and
- * their fill one decision.
+ * The hero had an animated backdrop through several versions — drifting
+ * brand names, then fine vertical fluting, then sweeping hairline arcs — and
+ * two blurred clearings to keep the copy off whichever of them was running.
+ * The client's decision on 2026-09-12 was plain white, so all of it is gone
+ * and `HeroBackdrop.astro` with it. What is left needs no stacking context,
+ * no overflow clipping and no `z-10` on the grid, because there is nothing
+ * behind the text to sit in front of.
+ *
+ * Worth knowing before adding another: none of those versions failed on
+ * taste. The names duplicated the strip 80px below, and the fluting and the
+ * arcs each had to be found by measuring, because an animation can be
+ * running perfectly and still read as a still page.
  */
 const { hero } = copy.home;
 ---
 
-{/* `relative` anchors the backdrop, `isolate` keeps its stacking context
-    from reaching the fixed nav, and `overflow-hidden` contains rows that are
-    deliberately wider than the page. */}
-<section class="relative isolate overflow-hidden bg-surface">
-  <HeroBackdrop />
-
+<section class="bg-surface">
   <div
-    class="relative z-10 mx-auto grid max-w-page gap-12 px-gutter pt-section pb-section lg:grid-cols-[1fr_16rem] lg:gap-16"
+    class="mx-auto grid max-w-page gap-12 px-gutter pt-section pb-section lg:grid-cols-[1fr_16rem] lg:gap-16"
   >
     <div>
       {/* The tagline, sized as a kicker rather than a second headline.
