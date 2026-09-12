@@ -1,94 +1,38 @@
 ---
 /*
- * Fluting, not a word list.
+ * Curves on a plain page. Nothing else.
  *
- * The first version of this drifted the brand names behind the hero. The
- * client's objection was structural rather than aesthetic: the marquee
- * directly below already carries two rows of the same names, legibly, so the
- * backdrop was spending the whole hero saying a thing the next 80px says
- * better.
+ * This has been three things. It drifted the brand names until the client
+ * pointed out the marquee 80px below already says them, legibly. It became a
+ * field of fine vertical lines — reeded glass — which looked right and moved
+ * too little to notice. What survived both is the part that actually moves:
+ * five hairline arcs, now over a plain background rather than a texture.
  *
- * What replaced it is fine vertical lines — reeded glass, the cabinet front
- * of a good kitchen. It is not a free choice: CLAUDE.md 9.1 rules out
- * gradients, and 9.2 allows gold only as a hairline, a rule or a numeral.
- * Between them, a composition of lines is close to the only thing left, and
- * it happens to suit a premium appliance retailer better than the words did.
+ * They are arcs and not rings because a ring looks identical at every angle
+ * and would therefore look still however fast it turned. Three of the four
+ * borders are transparent, leaving an open curve with a beginning and an end.
  *
- * Three things keep it texture rather than wallpaper:
+ * Each is far larger than the hero and centred off its edges, so what crosses
+ * the page is a curve rather than a circle spinning on it. The durations are
+ * primes — 23, 31, 17, 37 and 27 seconds — so the five share no common
+ * multiple, never return to the same arrangement, and the hero never visibly
+ * loops.
  *
- *   - Ink at 4-9%, gold at 20%, and masked away top and bottom. You read the
- *     headline first and notice the fluting second.
- *   - Nothing moves sideways. Light travels across it instead: each line
- *     fades between a third of its weight and its full weight, staggered by
- *     position, which reads as a reflection passing over glass. Opacity is
- *     composited, so the whole field costs the GPU one layer and the main
- *     thread nothing.
- *   - `aria-hidden` and `pointer-events: none`. It is decoration, and it must
- *     never intercept a tap meant for the CTA.
+ * **They were three times slower and the client read the hero as still.** A
+ * rotation about a centre off the page moves the visible part very little: at
+ * 61 seconds the curve drifted about six degrees a second, which a stopwatch
+ * finds and an eye does not. If these ever need to calm down, the lever is
+ * opacity, not duration — a slower arc does not read as more restrained, it
+ * reads as a static line.
  *
- * The inner span exists because the wave animates opacity while each line
- * keeps its own weight. Setting both on one element would mean animating a
- * value derived from a custom property, which engines interpolate
- * inconsistently; a static parent and an animated child always works.
+ * No top-and-bottom fade. It used to live on this container, and every frame
+ * of a rotating arc then recomposited a masked surface the size of the whole
+ * hero: 186ms of blocking time and a performance score of 97. The section
+ * clips the arcs anyway, and the strip below draws its own border across
+ * them, so nothing is lost by leaving it out.
  *
- * Positions are generated at build time from a fixed seed, never at runtime.
- * Even spacing reads as a barcode and perfectly random spacing reads as a
- * mistake, so this is even spacing with a little jitter — the irregularity of
- * something made rather than printed.
- */
-const LINES = 42;
-const SEED = 20260912;
-
-/* A tiny deterministic generator, so the pattern is identical in every build
-   and can be reviewed in a diff like any other content. */
-function* jitter(seed: number): Generator<number> {
-  let state = seed;
-  while (true) {
-    state = (state * 1664525 + 1013904223) % 4294967296;
-    yield state / 4294967296;
-  }
-}
-
-const random = jitter(SEED);
-const lines = Array.from({ length: LINES }, (_, index) => {
-  const even = (index / (LINES - 1)) * 100;
-  const drift = (random.next().value - 0.5) * 0.9;
-  const weight = random.next().value;
-  return {
-    /* Clamped so no line lands outside the hero and vanishes. */
-    left: Math.min(99.5, Math.max(0.5, even + drift)),
-    /* Every ninth line is gold. Enough to carry the colour through the
-       field, few enough that it stays an accent (9.1). */
-    gold: index % 9 === 4,
-    /* Two weights of line, as reeded glass has a ridge and a valley. */
-    heavy: weight > 0.62,
-    /* The wave crosses left to right over 14s; the delay is the line's own
-       position in that crossing, so it arrives in order. */
-    delay: (index / LINES) * 14,
-  };
-});
-
-/*
- * The moving part. A still field with light crossing it was not read as
- * motion, so something has to actually travel — and the only shape allowed
- * here is a line (9.2). These are hairline arcs: a circle whose border is
- * transparent on three sides, so what sweeps round is an open curve rather
- * than a ring, which would look identical at every angle and therefore look
- * static no matter how fast it turned.
- *
- * Each is far larger than the hero and centred off its edges, so what you
- * see is a curve crossing the page, not a circle spinning on it. The
- * durations are primes — 23, 31, 17, 37 and 27 seconds — so the five share
- * no common multiple, never return to the same arrangement, and the hero
- * does not visibly loop while anyone is looking at it.
- *
- * **They were three times slower than this and the client read the hero as
- * still.** A rotation about a centre that sits off the page moves the part
- * you can actually see very little: at 61 seconds the visible curve drifted
- * about six degrees a second, which is movement a stopwatch can find and an
- * eye cannot. If these ever need to calm down, the honest lever is opacity,
- * not duration — a slower arc does not read as more restrained, it reads as
- * a static line.
+ * `aria-hidden` and `pointer-events: none`: decoration, and it must never
+ * intercept a tap meant for the CTA.
  */
 const arcs = [
   { size: 46, left: -8, top: -30, duration: 23, reverse: false, gold: false, offset: 0 },
@@ -100,19 +44,6 @@ const arcs = [
 ---
 
 <div class="backdrop" aria-hidden="true">
-  <div class="field">
-    {
-      lines.map((line) => (
-        <div
-          class:list={['flute', line.gold && 'flute-gold', line.heavy && 'flute-heavy']}
-          style={`left:${line.left.toFixed(2)}%`}
-        >
-          <span class="sheen" style={`animation-delay:-${line.delay.toFixed(2)}s`} />
-        </div>
-      ))
-    }
-  </div>
-
   {
     arcs.map((arc) => (
       <div
@@ -133,74 +64,10 @@ const arcs = [
     user-select: none;
 
     /* Nothing inside affects layout outside, and the browser can skip the
-       whole field once it is scrolled past. */
+       whole thing once it is scrolled past. */
     contain: strict;
   }
 
-  /* The top-and-bottom fade lives on the fluting, not on the container.
-     With it on the container, every frame of a rotating arc forced the
-     masked surface over the whole hero to be recomposited — measured at
-     186ms of blocking time and a Lighthouse performance score of 97. Moving
-     it one level down leaves the arcs unmasked and costs nothing, and they
-     do not need it: they are curves that leave the frame on their own, and
-     the section clips them anyway. */
-  .field {
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
-  }
-
-  .flute {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 1px;
-    /* The line's own weight. The child varies from it; it never varies. */
-    opacity: 0.055;
-    background-color: var(--color-ink);
-  }
-
-  .flute-heavy {
-    width: 2px;
-    opacity: 0.1;
-  }
-
-  /* Gold is a stronger pigment than ink at the same opacity, and the first
-     cut set it four times heavier than its neighbours — which read as a
-     stray divider rule beside the figure rather than as part of the field.
-     It is now close enough to the ink lines to belong to them. */
-  .flute-gold {
-    opacity: 0.11;
-    background-color: var(--color-gold);
-  }
-
-  .flute-gold.flute-heavy {
-    opacity: 0.15;
-  }
-
-  /* The whole field drifts, slowly and only a little. On its own this is
-     barely motion; its job is to stop the fluting reading as a printed
-     pattern the arcs happen to pass over. */
-  .field {
-    position: absolute;
-    inset: -4% -6%;
-    animation: field-drift 90s ease-in-out infinite alternate;
-  }
-
-  @keyframes field-drift {
-    to {
-      transform: translateX(4%);
-    }
-  }
-
-  .sheen {
-    display: block;
-    height: 100%;
-    background-color: inherit;
-    animation: sheen 14s ease-in-out infinite;
-  }
-
-  /* An open curve, not a ring: three borders are transparent, so the arc has
-     a visible beginning and end and its rotation can be seen. */
   .arc {
     position: absolute;
     /* 2px, not 1. A hairline reads as a hairline on a rule a few inches
@@ -216,13 +83,11 @@ const arcs = [
     animation-iteration-count: infinite;
   }
 
-  /* No `will-change` here on purpose. A transform animation is promoted to
-     the compositor while it runs whether or not it is declared, and these
-     are large — the biggest is 78rem square, which on a 3x phone is a
-     texture worth tens of megabytes. Declaring `will-change` would pin all
-     five of those layers for the life of the page rather than only while
-     they are on screen. */
-
+  /* No `will-change` on purpose. A transform animation is promoted to the
+     compositor while it runs whether or not it is declared, and these are
+     large — the biggest is 62rem square, which on a 3x phone is a texture
+     worth tens of megabytes. Declaring it would pin all five of those layers
+     for the life of the page rather than only while they are on screen. */
   .arc-gold {
     border-top-color: var(--color-gold);
     border-right-color: var(--color-gold);
@@ -235,28 +100,9 @@ const arcs = [
     }
   }
 
-  /* A reflection crossing the glass: most of the time the line sits at a
-     third of its weight, and briefly comes up to full. */
-  @keyframes sheen {
-    0%,
-    70%,
-    100% {
-      opacity: 0.35;
-    }
-    35% {
-      opacity: 1;
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .sheen,
-    .field,
     .arc {
       animation: none;
-    }
-
-    .sheen {
-      opacity: 0.7;
     }
   }
 </style>

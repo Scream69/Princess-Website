@@ -26,7 +26,7 @@ const { hero } = copy.home;
 {/* `relative` anchors the backdrop, `isolate` keeps its stacking context
     from reaching the fixed nav, and `overflow-hidden` contains rows that are
     deliberately wider than the page. */}
-<section class="relative isolate overflow-hidden">
+<section class="relative isolate overflow-hidden bg-surface">
   <HeroBackdrop />
 
   <div
@@ -114,7 +114,10 @@ const { hero } = copy.home;
     inset: -3rem auto -3rem -1.5rem;
     width: calc(min(100%, var(--container-content)) + 3rem);
     z-index: -1;
-    background-color: var(--color-canvas);
+    /* The hero's own background, painted back over the arcs — so this token
+       and the `bg-surface` on the section above are one decision. Change one
+       and the clearings become a visible rectangle on a different white. */
+    background-color: var(--color-surface);
     filter: blur(1rem);
     pointer-events: none;
   }
