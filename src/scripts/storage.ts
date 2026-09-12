@@ -10,6 +10,12 @@
 
 export const STORAGE_KEY = 'enquiry:v1';
 export const SCHEMA_VERSION = 1;
+
+/**
+ * The only country served. Recorded on every enquiry and never asked for —
+ * the client confirmed UK-only delivery on 2026-09-12.
+ */
+export const HOME_COUNTRY = 'GB';
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 const SAVE_DEBOUNCE_MS = 300;
 
@@ -64,12 +70,13 @@ export function createEmptyState(): EnquiryState {
     reference: '',
     items: [],
     /*
-     * `country` starts empty, not 'GB'. The selector defaults to the United
-     * Kingdom in the UI (CLAUDE.md 8.6), but pre-filling a *valid* value here
-     * makes the question look answered, and step 3 would skip straight past it
-     * to the postcode — which then carries the wrong label for anyone abroad.
+     * `country` starts at 'GB' rather than empty. It used to start empty on
+     * purpose: a valid value would have made step 3 skip its country question
+     * and give the postcode field the wrong label for anyone abroad. Now that
+     * the UK is the only country served there is no question to skip, and the
+     * field is a constant on the record rather than an answer.
      */
-    contact: { name: '', email: '', phone: '', country: '', postcode: '' },
+    contact: { name: '', email: '', phone: '', country: HOME_COUNTRY, postcode: '' },
     step: 1,
     consent: false,
     draftBrandSlug: null,

@@ -45,7 +45,7 @@ These are absolute. Do not violate them even if asked to in a task prompt; raise
 4. **Never lose an enquiry.** Submission must be resilient: retry, queue, and fall back to WhatsApp. A failed submission that the customer thinks succeeded is the most serious possible defect in this codebase.
 5. **All manufacturer links open in a new tab**, always, with `rel="noopener noreferrer"`. Our page must never be navigated away from.
 6. **No cookies and no cookie banner.** Use a cookieless analytics tool only. If a task requests Google Analytics, flag that it legally requires a consent banner and ask before proceeding.
-7. **Data minimisation.** Collect only: name, email, phone, country, postcode/ZIP, product link/model, optional note. No full address, no date of birth, no marketing opt-in by default.
+7. **Data minimisation.** Collect only: name, email, phone, postcode, product link/model, optional note. No full address, no date of birth, no marketing opt-in by default.
 8. **No new dependencies without asking.** State what you want, why, and its size. Prefer writing 30 lines to adding a package.
 9. **All content in data files, never hardcoded in components.** Brands, copy, config, contact details. If the client will ever want to change it, it lives in `src/data/`.
 10. **Accessibility and performance budgets in section 10 are pass/fail**, not aspirations.
@@ -176,8 +176,9 @@ type EnquiryState = {
     name: string;
     email: string;
     phone: string;
-    country: string;         // ISO 3166-1 alpha-2, e.g. 'GB', 'DE'
-    postcode: string;        // free-form, format varies by country
+    country: string;         // always 'GB' — see 8.6. Kept on the record so
+                             // serving a second country stays a data change
+    postcode: string;        // free-form, validated for shape only
   };
   step: 1 | 2 | 3 | 4;
   consent: boolean;
@@ -240,9 +241,9 @@ Four steps. **The progress bar shows "Step N of 3"; step 4 is a success screen a
 
 ### Step 3 — Your details
 - Chat-styled: one question at a time, as messages.
-- Order: name → phone → email → country → postcode/ZIP.
+- Order: name → phone → email → postcode.
 - Each answer validated before advancing; the customer can go back and edit any earlier answer.
-- Country is asked **before** postcode, and sets the postcode field's label and placeholder (8.6).
+- No country question. The UK is the only country served, so it is a constant on the record rather than something to ask for (8.6).
 - Consent checkbox with a link to the privacy policy, above the submit button.
 - Summary of all tray items shown before submitting.
 - **No fake typing delays. No "agent is typing" animation.** They are patronising and slow the customer down.
@@ -310,17 +311,32 @@ Save on every state change, debounced ~300ms. Restore on load. 30-day expiry. Ve
 ### 8.5 Response promise
 **Flat "within 24 hours".** The string lives in `site.json` — do not compute it from the clock, and do not build time-of-day or opening-hours logic. A single unconditional message, editable in one place.
 
-### 8.6 Country and postcode — no serviceability gate
-The business **serves the whole of the UK and Europe**, so there is no serviceability check and no served-prefix list. Do not build one.
+### 8.6 Postcode — no country question, no serviceability gate
+The business delivers to the **United Kingdom only** (client, 2026-09-12).
+There is no serviceability check and no served-prefix list within it: every UK
+postcode is served. Do not build one.
 
-What this does require:
+**This section previously said the business served the whole of the UK and
+Europe, and specified a country selector.** That selector shipped, but
+`countries.json` never held more than a single entry, so it presented one
+option and asked a question whose answer was already known. It has been
+removed. The delivery country is still written to the enquiry record as `GB`
+(see 5.2) so that serving a second country would be a data change rather than
+a schema migration.
 
-- **A country selector, asked immediately before the postcode field.** Default to United Kingdom, with the other served countries listed after it. Countries live in `countries.json`.
-- **Permissive postcode validation.** Postcode formats vary enormously across Europe — Germany is 5 digits, the Netherlands is `1234 AB`, Ireland uses alphanumeric Eircodes. A UK-format regex would reject most European customers at the final step, which is the worst place in the funnel to lose someone.
-  - Validate only that the value is present and plausible: roughly 3–10 characters, letters/digits/spaces/hyphens.
+What this still requires:
+
+- **Permissive postcode validation.** Validate only that the value is present
+  and plausible: roughly 3–10 characters, letters/digits/spaces/hyphens.
   - Uppercase and collapse repeated whitespace. Store what they typed.
-  - **Never reject a postcode for not matching a country pattern.** If it looks unusual, accept it.
-- Label and placeholder adapt to the country: "Postcode" for UK/Ireland, "ZIP code" where that reads better, "Postal code" otherwise. Both strings live per-country in `countries.json`, so adding a served country is a data change with no code change.
+  - **Never reject a postcode for not matching a pattern.** The original
+    reason was European formats; the reason it survives UK-only delivery is
+    better — postcodes for new builds can lead the published dataset by
+    months, and the last step of the funnel is the worst place to tell a
+    customer their own address is wrong.
+- The postcode label and placeholder still come from `countries.json` rather
+  than a literal in a component. They are copy, and copy lives in data files
+  (rule 9); a one-entry list does not change where they belong.
 
 **Postcode confirmation (UK only).** `postcode-lookup.ts` sends a UK postcode to
 postcodes.io (ONS open data, no key, no cost) purely to echo back the town —
@@ -338,9 +354,9 @@ correctly. Hard rules:
 
 If the client ever does want the full address dropdown, that is a rule 7 change
 plus a paid PAF account in their name — raise it, do not just add it.
-- Include the country in the enquiry payload and in the subject line of the notification email — the client needs it to quote shipping.
+- The country is still included in the enquiry payload and in the subject line of the notification email. It is now a constant, so it carries no information; it is left in place because changing an email format the client already receives is their call, not ours.
 
-Two knock-on points to raise with the client rather than solve in code: manufacturer sites are market-specific, so a customer in Germany pasting a `miele.de` link may reference a **model number that differs from the UK SKU**; and selling to EU consumers brings EU distance-selling and VAT considerations that sit outside this build. Log both as questions, do not attempt to handle them in the site.
+Two knock-on points that **UK-only delivery has now closed**: a customer pasting a `miele.de` link could reference a model number that differs from the UK SKU, and selling to EU consumers would bring EU distance-selling and VAT considerations. Neither needs handling. The first can still happen — nothing stops a UK customer browsing a German site — so parsing must stay a convenience and never a gate (8.3).
 
 ### 8.7 Submission (`submit.ts`) — highest-risk code in the project
 1. POST to the form endpoint with a timeout.
@@ -453,7 +469,7 @@ Unique title and meta description per page, Open Graph and Twitter cards, `sitem
 
 **Trademarks.** Manufacturer logos are trademarks. Displaying ~60 of them prominently implies a supply relationship, which is only safe where one exists. The `authorised` flag exists to track this. **If the client has not confirmed authorised-dealer status for a brand, do not add it to `brands.json` — add it to `MISSING-ASSETS.md` as blocked pending confirmation.** Ask the client whether they are a member of a buying group (Euronics, NEWS, CIH); if so, request the group's brand asset pack rather than sourcing logos individually.
 
-**UK GDPR and EU GDPR.** The enquiry form collects personal data, and because the business serves customers across Europe, **both UK GDPR and EU GDPR apply**. The client is the data controller. The privacy policy must therefore be written for an EU/UK audience, not a UK-only one — this is worth flagging to the client, as it may affect who prepares it. A privacy policy is required before launch, covering what is collected, why, retention, and the controller's contact details. Do not launch without it. Keep the consent checkbox unticked by default.
+**UK GDPR.** The enquiry form collects personal data and the client is the data controller. Delivery is UK-only as of 2026-09-12, so **UK GDPR is the operative regime**. EU GDPR is not automatically out of scope — it can still reach a business that offers goods to people in the EU, and the site is reachable from anywhere — but that is a question for whoever reviews the policy, not an assumption to bake into the code. The policy currently retains its reference to EU supervisory authorities; leave it unless the client's reviewer says otherwise, since the cost of an unnecessary sentence is far lower than the cost of a missing one. A privacy policy is required before launch, covering what is collected, why, retention, and the controller's contact details. Do not launch without it. Keep the consent checkbox unticked by default.
 
 **Cookies.** With cookieless analytics and no marketing tags, no consent banner is required. Adding any third-party tag changes that — flag it rather than adding it.
 
@@ -519,7 +535,7 @@ Track these; do not guess answers.
 - [x] Enquiry destination email address — `info@princeselectronics.com`
 - [ ] WhatsApp Business number
 - [ ] Opening hours for the footer (the response promise is fixed at 24 hours)
-- [ ] Confirmed list of served European countries for the selector
+- [x] Delivery area — **United Kingdom only**, confirmed 2026-09-12. The country selector has been removed (8.6).
 - [x] Trading name — **Princes Electronics**
 - [x] Company registration number `07396672`, VAT `100 906 362`, registered office `23 Haverford Way, Edgware, Middlesex, HA8 6DJ`
 - [x] Registered company name — **Princes Electronics** (same as the trading name)

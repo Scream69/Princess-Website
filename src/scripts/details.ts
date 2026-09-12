@@ -1,18 +1,23 @@
 /*
  * Step 3 — the chat-styled details sequence.
  *
- * Styled as a conversation, but it is a fixed five-question form. Nothing the
+ * Styled as a conversation, but it is a fixed four-question form. Nothing the
  * customer types is interpreted, nothing is sent anywhere to be understood, and
- * the order never varies (CLAUDE.md 2.1). Country is asked immediately before
- * postcode because it sets that field's label (CLAUDE.md 8.6).
+ * the order never varies (CLAUDE.md 2.1).
+ *
+ * There were five questions until 2026-09-12, when the client confirmed they
+ * deliver to the United Kingdom only. The country question existed to set the
+ * postcode field's label, but `countries.json` never held more than one entry,
+ * so it was a select with a single option — a question whose answer was
+ * already known. The delivery country is still recorded on the enquiry as
+ * `GB`; it is simply no longer asked for.
  */
 import copy from '../data/copy.json' with { type: 'json' };
 import { track } from './analytics.ts';
 import countries from '../data/countries.json' with { type: 'json' };
 import { isLookupSupported, lookupPostcode, type PostcodeArea } from './postcode-lookup.ts';
-import type { EnquiryContact } from './storage.ts';
+import { HOME_COUNTRY, type EnquiryContact } from './storage.ts';
 import {
-  validateCountry,
   validateEmail,
   validateName,
   validatePhone,
@@ -21,21 +26,26 @@ import {
 } from './validate.ts';
 
 const QUESTIONS = copy.order.step3.questions;
-const COUNTRY_CODES = countries.map((country) => country.code);
 
-export type FieldName = keyof EnquiryContact;
+/*
+ * `country` stays on the stored contact but is not a question, so it is
+ * excluded here rather than removed from the record. Leaving it on
+ * `EnquiryContact` means enquiries already saved on a customer's device need
+ * no schema bump and no migration (CLAUDE.md 5.2), and serving a second
+ * country again would be a data change rather than a rewrite.
+ */
+export type FieldName = Exclude<keyof EnquiryContact, 'country'>;
 
-export const FIELD_ORDER: FieldName[] = ['name', 'phone', 'email', 'country', 'postcode'];
+export const FIELD_ORDER: FieldName[] = ['name', 'phone', 'email', 'postcode'];
 
 const VALIDATORS: Record<FieldName, (raw: string) => Validation> = {
   name: validateName,
   phone: validatePhone,
   email: validateEmail,
-  country: (raw) => validateCountry(raw, COUNTRY_CODES),
   postcode: validatePostcode,
 };
 
-/** The first question without a valid answer, or null when all five are done. */
+/** The first question without a valid answer, or null when all four are done. */
 export function firstUnanswered(contact: EnquiryContact): FieldName | null {
   return FIELD_ORDER.find((field) => !VALIDATORS[field](contact[field]).ok) ?? null;
 }
@@ -44,7 +54,12 @@ export function isComplete(contact: EnquiryContact): boolean {
   return firstUnanswered(contact) === null;
 }
 
-/** Label and placeholder follow the chosen country (CLAUDE.md 8.6). */
+/*
+ * The postcode label and placeholder still come from `countries.json` rather
+ * than from a literal here. They are copy, and copy lives in data files
+ * (CLAUDE.md 2.9); the list being one entry long today does not change where
+ * it belongs.
+ */
 export function postcodeLabelFor(code: string): { label: string; placeholder: string } {
   const country = countries.find((entry) => entry.code === code.toUpperCase());
   return {
@@ -75,7 +90,6 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
   const questionText = root.querySelector<HTMLElement>('[data-detail-question]');
   const label = root.querySelector<HTMLLabelElement>('[data-detail-label]');
   const input = root.querySelector<HTMLInputElement>('[data-detail-input]');
-  const select = root.querySelector<HTMLSelectElement>('[data-detail-select]');
   const error = root.querySelector<HTMLElement>('[data-detail-error]');
   const review = root.querySelector<HTMLElement>('[data-review]');
   const reviewList = root.querySelector<HTMLElement>('[data-review-list]');
@@ -83,7 +97,7 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
   const consentBox = root.querySelector<HTMLInputElement>('[data-consent]');
   const submitButton = root.querySelector<HTMLButtonElement>('[data-submit-enquiry]');
 
-  if (!form || !input || !select || !label || !questionText || !error) {
+  if (!form || !input || !label || !questionText || !error) {
     return { refresh: () => {} };
   }
 
@@ -104,7 +118,7 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
     const run = (lookupRun += 1);
     confirmed = null;
 
-    if (!isLookupSupported(getContact().country) || raw.trim().length < 5) {
+    if (!isLookupSupported(HOME_COUNTRY) || raw.trim().length < 5) {
       hint.textContent = '';
       return;
     }
@@ -136,8 +150,7 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
   }
 
   function displayValue(field: FieldName): string {
-    const value = getContact()[field];
-    return field === 'country' ? countryName(value) : value;
+    return getContact()[field];
   }
 
   function renderTranscript(): void {
@@ -205,42 +218,30 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
     if (field === null) return;
 
     const question = QUESTIONS[field];
-    const usesSelect = field === 'country';
     const contact = getContact();
 
     questionText!.textContent = question.question;
     error!.textContent = '';
     if (hint && field !== 'postcode') hint.textContent = '';
 
-    input!.hidden = usesSelect;
-    select!.hidden = !usesSelect;
-    label!.htmlFor = usesSelect ? 'detail-select' : 'detail-input';
+    const postcode = field === 'postcode' ? postcodeLabelFor(HOME_COUNTRY) : null;
+    label!.textContent = postcode?.label ?? question.label;
+    input!.value = contact[field];
+    input!.placeholder = postcode?.placeholder ?? ('placeholder' in question ? question.placeholder : '');
+    input!.type = field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text';
+    input!.inputMode = field === 'phone' ? 'tel' : field === 'email' ? 'email' : 'text';
+    input!.autocomplete =
+      field === 'name'
+        ? 'name'
+        : field === 'phone'
+          ? 'tel'
+          : field === 'email'
+            ? 'email'
+            : 'postal-code';
 
-    if (usesSelect) {
-      select!.value = contact.country || COUNTRY_CODES[0];
-    } else {
-      const postcode = field === 'postcode' ? postcodeLabelFor(contact.country) : null;
-      label!.textContent = postcode?.label ?? question.label;
-      input!.value = contact[field];
-      input!.placeholder = postcode?.placeholder ?? ('placeholder' in question ? question.placeholder : '');
-      input!.type = field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text';
-      input!.inputMode = field === 'phone' ? 'tel' : field === 'email' ? 'email' : 'text';
-      input!.autocomplete =
-        field === 'name'
-          ? 'name'
-          : field === 'phone'
-            ? 'tel'
-            : field === 'email'
-              ? 'email'
-              : 'postal-code';
-
-      // Re-confirm when returning to a postcode already answered, so the
-      // reassurance is there on an edit or after a refresh.
-      if (field === 'postcode' && input!.value.trim() !== '') void confirmPostcode(input!.value);
-      return;
-    }
-
-    label!.textContent = question.label;
+    // Re-confirm when returning to a postcode already answered, so the
+    // reassurance is there on an edit or after a refresh.
+    if (field === 'postcode' && input!.value.trim() !== '') void confirmPostcode(input!.value);
   }
 
   function renderReviewPanel(): void {
@@ -254,9 +255,8 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
   }
 
   function focusControl(): void {
-    const field = activeField();
-    if (!field) return;
-    (field === 'country' ? select! : input!).focus();
+    if (!activeField()) return;
+    input!.focus();
   }
 
   function refresh(): void {
@@ -270,20 +270,19 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
     const field = activeField();
     if (!field) return;
 
-    const raw = field === 'country' ? select.value : input.value;
-    const result = VALIDATORS[field](raw);
+    const result = VALIDATORS[field](input.value);
 
     if (!result.ok) {
       // The field, never the value: which question people get wrong is the
       // useful signal, and the value is personal data (CLAUDE.md 2.7, 8.10).
       track('validation_error', { field });
       error.textContent = result.message;
-      (field === 'country' ? select : input).setAttribute('aria-invalid', 'true');
-      (field === 'country' ? select : input).focus();
+      input.setAttribute('aria-invalid', 'true');
+      input.focus();
       return;
     }
 
-    (field === 'country' ? select : input).removeAttribute('aria-invalid');
+    input.removeAttribute('aria-invalid');
     error.textContent = '';
     editing = null;
 

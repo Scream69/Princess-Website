@@ -1,11 +1,15 @@
 ---
 import copy from '../../data/copy.json';
-import countries from '../../data/countries.json';
 
-// Step 3. Chat-*styled*, not a chat: a fixed five-question sequence with no
+// Step 3. Chat-*styled*, not a chat: a fixed four-question sequence with no
 // interpretation of anything the customer types (CLAUDE.md 2.1). There are no
 // typing indicators and no artificial delays — they are patronising and slow
 // the customer down (CLAUDE.md 6).
+//
+// The sequence had a country select until 2026-09-12. The client delivers to
+// the UK only, so it offered a single option and asked a question whose answer
+// was already known. Every question is now a text input, which is why there is
+// one control here rather than two.
 const { step3, submit } = copy.order;
 ---
 
@@ -39,16 +43,6 @@ const { step3, submit } = copy.order;
           aria-describedby="detail-error"
           class="mt-2 h-touch w-full rounded-sm border border-line-strong bg-surface px-3 text-ink placeholder:text-ink-subtle"
         />
-
-        <select
-          id="detail-select"
-          data-detail-select
-          hidden
-          aria-describedby="detail-error"
-          class="mt-2 h-touch w-full rounded-sm border border-line-strong bg-surface px-3 text-ink"
-        >
-          {countries.map((country) => <option value={country.code}>{country.name}</option>)}
-        </select>
 
         <p id="detail-error" data-detail-error role="alert" class="mt-2 text-sm text-error"></p>
 

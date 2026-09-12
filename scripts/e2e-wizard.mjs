@@ -443,9 +443,7 @@ await evaluate(`document.querySelector('[data-continue-details]').click(); retur
 
 const answer = (value) => evaluate(`
   const form = document.querySelector('[data-detail-form]');
-  const select = form.querySelector('[data-detail-select]');
-  const control = select.hidden ? form.querySelector('[data-detail-input]') : select;
-  control.value = ${JSON.stringify(value)};
+  form.querySelector('[data-detail-input]').value = ${JSON.stringify(value)};
   form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
   return 1;
 `).then(settle);
@@ -483,18 +481,17 @@ check('a malformed email is caught', s.error, 'That does not look like an email 
 
 await answer('jane@example.co.uk');
 s = await evaluate(detailState);
-check('country is asked before postcode', s.question, 'Which country are we delivering to?');
-
-await answer('GB');
-s = await evaluate(detailState);
-check('the postcode label follows the country', s.label, 'Postcode');
+check('the postcode follows the email, with no country asked', s.question, 'And the postcode?');
+check('the postcode label comes from countries.json', s.label, 'Postcode');
+check('and no country control is rendered at all', await evaluate(
+  `return document.querySelectorAll('[data-detail-form] select').length;`), 0);
 
 await answer('AB');
 s = await evaluate(detailState);
 check('an implausible postcode is caught', s.error, 'That looks too short — please check it.');
 
-// The point of 8.6: no country pattern, so a Dutch postcode must be accepted
-// even though the customer said GB.
+// The point of 8.6 outlasts UK-only delivery: no pattern is applied, so an
+// unfamiliar postcode is still accepted rather than rejected at the last step.
 // Postcode confirmation is advisory. Stub the API so the suite never depends
 // on the network, and prove both the good and the failing path.
 await evaluate(`
@@ -558,8 +555,8 @@ await evaluate(`
 `);
 await answer('1234 ab');
 s = await evaluate(detailState);
-check('no postcode is rejected for failing a country pattern', s.error, '');
-check('all five questions answered', s.answered, ['name', 'phone', 'email', 'country', 'postcode']);
+check('no postcode is rejected for failing a pattern', s.error, '');
+check('all four questions answered', s.answered, ['name', 'phone', 'email', 'postcode']);
 check('the question form gives way to the review', [s.formHidden, s.reviewHidden], [true, false]);
 check('submit is gated on consent', s.submitDisabled, true);
 
@@ -568,7 +565,8 @@ s = await evaluate(`
   return stored.contact;
 `);
 check('the postcode is uppercased and collapsed, not reformatted', s.postcode, '1234 AB');
-check('contact details are persisted', [s.name, s.email, s.country], ['Jane Doe', 'jane@example.co.uk', 'GB']);
+check('contact details are persisted', [s.name, s.email], ['Jane Doe', 'jane@example.co.uk']);
+check('the delivery country is recorded without being asked', s.country, 'GB');
 
 await evaluate(`
   const box = document.querySelector('[data-consent]');
@@ -598,7 +596,7 @@ check('the corrected answer is kept', s, 'jane.doe@example.co.uk');
 
 await goto('/order?step=3');
 s = await evaluate(detailState);
-check('a refresh restores every answer', s.answered, ['name', 'phone', 'email', 'country', 'postcode']);
+check('a refresh restores every answer', s.answered, ['name', 'phone', 'email', 'postcode']);
 
 s = await evaluate(`
   const res = await fetch('/privacy');

@@ -54,16 +54,14 @@ export function validateEmail(raw: string): Validation {
   return ok(value);
 }
 
-export function validateCountry(raw: string, allowed: readonly string[]): Validation {
-  const value = raw.trim().toUpperCase();
-  if (value === '') return no('Please choose a country.');
-  if (!allowed.includes(value)) return no('Please choose a country from the list.');
-  return ok(value);
-}
-
 /*
- * Postcode formats vary enormously across Europe: Germany is five digits, the
- * Netherlands is "1234 AB", Ireland uses alphanumeric Eircodes. There is no
+ * Postcodes are validated for presence and shape only, never against a
+ * pattern. The original reason was Europe — Germany is five digits, the
+ * Netherlands is "1234 AB", Ireland uses alphanumeric Eircodes — and the rule
+ * survives UK-only delivery for a better one: British postcodes for new
+ * builds can lead the published dataset by months, and the final step of the
+ * funnel is the worst place to tell a customer their own address is wrong.
+ * There is no
  * per-country pattern here and there must never be one (CLAUDE.md 8.6) — a
  * UK-shaped regex would reject most European customers at the final step.
  */

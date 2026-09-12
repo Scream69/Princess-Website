@@ -47,6 +47,7 @@ test('missing fields are filled from the empty state', () => {
   const state = parseStored(partial, now);
   assert.equal(state?.draftBrandSlug, null);
   assert.equal(state?.submitted, false);
-  // Empty, not 'GB': a valid default would make step 3 skip the country question.
-  assert.equal(state?.contact.country, '');
+  // 'GB', not empty: the UK is the only country served, so this is a constant
+  // on the record rather than an answer step 3 has to collect.
+  assert.equal(state?.contact.country, 'GB');
 });

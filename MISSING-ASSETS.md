@@ -88,20 +88,33 @@ Recorded here so they can be checked back with the client:
   Hotpoint), chosen only so the "popular brands" row is buildable.
   - [ ] Client to choose the real featured set.
 
-### 1.4 Served countries — blocks the Step 3 country selector
+### 1.4 Served countries — resolved
 
-`src/data/countries.json` currently contains **United Kingdom only**. The
-served European countries have not been confirmed, and guessing the list
-would put countries in front of customers that the client may not ship to.
+- [x] **United Kingdom only**, confirmed by the client 2026-09-12.
 
-- [ ] Confirmed list of served European countries
+This was open for the whole build, and `countries.json` held a single entry
+throughout. The consequence was a step 3 country selector with one option: a
+question whose answer was already known, sitting in the middle of the funnel.
+It has been removed, and step 3 is now four questions rather than five.
 
-The step 3 selector is **built and working**, driven entirely by
-`countries.json`. Adding a country is a data change, no code. Each entry
-carries its own `postcodeLabel` and `postcodePlaceholder`, so the field
-relabels itself per country. Postcode validation is deliberately pattern-free
-(CLAUDE.md 8.6) and already accepts German, Dutch, Irish and Polish formats —
-this is verified in `npm test`.
+What survived the removal, and why:
+
+- **The delivery country is still on the enquiry record**, hard-set to `GB`
+  (`HOME_COUNTRY` in `storage.ts`). Serving a second country again is then a
+  data change plus restoring one question, rather than a schema migration for
+  every enquiry already saved on a customer's device (CLAUDE.md 5.2).
+- **`countries.json` stays.** It carries the postcode label and placeholder,
+  which are copy, and copy lives in data files (rule 9).
+- **Postcode validation stays pattern-free.** It was written that way for
+  European formats, and the reason it still holds is stronger: postcodes for
+  new UK builds can lead the published dataset by months, and the last step of
+  the funnel is the worst place to tell a customer their own address is wrong.
+
+One thing this does **not** settle: whether EU GDPR still reaches the
+business. UK-only delivery makes UK GDPR the operative regime, but a site
+reachable from anywhere that would accept an EU customer's enquiry is a
+question for whoever reviews the privacy policy. The policy's reference to EU
+supervisory authorities has deliberately been left in place (CLAUDE.md 11).
 
 ---
 

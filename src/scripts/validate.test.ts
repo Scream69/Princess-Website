@@ -1,7 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  validateCountry,
   validateEmail,
   validateName,
   validatePhone,
@@ -53,12 +52,6 @@ test('email rejects the clearly wrong', () => {
   for (const input of ['', 'jane', 'jane@', '@example.com', 'jane@example', 'a b@example.com']) {
     assert.equal(validateEmail(input).ok, false, input);
   }
-});
-
-test('country must come from the served list', () => {
-  assert.equal(value(validateCountry('gb', ['GB'])), 'GB');
-  assert.equal(validateCountry('FR', ['GB']).ok, false);
-  assert.equal(validateCountry('', ['GB']).ok, false);
 });
 
 test('postcodes from across Europe are all accepted', () => {

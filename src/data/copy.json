@@ -81,7 +81,7 @@
     },
     "step3": {
       "heading": "Your details",
-      "intro": "Five short questions — everything we need to price your enquiry and get back to you. You can change any answer before you send it.",
+      "intro": "Four short questions — everything we need to price your enquiry and get back to you. You can change any answer before you send it.",
       "questions": {
         "name": {
           "question": "What name should we put on the quote?",
@@ -97,10 +97,6 @@
           "question": "Where should we send the quote?",
           "label": "Email address",
           "placeholder": "you@example.com"
-        },
-        "country": {
-          "question": "Which country are we delivering to?",
-          "label": "Country"
         },
         "postcode": {
           "question": "And the postcode?",
