@@ -1,11 +1,23 @@
 ---
 import site from '../data/site.json';
 import copy from '../data/copy.json';
-import { legalName } from '../data/site';
+import { isPlaceholder, legalName } from '../data/site';
 // See the note in Nav.astro — `?url` keeps the two lockups' gradient ids apart.
 import logoStacked from '../assets/logo-stacked.svg?url';
 
 const year = new Date().getFullYear();
+
+/*
+ * The telephone number is not supplied yet (MISSING-ASSETS 4). While it is a
+ * marker, the number is still shown — it is a visible reminder to the client,
+ * and the site is not indexed yet — but it is not wrapped in a `tel:` link.
+ * A dead `tel:` is worse than no link: on a phone it is a full-width tap
+ * target that opens the dialler with a placeholder in it. `site.ts` already
+ * takes this position for WhatsApp, where the button renders nothing rather
+ * than a broken `wa.me` href; this is the same rule applied consistently.
+ */
+const phone = site.contact.phone;
+const phoneIsReal = !isPlaceholder(phone);
 ---
 
 <footer id="contact" class="mt-section border-t border-line bg-surface">
@@ -37,9 +49,15 @@ const year = new Date().getFullYear();
             </a>
           </li>
           <li>
-            <a class="inline-flex min-h-touch items-center hover:text-ink" href={`tel:${site.contact.phone}`}>
-              {site.contact.phone}
-            </a>
+            {
+              phoneIsReal ? (
+                <a class="inline-flex min-h-touch items-center hover:text-ink" href={`tel:${phone}`}>
+                  {phone}
+                </a>
+              ) : (
+                <span>{phone}</span>
+              )
+            }
           </li>
           <li>{site.hours}</li>
         </ul>

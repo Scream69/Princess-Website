@@ -454,7 +454,9 @@ Mobile first. Test at 320, 375, 768, 1024, 1440. Touch targets ≥ 44px. The pro
 
 ### 10.2 Performance
 - Lighthouse mobile: performance ≥ 90, accessibility 100, best practices ≥ 95, SEO ≥ 95.
-- Total JS < 40KB gzipped. Home page ships effectively no JS beyond the nav and WhatsApp button — **plus, since the client asked for the scroll-driven how-it-works sequence, one IntersectionObserver (728 bytes inline, no scroll listener, gated at `lg`, and degrading to a plain list without JavaScript)**. The e2e suite names every script the home page is allowed to load, so a third cannot appear unnoticed.
+- Total JS < 40KB gzipped. **Measured 2026-09-12: 11.9KB gzipped**, all of it on `/order`; the home page ships 1.6KB of inline module script and nothing else.
+- The home page's two scripts are the nav toggle (351 bytes) and the how-it-works sequence (1,206 bytes). The e2e suite names every script the home page is allowed to load, so a third cannot appear unnoticed.
+- **The how-it-works sequence is scroll-scrubbed, not observed.** This section previously described it as "one IntersectionObserver, 728 bytes, no scroll listener". That stopped being true when the client asked to slow the sequence down and it was rewritten to advance with the scroll position: it now uses a passive `scroll` listener throttled through `requestAnimationFrame`, and there is no IntersectionObserver left in it. It is still gated at `lg` and still degrades to a plain list without JavaScript. Measured TBT remains 0ms.
 - All logos as optimised SVG; lazy-load below the fold.
 - No layout shift on load (CLS < 0.05).
 
