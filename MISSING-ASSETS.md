@@ -295,7 +295,24 @@ clock (CLAUDE.md 8.5).
       code actually does: every processor the site talks to is named
       (Web3Forms, postcodes.io, the analytics tool), the lawful bases are
       stated, and the browser-side storage and retry queue are described.
-- [ ] **Three fields inside the policy still to complete**, each a commitment
+- [x] **The policy's open fields are done** (2026-09-15), except the effective
+      date, which is `[SET ON LAUNCH DAY: …]` and is the last thing to fill in
+      before going live.
+      - Retention: **18 months from last contact** for enquiries that do not
+        become orders. This is a promise, not a form of words — it has to be
+        honoured in the inbox.
+      - Analytics: **deferred**. The client may build their own next year. The
+        paragraph describing analytics was **removed rather than left vague**,
+        along with its lawful-basis bullet: the policy had been describing
+        measurement that does not happen, which is the wrong kind of wrong in
+        a legal document.
+      - Transfers: generic wording — postcodes.io is UK, and for the rest we
+        rely on the safeguards in each provider's published data processing
+        terms. **This is the clause to put in front of a data protection
+        adviser**: it rests on what those providers publish generally, not on
+        a check of each one, and the email host has not been named.
+
+- [ ] ~~Three fields inside the policy still to complete~~, each a commitment
       in law rather than copy, so none is guessed:
       - the controller's registered name (address and company number are in)
       - the date the policy takes effect

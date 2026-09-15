@@ -19,7 +19,13 @@ import privacy from '../data/privacy.json';
  * HTML so a sentence can carry a link — the source is our own data file, not
  * anything a visitor can supply.
  */
-const isPlaceholder = (value: string) => value.startsWith('[AWAITING');
+/*
+ * Any bracketed marker, not just `[AWAITING`. The effective date is now
+ * `[SET ON LAUNCH DAY: …]` — a step in the launch checklist rather than an
+ * open question — and a narrower test would have rendered that marker to
+ * customers as though it were the date.
+ */
+const isPlaceholder = (value: string) => value.startsWith('[');
 ---
 
 <Base title={privacy.title} description={privacy.description}>

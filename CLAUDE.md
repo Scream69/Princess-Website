@@ -548,6 +548,6 @@ Track these; do not guess answers.
 - [x] Trading name — **Princes Electronics**
 - [x] Company registration number `07396672`, VAT `100 906 362`, registered office `23 Haverford Way, Edgware, Middlesex, HA8 6DJ`
 - [x] Registered company name — **Princes Electronics** (same as the trading name)
-- [ ] Privacy policy covering both UK and EU GDPR — client supplying, or in scope?
+- [x] Privacy policy — written and completed 2026-09-15 apart from the effective date, which is set on launch day. Retention is 18 months from last contact. **Still needs a read-through by whoever advises the business on data protection**, and the client should confirm ICO registration as data controller.
 - [ ] Domain, registrar access, and **existing MX records** (changing DNS carelessly will break their email)
-- [ ] Analytics preference confirmed as cookieless
+- [x] Analytics — **deferred**, 2026-09-15. The client may build their own next year. No provider script is loaded, `track()` no-ops, and the privacy policy no longer describes analytics at all. The event wiring in `analytics.ts` stays: it is CLAUDE.md 8.10's list, it costs nothing while no provider is present, and naming a provider is the only step needed to turn it on.
