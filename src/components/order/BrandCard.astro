@@ -10,9 +10,20 @@ interface Props {
 const { brand, isFirstOfLetter } = Astro.props;
 const letter = firstLetter(brand.name);
 
-// No manufacturer logo files have been supplied yet, so every card currently
-// renders the documented text fallback (CLAUDE.md 2.3, 9.4). opticalScale is
-// wired but inert until real SVGs land and each value is tuned by eye.
+/*
+ * Every logo file is the same 280x88 canvas with the mark already scaled to a
+ * constant optical weight inside it (scripts/prepare-logos.mjs), so the card
+ * can render them all in one identical box and they come out looking the same
+ * size — which is the whole point of CLAUDE.md 9.4 and the thing that fitting
+ * each mark to the same width fails to do.
+ *
+ * `opticalScale` stays wired as the escape hatch for a mark the automatic
+ * normalisation still gets wrong. It is 1 for every brand today; set it on the
+ * one record that needs it rather than nudging the pipeline for everyone.
+ *
+ * Width and height are the intrinsic pixel size, not the rendered size, so the
+ * browser reserves the right box before the file arrives (CLS, 10.2).
+ */
 const logoUrl = brand.logo ? `/brands/${brand.logo}` : null;
 ---
 
@@ -35,9 +46,11 @@ const logoUrl = brand.logo ? `/brands/${brand.logo}` : null;
       <img
         src={logoUrl}
         alt=""
+        width="280"
+        height="88"
         loading="lazy"
         decoding="async"
-        class="max-h-10 w-auto max-w-full origin-center"
+        class="h-11 w-full origin-center object-contain"
         style="scale: var(--optical-scale)"
       />
     ) : (

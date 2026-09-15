@@ -1,5 +1,10 @@
 # Brand logos — where to get them
 
+> **Superseded 2026-09-15.** The client supplied all 67 logos directly, so none
+> of this sourcing was needed. It is kept because the links below are still the
+> route to a *better* file for the nine marks whose supplied artwork is too
+> small to render sharply — see `MISSING-ASSETS.md` 1.1 for that list.
+
 One row per brand in `src/data/brands.json`. Tick a brand off when its SVG
 is in `src/assets/brands/`.
 

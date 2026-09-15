@@ -818,6 +818,29 @@ check('one h1 per page', s.headings, 1);
  * hero's own call to action; on /order it is the escape hatch for an enquiry
  * that cannot be sent (8.7 step 4) and must be there from the start.
  */
+/*
+ * Wait for the observer to settle rather than for a fixed number of
+ * milliseconds. A flat sleep passed until the home page gained 67 lazy brand
+ * images, then failed about one run in three — the reveal is event-driven, so
+ * the test has to be too.
+ *
+ * It polls the computed `visibility`, not the data attribute, because that is
+ * what the assertions read. The attribute flips immediately and the style
+ * follows 240ms later, at the end of the fade; polling the attribute returned
+ * mid-transition and reported a button that was still visible.
+ */
+const untilFloat = async (shown) => {
+  const want = shown ? 'visible' : 'hidden';
+  for (let i = 0; i < 40; i += 1) {
+    const state = await evaluate(`
+      const el = document.querySelector('[data-whatsapp-float]');
+      return el ? getComputedStyle(el).visibility : null;
+    `);
+    if (state === want) return;
+    await wait(100);
+  }
+};
+
 const floatState = `
   const el = document.querySelector('[data-whatsapp-float]');
   const style = el && getComputedStyle(el);
@@ -849,7 +872,7 @@ await evaluate(`
   window.scrollTo(0, cue.getBoundingClientRect().top + window.scrollY + 50);
   return 1;
 `);
-await wait(600);
+await untilFloat(true);
 s = await evaluate(floatState);
 check('and appears once the reader is half way through how it works', [s.shown, s.visibility], [true, 'visible']);
 check('with a real number, opening in a new tab', [s.href, s.target, s.rel], [
@@ -859,13 +882,13 @@ check('with a real number, opening in a new tab', [s.href, s.target, s.rel], [
 // Back to the top: it has to go away again, and an observer watching a 1px
 // cue against the plain viewport would not have noticed the jump.
 await evaluate(`window.scrollTo(0, 0); return 1;`);
-await wait(600);
+await untilFloat(false);
 s = await evaluate(floatState);
 check('and withdraws again on the way back up', [s.shown, s.visibility], [false, 'hidden']);
 
 // The jump that broke the first cut: an anchor leaping clean over the cue.
 await evaluate(`document.querySelector('a[href$="#brands"]').click(); return 1;`);
-await wait(700);
+await untilFloat(true);
 s = await evaluate(floatState);
 check('a nav anchor that skips the cue still reveals it', s.shown, true);
 

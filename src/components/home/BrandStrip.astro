@@ -44,13 +44,31 @@ const { brands } = copy.home;
             class="group flex min-h-28 flex-col items-center justify-center gap-2 rounded-sm border border-line bg-surface px-3 py-5 transition-[transform,border-color] duration-150 hover:-translate-y-0.5 hover:border-line-strong focus-visible:-translate-y-0.5"
             style={`--optical-scale:${brand.opticalScale}`}
           >
-            <span
-              aria-hidden="true"
-              class="origin-center text-center font-serif text-lg leading-tight text-ink"
-              style="scale: var(--optical-scale)"
-            >
-              {brand.name}
-            </span>
+            {
+              /* Same normalised canvas as the order page's cards — see the
+                 note in BrandCard.astro. The name stays as the fallback for
+                 any brand whose artwork has not arrived. */
+              brand.logo ? (
+                <img
+                  src={`/brands/${brand.logo}`}
+                  alt=""
+                  width="280"
+                  height="88"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-10 w-full origin-center object-contain"
+                  style="scale: var(--optical-scale)"
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  class="origin-center text-center font-serif text-lg leading-tight text-ink"
+                  style="scale: var(--optical-scale)"
+                >
+                  {brand.name}
+                </span>
+              )
+            }
             <span
               aria-hidden="true"
               class="text-xs text-ink-muted opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"

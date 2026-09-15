@@ -21,15 +21,26 @@ The brand list itself is **resolved**: 67 Euronics brands are in
 
 What is still missing is the artwork:
 
-- [ ] Vector logo (SVG) per brand → `src/assets/brands/<slug>.svg`, ideally
-      from the Euronics brand asset pack rather than sourced individually.
-      **`BRAND-LOGOS.md` is the working checklist** — one row per brand with
-      the filename to save and, where one could be found, a link to that
-      brand's own press or trade page. Twelve have a public press page, four
-      a trade route, and the remaining fifty-one need the Euronics library or
-      an account manager.
-- [ ] `opticalScale` per brand — currently `1.0` for all 67 as a placeholder.
-      It is tuned by eye against the real logo and cannot be set in advance.
+- [x] **Logos supplied 2026-09-15** — the client provided all of them at
+      once, as raster files, which is why `BRAND-LOGOS.md` (the sourcing
+      checklist) was never needed. Every one of the 65 active brands now has
+      artwork, plus the two inactive ones.
+      - Processed by `scripts/prepare-logos.mjs` into
+        `public/brands/<slug>.webp`. Re-run it when a file is replaced; it
+        rebuilds the whole folder from source.
+      - Nine sources are small enough that the 2× render is upscaling them,
+        and **Leisure is the bad one at 120px wide, upscaled 1.85×** — it will
+        look soft on a phone. Better files would help for: leisure, vivanco,
+        jvc, lg, dyson, vax, numatic, cata, reflex-active.
+      - **Vivanco's file is wrong rather than small** — the artwork is a black
+        bar above a small wordmark, which is a crop of a larger lockup.
+      - Comfee and Fridgemaster are pale, low-contrast versions that look
+        washed out beside their neighbours; a standard-weight version of each
+        would sit better.
+- [x] `opticalScale` — no longer hand-tuned. The optical balancing moved into
+      `prepare-logos.mjs`, which normalises every mark to a constant geometric
+      mean before it reaches the page (CLAUDE.md 9.4). The field stays at `1`
+      for all 67 and is kept as the per-brand override.
 
 Until logos land, **every card renders the documented text fallback**
 (CLAUDE.md 9.4). The grid is therefore only half-judgeable: layout, filter,

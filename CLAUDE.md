@@ -429,8 +429,11 @@ One family, or a serif for headings paired with a clean sans for body if the bra
 ### 9.4 Brand grid — the detail that decides quality
 This is what the client will judge. Get it right.
 - Identical card size, white background, subtle 1px border, generous internal padding.
-- Each logo scaled by its **`opticalScale`** value so a tall stacked mark and a long wordmark read at the same visual weight. Fitting every logo to the same box width looks amateur. Tune each value by eye.
-- SVG only, with a text fallback for missing files.
+- Every mark must read at the same visual weight. A tall stacked mark and a long wordmark fitted to the same box width look wrong, and that is what makes a brand grid look automated.
+- **This is now done in the asset pipeline, not by hand.** `scripts/prepare-logos.mjs` crops each supplied file to its own ink and scales it so its geometric mean — `sqrt(width × height)` — is constant, then centres it on an identical 280×88 canvas. Because every file is the same size with the mark already balanced inside it, the card renders them all in one box and they come out looking the same size.
+- **`opticalScale` remains, as the escape hatch** for a mark the automatic pass still gets wrong. It is `1` for all 67 today. Set it on the single record that needs it rather than moving the pipeline for everyone.
+- **Raster, not SVG.** This section said "SVG only" until 2026-09-15, when the client supplied the artwork as photographs — PNG, JPG, WebP and one AVIF. That is what manufacturers' press pages hand out, so it is what the grid has to accept. The pipeline normalises them to WebP and flags any source too small to survive a 2× render, because a soft logo on a white card is worse than the text fallback it replaces. The text fallback stays for any brand whose file has not arrived.
+- Logos live in `public/brands/<slug>.webp` — a plain path rather than Astro's image pipeline, because 67 files referenced from data cannot be statically imported, and they are pre-sized anyway.
 - Rows fill continuously; **do not force a row break at each letter** (the reference page wastes large amounts of space doing this). Mark letters with a sticky divider or heading instead.
 - No redundant text label under the logo. Use `aria-label` and a hover treatment.
 - On hover: slight lift and a **"View range ↗"** affordance, so it is obvious the link leaves the site.
