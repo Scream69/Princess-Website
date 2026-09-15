@@ -146,5 +146,9 @@
     "heading": "That page does not exist",
     "body": "The link may be out of date, or we may have moved the page. Nothing is wrong with your enquiry — anything you had saved is still here.",
     "home": "Back to the home page"
+  },
+  "whatsapp": {
+    "hero": "Message us on WhatsApp",
+    "floating": "WhatsApp"
   }
 }

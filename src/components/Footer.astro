@@ -1,7 +1,7 @@
 ---
 import site from '../data/site.json';
 import copy from '../data/copy.json';
-import { isPlaceholder, legalName } from '../data/site';
+import { isPlaceholder, legalName, telHref } from '../data/site';
 // See the note in Nav.astro — `?url` keeps the two lockups' gradient ids apart.
 import logoStacked from '../assets/logo-stacked.svg?url';
 
@@ -51,7 +51,7 @@ const phoneIsReal = !isPlaceholder(phone);
           <li>
             {
               phoneIsReal ? (
-                <a class="inline-flex min-h-touch items-center hover:text-ink" href={`tel:${phone}`}>
+                <a class="inline-flex min-h-touch items-center hover:text-ink" href={telHref}>
                   {phone}
                 </a>
               ) : (
@@ -59,7 +59,16 @@ const phoneIsReal = !isPlaceholder(phone);
               )
             }
           </li>
-          <li>{site.hours}</li>
+          {
+            /* Only the days the client gave us. Sunday is absent rather than
+               marked closed — they did not say it is, and opening hours are a
+               business fact, not something to infer from a gap in a list. */
+            site.hours.map((block) => (
+              <li>
+                {block.label}, {block.opens}–{block.closes}
+              </li>
+            ))
+          }
         </ul>
       </div>
 

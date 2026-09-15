@@ -271,7 +271,8 @@ Four steps. **The progress bar shows "Step N of 3"; step 4 is a success screen a
 - **About:** who they are, why buy through them, credentials.
 - **Brand strip:** featured logos only, linking to `/order?brand=<slug>` — *not* straight out to the manufacturer. From the home page we want them entering the wizard.
 - **Footer:** contact, company registration details, social links, privacy policy.
-- **Floating WhatsApp button** on both pages.
+- **WhatsApp, twice, deliberately.** A button beside "Get a quote" in the hero — outlined, so the quote button stays the primary action — and the floating button in the corner.
+- **The floating button waits on the home page.** It is withheld until the reader passes a cue at 50% of the how-it-works section, so it is not a second offer covering the page's own call to action. On `/order` it appears immediately: there it is the escape hatch for an enquiry that cannot be sent (8.7 step 4), and delaying it would be harmful. The gate is CSS, declared by the section that owns the cue — applying it from the script showed the button for a frame on every load, because module scripts run after first paint.
 
 ---
 
@@ -454,8 +455,8 @@ Mobile first. Test at 320, 375, 768, 1024, 1440. Touch targets ≥ 44px. The pro
 
 ### 10.2 Performance
 - Lighthouse mobile: performance ≥ 90, accessibility 100, best practices ≥ 95, SEO ≥ 95.
-- Total JS < 40KB gzipped. **Measured 2026-09-12: 11.9KB gzipped**, all of it on `/order`; the home page ships 1.6KB of inline module script and nothing else.
-- The home page's two scripts are the nav toggle (351 bytes) and the how-it-works sequence (1,206 bytes). The e2e suite names every script the home page is allowed to load, so a third cannot appear unnoticed.
+- Total JS < 40KB gzipped. **Measured 2026-09-15: 11.9KB gzipped**, all of it on `/order`; the home page ships 1.8KB of inline module script and nothing else.
+- The home page's three scripts are the nav toggle (351 bytes), the how-it-works sequence (1,206 bytes) and the floating WhatsApp button's reveal (286 bytes). The e2e suite names every script the home page is allowed to load, so a fourth cannot appear unnoticed — the list went from two to three deliberately, in the commit that added the button.
 - **The how-it-works sequence is scroll-scrubbed, not observed.** This section previously described it as "one IntersectionObserver, 728 bytes, no scroll listener". That stopped being true when the client asked to slow the sequence down and it was rewritten to advance with the scroll position: it now uses a passive `scroll` listener throttled through `requestAnimationFrame`, and there is no IntersectionObserver left in it. It is still gated at `lg` and still degrades to a plain list without JavaScript. Measured TBT remains 0ms.
 - All logos as optimised SVG; lazy-load below the fold.
 - No layout shift on load (CLS < 0.05).
@@ -536,8 +537,9 @@ Track these; do not guess answers.
 - [ ] Fonts and any brand guidelines
 - [ ] Home page copy: hero, about, how-it-works
 - [x] Enquiry destination email address — `info@princeselectronics.com`
-- [ ] WhatsApp Business number
-- [ ] Opening hours for the footer (the response promise is fixed at 24 hours)
+- [x] WhatsApp Business number — **+44 7930 565656**, supplied 2026-09-15. This was the last thing standing between the site and rule 2.4: with no number, every WhatsApp button rendered nothing, so an enquiry that could not be sent had "Try again" and no second route out.
+- [x] Opening hours — supplied 2026-09-15. Monday to Friday 09:00–17:00, Saturday 10:00–16:00. Sunday was not given and is **not** shown as closed: that would be inferring a business fact from a gap in a list. Stored structured in `site.json` so the footer and the `LocalBusiness` block render from one record.
+- [x] Telephone — **+44 20 8204 1526**, supplied 2026-09-15. Now a live `tel:` link and in the structured data.
 - [x] Delivery area — **United Kingdom only**, confirmed 2026-09-12. The country selector has been removed (8.6).
 - [x] Trading name — **Princes Electronics**
 - [x] Company registration number `07396672`, VAT `100 906 362`, registered office `23 Haverford Way, Edgware, Middlesex, HA8 6DJ`

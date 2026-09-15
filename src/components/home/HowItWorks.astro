@@ -39,7 +39,24 @@ const tiles = featuredBrands.slice(0, 6);
 const CHOSEN = 3;
 ---
 
-<section id="how-it-works" class="border-y border-line bg-surface">
+<section id="how-it-works" class="relative border-y border-line bg-surface">
+  {/*
+    Half way down this section. The floating WhatsApp button watches it and
+    fades in once it has scrolled past the top of the viewport, so the button
+    arrives when the reader has committed rather than on top of the hero's own
+    call to action.
+
+    It lives here, and not in the button, because 50% of this section is a
+    fact about this section: the stage below is three viewport-heights of
+    scroll and its height changes with the step count. A number copied into
+    the button would be wrong the first time anyone edits the steps.
+
+    `relative` on the section above is what this is measured against. Nothing
+    else here depends on the section's position — the sentinels that drive the
+    sequence are absolute inside `.stage`, which has its own `position:
+    relative` — so adding it moves nothing.
+  */}
+  <div class="cue" data-whatsapp-cue aria-hidden="true"></div>
   <div class="section-inner mx-auto max-w-page px-gutter py-section">
     <div class="stage" data-stage>
       {/* Sentinels: something for the observer to cross. They add no height
@@ -153,6 +170,43 @@ const CHOSEN = 3;
 </section>
 
 <style>
+  /*
+   * The floating WhatsApp button lives in the layout, but the rule that it
+   * *waits* belongs here, with the cue it waits for. A page without this
+   * section — `/order` — therefore shows the button immediately, which is the
+   * behaviour that page needs rather than an accident.
+   *
+   * In CSS rather than applied by the script, and that is the whole point: a
+   * module script runs after first paint, so arming the button in JavaScript
+   * showed it over the hero for a frame on every single load. The e2e suite
+   * caught this against the dev server; a 1.5s wait had been hiding it from
+   * the build check.
+   *
+   * The cost is that the floating button never appears without JavaScript.
+   * That is the right trade here: the hero's own WhatsApp button and the
+   * footer's number are both plain HTML, so the offer is not lost — only its
+   * duplicate is.
+   */
+  :global([data-whatsapp-float]:not([data-shown])) {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(0.5rem);
+    transition:
+      opacity 240ms ease,
+      transform 240ms ease,
+      visibility 0s linear 240ms;
+  }
+
+  /* Zero-sized and unpaintable: it exists to be observed, nothing else. */
+  .cue {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+
   /* --- unenhanced, and every screen below lg: three plain blocks -------- */
 
   .sentinels,

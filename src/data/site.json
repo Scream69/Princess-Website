@@ -5,10 +5,31 @@
   "responsePromise": "We reply to every enquiry within 24 hours.",
   "contact": {
     "email": "info@princeselectronics.com",
-    "phone": "[AWAITING DETAIL: telephone]",
-    "whatsapp": "[AWAITING DETAIL: WhatsApp Business number, digits only, incl. country code]"
+    "phone": "+44 20 8204 1526",
+    "whatsapp": "447930565656"
   },
-  "hours": "[AWAITING DETAIL: opening hours]",
+  "hours": [
+    {
+      "label": "Monday to Friday",
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday"
+      ],
+      "opens": "09:00",
+      "closes": "17:00"
+    },
+    {
+      "label": "Saturday",
+      "days": [
+        "Saturday"
+      ],
+      "opens": "10:00",
+      "closes": "16:00"
+    }
+  ],
   "company": {
     "registrationNumber": "07396672",
     "vatNumber": "100 906 362",
@@ -16,10 +37,22 @@
   },
   "social": [],
   "nav": [
-    { "label": "How it works", "href": "/#how-it-works" },
-    { "label": "Brands", "href": "/#brands" },
-    { "label": "About", "href": "/#about" },
-    { "label": "Contact", "href": "/#contact" }
+    {
+      "label": "How it works",
+      "href": "/#how-it-works"
+    },
+    {
+      "label": "Brands",
+      "href": "/#brands"
+    },
+    {
+      "label": "About",
+      "href": "/#about"
+    },
+    {
+      "label": "Contact",
+      "href": "/#contact"
+    }
   ],
   "cta": {
     "label": "Get a quote",

@@ -11,8 +11,8 @@ import site from '../data/site.json';
  * placeholder company name in machine-readable form is worse than none at all
  * (rule 2.2).
  *
- * Address and telephone are the two fields that make this worth having for
- * local search, and both are outstanding (MISSING-ASSETS.md 4).
+ * Address, telephone and opening hours are what make this worth having for
+ * local search. All three landed on 2026-09-15.
  */
 const supplied = (value: string): string | null =>
   value && !value.startsWith('[AWAITING') && !value.startsWith('[BLOCKED') ? value : null;
@@ -23,6 +23,18 @@ const email = supplied(site.contact.email);
 const telephone = supplied(site.contact.phone);
 const address = supplied(site.company.registeredAddress);
 const vat = supplied(site.company.vatNumber);
+
+/*
+ * schema.org wants days and 24-hour times, which is exactly the shape
+ * `site.hours` is stored in — the footer's readable version is rendered from
+ * the same records, so the two can never disagree.
+ */
+const openingHours = site.hours.map((block) => ({
+  '@type': 'OpeningHoursSpecification',
+  dayOfWeek: block.days,
+  opens: block.opens,
+  closes: block.closes,
+}));
 
 // A name and a way to reach them is the minimum that says anything true.
 const ready = Boolean(name && (email || telephone));
@@ -37,6 +49,7 @@ const data = ready
       ...(telephone ? { telephone } : {}),
       ...(address ? { address: { '@type': 'PostalAddress', streetAddress: address } } : {}),
       ...(vat ? { vatID: vat } : {}),
+      ...(openingHours.length ? { openingHoursSpecification: openingHours } : {}),
       ...(Astro.site ? { url: Astro.site.href } : {}),
     }
   : null;

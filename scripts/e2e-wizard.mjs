@@ -800,16 +800,87 @@ check('the featured brands enter the wizard, never the manufacturer', [
 ], [true, true]);
 /*
  * The home page's JavaScript budget, named module by module (CLAUDE.md
- * 10.2). Two is the agreed number: the nav toggle, and the observer that
- * drives the how-it-works sequence. A third arriving unnoticed is exactly
- * what this is here to stop.
+ * 10.2). Three is the agreed number: the nav toggle, the how-it-works
+ * sequence, and the floating WhatsApp button's reveal. A fourth arriving
+ * unnoticed is exactly what this is here to stop — this list went from two
+ * to three deliberately, in the same commit that added the button.
  */
 check(
-  'the home page ships the nav toggle and the how-it-works observer, and nothing else',
+  'the home page ships three named scripts and nothing else',
   s.own.map((src) => src.replace(/^.*\/src\/components\//, '').replace(/\?.*$/, '')).sort(),
-  ['Nav.astro', 'home/HowItWorks.astro'],
+  ['Nav.astro', 'WhatsAppButton.astro', 'home/HowItWorks.astro'],
 );
 check('one h1 per page', s.headings, 1);
+
+/*
+ * The floating WhatsApp button (CLAUDE.md 7). On the home page it waits for
+ * the cue half way down how-it-works, so it does not sit on top of the
+ * hero's own call to action; on /order it is the escape hatch for an enquiry
+ * that cannot be sent (8.7 step 4) and must be there from the start.
+ */
+const floatState = `
+  const el = document.querySelector('[data-whatsapp-float]');
+  const style = el && getComputedStyle(el);
+  return {
+    present: !!el,
+    shown: el ? 'shown' in el.dataset : null,
+    visibility: style ? style.visibility : null,
+    href: el ? el.getAttribute('href') : null,
+    rel: el ? el.getAttribute('rel') : null,
+    target: el ? el.getAttribute('target') : null,
+  };
+`;
+
+s = await evaluate(floatState);
+check('the floating button is withheld over the hero', [s.present, s.shown, s.visibility], [true, false, 'hidden']);
+// Asked of the browser rather than inferred: `checkVisibility()` ignores
+// `visibility: hidden` unless told not to, so the honest test is whether the
+// element can actually take focus. A withheld link that still could would be
+// a trap for anyone tabbing through the page.
+check('and leaves the tab order while withheld', await evaluate(`
+  const el = document.querySelector('[data-whatsapp-float]');
+  el.focus();
+  return document.activeElement === el;
+`), false);
+
+// Past the cue.
+await evaluate(`
+  const cue = document.querySelector('[data-whatsapp-cue]');
+  window.scrollTo(0, cue.getBoundingClientRect().top + window.scrollY + 50);
+  return 1;
+`);
+await wait(600);
+s = await evaluate(floatState);
+check('and appears once the reader is half way through how it works', [s.shown, s.visibility], [true, 'visible']);
+check('with a real number, opening in a new tab', [s.href, s.target, s.rel], [
+  'https://wa.me/447930565656', '_blank', 'noopener noreferrer',
+]);
+
+// Back to the top: it has to go away again, and an observer watching a 1px
+// cue against the plain viewport would not have noticed the jump.
+await evaluate(`window.scrollTo(0, 0); return 1;`);
+await wait(600);
+s = await evaluate(floatState);
+check('and withdraws again on the way back up', [s.shown, s.visibility], [false, 'hidden']);
+
+// The jump that broke the first cut: an anchor leaping clean over the cue.
+await evaluate(`document.querySelector('a[href$="#brands"]').click(); return 1;`);
+await wait(700);
+s = await evaluate(floatState);
+check('a nav anchor that skips the cue still reveals it', s.shown, true);
+
+s = await evaluate(`
+  const links = [...document.querySelectorAll('a[href*="wa.me"]')]
+    .filter((a) => !('whatsappFloat' in a.dataset));
+  return links.map((a) => [a.textContent.trim(), a.getAttribute('target'), a.getAttribute('rel')]);
+`);
+check('the hero offers WhatsApp beside the quote button', s, [
+  ['Message us on WhatsApp', '_blank', 'noopener noreferrer'],
+]);
+
+await goto('/order');
+s = await evaluate(floatState);
+check('on the order page it is there from the start', [s.present, s.shown, s.visibility], [true, true, 'visible']);
 
 // --- analytics events (CLAUDE.md 8.10) --------------------------------------
 // No provider script is loaded in this build, so `track` is a no-op against a

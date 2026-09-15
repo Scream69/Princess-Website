@@ -10,6 +10,14 @@ import site from './site.json' with { type: 'json' };
  */
 export const whatsappDigits = site.contact.whatsapp.replace(/\D/g, '');
 
+/*
+ * `phone` is stored the way a customer should read it — "+44 20 8204 1526" —
+ * and `tel:` wants it without the spaces. Deriving the href rather than
+ * storing a second field keeps one number in site.json: two would drift, and
+ * the one that drifts is always the one nobody looks at.
+ */
+export const telHref = `tel:${site.contact.phone.replace(/\s+/g, '')}`;
+
 /** True while a field is still an `[AWAITING …]` marker rather than a fact. */
 export function isPlaceholder(value: string): boolean {
   return value.startsWith('[AWAITING') || value.startsWith('[BLOCKED');

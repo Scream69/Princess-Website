@@ -2,6 +2,8 @@
 import { brands as allBrands } from '../../data/brands';
 import copy from '../../data/copy.json';
 import site from '../../data/site.json';
+import { whatsappHref } from '../../data/site';
+import WhatsAppIcon from '../WhatsAppIcon.astro';
 
 /*
  * The home page has five seconds to explain a model no other retailer uses:
@@ -33,6 +35,13 @@ import site from '../../data/site.json';
  * running perfectly and still read as a still page.
  */
 const { hero } = copy.home;
+
+/*
+ * Null until a number is in site.json, and the button disappears with it
+ * rather than rendering a dead wa.me link (see the note in site.ts). The
+ * number landed 2026-09-15, so both buttons are live.
+ */
+const whatsapp = whatsappHref();
 ---
 
 <section class="bg-surface">
@@ -48,14 +57,35 @@ const { hero } = copy.home;
 
       <p class="mt-8 max-w-content border-l-2 border-gold pl-4 text-ink">{hero.process}</p>
 
-      {/* One call to action. The jump link to how-it-works came out with the
-          supporting line; the nav still carries that anchor. */}
-      <a
-        href={site.cta.href}
-        class="mt-10 inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
-      >
-        {site.cta.label}
-      </a>
+      {/*
+        Two ways to start, with one of them clearly first. The quote button is
+        the filled one because the enquiry form is what this page exists to
+        feed (CLAUDE.md 1); WhatsApp is outlined, for the customer who would
+        rather send a photo than fill anything in. Equal weight would make the
+        page ask a question instead of giving a direction.
+      */}
+      <div class="mt-10 flex flex-wrap items-center gap-3">
+        <a
+          href={site.cta.href}
+          class="inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+        >
+          {site.cta.label}
+        </a>
+
+        {
+          whatsapp && (
+            <a
+              href={whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex min-h-touch items-center gap-2 rounded-sm border border-line-strong px-5 font-medium text-ink transition-colors hover:border-ink"
+            >
+              <WhatsAppIcon />
+              <span>{copy.whatsapp.hero}</span>
+            </a>
+          )
+        }
+      </div>
     </div>
 
     {/* `self-start` so the figure sits at the top of its column rather than

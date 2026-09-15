@@ -219,15 +219,23 @@ clock (CLAUDE.md 8.5).
 - [x] Enquiry destination email address — `info@princeselectronics.com`,
       supplied 2026-09-09 and now in `site.json`. It is also the contact
       address shown on the privacy page.
-- [ ] Telephone number
-- [ ] WhatsApp Business number. **Now blocks launch.** Until it is set,
-      `WhatsAppButton.astro`, the step 4 follow-up link and the failure-path
-      fallback all **render nothing** — a dead WhatsApp link is worse than
-      none, so they are withheld rather than broken (`src/data/site.ts`).
-      Without it, a customer whose enquiry cannot be sent has only "Try
-      again": the second route out required by CLAUDE.md 8.7 step 4 does not
-      exist yet.
-- [ ] Opening hours for the footer
+- [x] Telephone number — **+44 20 8204 1526**, supplied 2026-09-15. Shown in
+      the footer as a live `tel:` link and carried in the `LocalBusiness`
+      structured data. It is stored once, in readable form; the dialable form
+      is derived in `site.ts` so there is no second field to drift.
+- [x] WhatsApp Business number — **+44 7930 565656**, supplied 2026-09-15.
+      **This closed the one genuine rule 2.4 gap.** Until it landed, every
+      WhatsApp button rendered nothing — correctly, since a dead `wa.me` link
+      is worse than none — which meant a customer whose enquiry could not be
+      sent had "Try again" and no second route out. The floating button, the
+      new hero button, the step 4 follow-up and the failure-path fallback are
+      all live now.
+- [x] Opening hours — supplied 2026-09-15. Monday to Friday 09:00–17:00,
+      Saturday 10:00–16:00. **Sunday is absent rather than marked closed** —
+      the client did not say it is, and that is a business fact rather than
+      something to infer from a gap in a list. Stored as structured records in
+      `site.json`, so the footer's readable lines and the `LocalBusiness`
+      `openingHoursSpecification` are rendered from the same source.
 - [x] Company registration number `07396672`, VAT number `100 906 362`, and
       registered office `23 Haverford Way, Edgware, Middlesex, HA8 6DJ` —
       supplied 2026-09-11, in `site.json`, the footer and the privacy policy.
