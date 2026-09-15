@@ -22,7 +22,18 @@ const letter = firstLetter(brand.name);
  * one record that needs it rather than nudging the pipeline for everyone.
  *
  * Width and height are the intrinsic pixel size, not the rendered size, so the
- * browser reserves the right box before the file arrives (CLS, 10.2).
+ * browser reserves the right box before the file arrives (CLS, 10.2). *
+ * THE NAME UNDER THE LOGO is a client decision from 2026-09-15, and it
+ * reverses what 9.4 used to say. The old rule — mark only, name in the
+ * `aria-label` — assumes every mark is recognisable on sight, and across 65
+ * brands that does not hold: Sensis, Schönhaus, Statesman, Avtex and Haden
+ * are wordmarks a customer has no reason to know. The label is only redundant
+ * where the mark already reads as the name.
+ *
+ * The `aria-label` stays and still wins as the accessible name. It begins
+ * with the visible text, which is what WCAG 2.5.3 asks for, and adds the part
+ * a screen reader needs and sighted users get from the hover affordance —
+ * that the link leaves the site.
  */
 const logoUrl = brand.logo ? `/brands/${brand.logo}` : null;
 ---
@@ -42,7 +53,7 @@ const logoUrl = brand.logo ? `/brands/${brand.logo}` : null;
   style={`--optical-scale:${brand.opticalScale}`}
 >
   {
-    logoUrl ? (
+    logoUrl && (
       <img
         src={logoUrl}
         alt=""
@@ -53,16 +64,21 @@ const logoUrl = brand.logo ? `/brands/${brand.logo}` : null;
         class="h-11 w-full origin-center object-contain"
         style="scale: var(--optical-scale)"
       />
-    ) : (
-      <span
-        aria-hidden="true"
-        class="text-center font-serif text-lg leading-tight text-ink origin-center"
-        style="scale: var(--optical-scale)"
-      >
-        {brand.name}
-      </span>
     )
   }
+
+  {/* The name carries the card on its own where no artwork has arrived, so it
+      is set larger there — it is standing in for the mark, not labelling it. */}
+  <span
+    aria-hidden="true"
+    class:list={[
+      'origin-center text-center leading-tight text-ink',
+      logoUrl ? 'text-xs text-ink-muted' : 'font-serif text-lg',
+    ]}
+    style={logoUrl ? undefined : 'scale: var(--optical-scale)'}
+  >
+    {brand.name}
+  </span>
 
   <span
     aria-hidden="true"

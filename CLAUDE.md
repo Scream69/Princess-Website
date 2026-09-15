@@ -435,7 +435,8 @@ This is what the client will judge. Get it right.
 - **Raster, not SVG.** This section said "SVG only" until 2026-09-15, when the client supplied the artwork as photographs — PNG, JPG, WebP and one AVIF. That is what manufacturers' press pages hand out, so it is what the grid has to accept. The pipeline normalises them to WebP and flags any source too small to survive a 2× render, because a soft logo on a white card is worse than the text fallback it replaces. The text fallback stays for any brand whose file has not arrived.
 - Logos live in `public/brands/<slug>.webp` — a plain path rather than Astro's image pipeline, because 67 files referenced from data cannot be statically imported, and they are pre-sized anyway.
 - Rows fill continuously; **do not force a row break at each letter** (the reference page wastes large amounts of space doing this). Mark letters with a sticky divider or heading instead.
-- No redundant text label under the logo. Use `aria-label` and a hover treatment.
+- **The brand name sits under the logo.** This reversed on 2026-09-15, at the client's request. The rule had been "no redundant text label — use `aria-label` and a hover treatment", which assumes every mark is recognisable on sight; across 65 brands it is not, and Sensis, Schönhaus, Statesman, Avtex and Haden are wordmarks a customer has no reason to know. The `aria-label` stays and still wins as the accessible name: it opens with the visible text, as WCAG 2.5.3 requires, and adds what the hover affordance tells a sighted user — that the link leaves the site.
+- Where no artwork has arrived the name stands in for the mark and is set larger, because there it *is* the card rather than a label on it.
 - On hover: slight lift and a **"View range ↗"** affordance, so it is obvious the link leaves the site.
 - Letters with no active brands are dimmed and not clickable in the A–Z rail.
 
