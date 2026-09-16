@@ -696,15 +696,39 @@ if (HAS_KEY) {
   s = await evaluate(PROBE);
   const stranded = s.reference;
 
+  /*
+   * Queued by failing a real submission, not by hand-writing localStorage.
+   * The fixture used to seed `{ reference, subject }` and nothing else, which
+   * is a payload the app could never produce — so it could not catch the
+   * defect that the recovery path completes an enquiry whose contents have
+   * since changed. Letting the app queue its own payload is both more faithful
+   * and the only version of this test that exercises that comparison.
+   */
   await evaluate(`
-    localStorage.setItem('pending-enquiry', JSON.stringify([{
-      reference: '${stranded}',
-      payload: { reference: '${stranded}', subject: 'Enquiry ${stranded}' },
-      queuedAt: Date.now(),
-      attempts: 1,
-    }]));
+    window.__posts = 0;
+    window.__realFetch ??= window.fetch;
+    window.fetch = (url, init) => {
+      if (!String(url).includes('web3forms')) return window.__realFetch(url, init);
+      window.__posts += 1;
+      return Promise.reject(new Error('offline'));
+    };
     return 1;
   `);
+  await submit();
+  // One attempt plus two retries, backing off 800ms then 2400ms.
+  await wait(4500);
+  await settle();
+  s = await evaluate(PROBE);
+  // Read the entry itself: PROBE reduces the queue to references.
+  const queuedPayload = await evaluate(`
+    const raw = JSON.parse(localStorage.getItem('pending-enquiry') ?? '[]');
+    return { entries: raw.length, appliances: raw[0]?.payload?.appliances ?? null };
+  `);
+  check(
+    'a failed submission is queued with the whole payload, not just a reference',
+    [s.queue, queuedPayload.entries, typeof queuedPayload.appliances],
+    [[stranded], 1, 'string'],
+  );
 
   const stub = await send('Page.addScriptToEvaluateOnNewDocument', {
     source: `
@@ -829,9 +853,35 @@ check('one h1 per page', s.headings, 1);
  * follows 240ms later, at the end of the fade; polling the attribute returned
  * mid-transition and reported a button that was still visible.
  */
-const untilFloat = async (shown) => {
+/** Waits for the reveal script to have attached its observer. */
+const floatReady = async () => {
+  for (let i = 0; i < 60; i += 1) {
+    const ready = await evaluate(
+      `return document.querySelector('[data-whatsapp-float][data-ready]') !== null;`,
+    );
+    if (ready) return;
+    await wait(100);
+  }
+  throw new Error('the floating WhatsApp button never armed');
+};
+
+const untilFloat = async (shown, { keepScrolledPast = false } = {}) => {
   const want = shown ? 'visible' : 'hidden';
   for (let i = 0; i < 40; i += 1) {
+    /*
+     * Re-apply the scroll on every poll, rather than computing the target once
+     * and trusting it. The cue's document position is measured from a page
+     * carrying 67 lazy brand images, and a single measure-then-scroll landed
+     * short of it often enough to fail roughly one run in five once those
+     * images arrived. Re-measuring converges instead of racing.
+     */
+    if (keepScrolledPast) {
+      await evaluate(`
+        const cue = document.querySelector('[data-whatsapp-cue]');
+        if (cue) window.scrollTo(0, cue.getBoundingClientRect().top + window.scrollY + 50);
+        return 1;
+      `);
+    }
     const state = await evaluate(`
       const el = document.querySelector('[data-whatsapp-float]');
       return el ? getComputedStyle(el).visibility : null;
@@ -854,6 +904,7 @@ const floatState = `
   };
 `;
 
+await floatReady();
 s = await evaluate(floatState);
 check('the floating button is withheld over the hero', [s.present, s.shown, s.visibility], [true, false, 'hidden']);
 // Asked of the browser rather than inferred: `checkVisibility()` ignores
@@ -872,7 +923,7 @@ await evaluate(`
   window.scrollTo(0, cue.getBoundingClientRect().top + window.scrollY + 50);
   return 1;
 `);
-await untilFloat(true);
+await untilFloat(true, { keepScrolledPast: true });
 s = await evaluate(floatState);
 check('and appears once the reader is half way through how it works', [s.shown, s.visibility], [true, 'visible']);
 check('with a real number, opening in a new tab', [s.href, s.target, s.rel], [

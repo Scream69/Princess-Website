@@ -243,8 +243,21 @@ export function initWizard() {
     render(previousStep, options.push ?? false);
   }
 
+  /*
+   * The resume banner is a sibling of the step panels, not a child of one, so
+   * nothing here was hiding it. It sat above whatever step the customer moved
+   * on to, still offering "Start again" — which from step 3 reads as "restart
+   * the details" and instead wiped every appliance, the reference and every
+   * answer, from memory and from storage. It is an offer about the step it was
+   * shown on, and it does not survive leaving it.
+   */
+  function dismissResume(): void {
+    if (el.resume) el.resume.hidden = true;
+  }
+
   function render(previousStep: Step, push: boolean): void {
     const changed = state.step !== previousStep;
+    if (changed) dismissResume();
 
     for (const [step, section] of el.steps) {
       section.hidden = step !== state.step;
@@ -516,21 +529,37 @@ export function initWizard() {
       case 'add-another':
         event.preventDefault();
         track('add_another', { items: state.items.length });
-        update({ draftBrandSlug: null }, { push: true });
+        /*
+         * One history entry, not two. `update` pushed here as well, stacking a
+         * duplicate of the step the customer is already on, so the first back
+         * press appeared to do nothing — the exact failure CLAUDE.md 6 says
+         * step-in-URL exists to prevent. `goToStep` is the only thing that
+         * navigates, so it is the only thing that touches history.
+         */
+        update({ draftBrandSlug: null });
         goToStep(1);
         break;
       case 'resume-continue':
-        if (el.resume) el.resume.hidden = true;
+        dismissResume();
         break;
       case 'resume-discard': {
-        // Deliberately not routed through `update`, which would persist the
-        // fresh empty state and leave a record behind for someone who just
-        // asked us to forget them.
+        /*
+         * Deliberately not routed through `update`, which would persist the
+         * fresh empty state and leave a record behind for someone who just
+         * asked us to forget them.
+         *
+         * The queue goes with it. `pending-enquiry` is a second key holding
+         * the same name, email, phone and postcode for thirty days, and
+         * without this the very next page load posted the enquiry they had
+         * just asked us to forget.
+         */
         const previousStep = state.step;
+        const abandoned = state.reference;
         state = { ...createEmptyState(), step: 1 };
-        if (el.resume) el.resume.hidden = true;
+        dismissResume();
         render(previousStep, true);
         discard();
+        if (abandoned !== '') dropFromQueue(abandoned);
         break;
       }
       case 'copy-reference':
@@ -828,7 +857,30 @@ export function initWizard() {
   void retryQueue({
     accessKey: ACCESS_KEY,
     onSent: (entry) => {
-      if (entry.reference === state.reference && !state.submitted && state.items.length > 0) {
+      /*
+       * Only when the delivered payload is still what is on the device.
+       *
+       * `items.length > 0` was standing in for "the same enquiry is still
+       * here", and it never checked that. A customer whose submission failed,
+       * then came back and added another appliance, kept the same reference —
+       * so when the older, smaller payload finally got through in the
+       * background, this cleared their state and showed them a confirmation
+       * for an enquiry that did not contain the appliance they had just added.
+       * It was gone from memory and from storage.
+       *
+       * If it has changed, we do nothing: the entry is delivered and dropped
+       * from the queue, and the customer submits what is in front of them.
+       * The client may get two emails under one reference, the second a
+       * superset of the first — which is a far cheaper failure than deleting
+       * an appliance the customer chose.
+       */
+      const unchanged = entry.payload.appliances === currentPayload().appliances;
+      if (
+        entry.reference === state.reference &&
+        !state.submitted &&
+        state.items.length > 0 &&
+        unchanged
+      ) {
         completeEnquiry(entry.reference);
       }
     },

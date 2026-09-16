@@ -7,11 +7,31 @@ import {
   parseQueue,
   passesTimeCheck,
   postEnquiry,
+  queueEnquiry,
+  readQueue,
+  retryQueue,
   whatsappMessage,
   withinRateLimit,
   type EnquiryPayload,
   type QueueEntry,
 } from './submit.ts';
+
+/*
+ * The queue lives in localStorage, and these tests are the only place the
+ * write-back is observable. Node has no `window`, so it gets a minimal one —
+ * enough for the four calls submit.ts makes, and nothing more.
+ */
+function useStorage(): Map<string, string> {
+  const store = new Map<string, string>();
+  (globalThis as { window?: unknown }).window = {
+    localStorage: {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => void store.set(key, value),
+      removeItem: (key: string) => void store.delete(key),
+    },
+  };
+  return store;
+}
 
 const now = Date.UTC(2026, 0, 31, 9, 30);
 const DAY = 24 * 60 * 60 * 1000;
@@ -134,6 +154,27 @@ test('the WhatsApp message carries the whole enquiry', () => {
   assert.match(message, /Jane Doe · \+44 7700 900123 · jane@example\.co\.uk/);
   assert.match(message, /^WD17 1AA$/m);
   assert.match(message, /Miele — Handleless Oven — H7860BPX/);
+});
+
+test('the cut never splits a character, so the link can always be built', () => {
+  // `slice` counts UTF-16 units: an emoji straddling the limit left a lone
+  // surrogate, and `encodeURIComponent` threw inside the one path whose job is
+  // to survive a failed submission — the WhatsApp button was never revealed.
+  /*
+   * Both parities. Each emoji is two UTF-16 units, so whether the cut lands
+   * between characters or inside one depends on the length of everything
+   * before it — and that is payload copy, which changes. Running with and
+   * without a one-character pad guarantees one of the two splits a pair, so
+   * this cannot quietly stop testing when someone rewords a line.
+   */
+  for (const pad of ['', '.']) {
+    const emoji = pad + '\u{1F600}'.repeat(900);
+    const message = whatsappMessage(
+      buildPayload(context({ items: [item({ rawInput: emoji, inputType: 'description' })] })),
+    );
+    assert.match(message, /please ask me for the rest/, 'the message should have been cut');
+    assert.doesNotThrow(() => encodeURIComponent(message), `pad ${JSON.stringify(pad)}`);
+  }
 });
 
 test('an enormous enquiry is cut short rather than dropped', () => {
@@ -267,21 +308,96 @@ test('a second, different enquiry is queued alongside the first', () => {
   const other = { ...payload(), reference: 'ENQ-77777' };
   const queued = mergeIntoQueue([entry()], other, now);
   assert.deepEqual(
-    queued.map((queuedEntry) => queuedEntry.reference),
+    queued.map((queuedEntry) => queuedEntry.reference).sort(),
     ['ENQ-4CDEF', 'ENQ-77777'],
   );
 });
 
-test('the queue is capped, keeping those that have waited longest', () => {
+test('the queue is capped, and the enquiry being queued always survives it', () => {
+  // The one with someone waiting on it. This asserted the opposite until
+  // 2026-09-16: the newest entry was appended and then sliced off the end, so
+  // a full queue silently discarded the enquiry that had just failed while the
+  // customer was being told nothing had been lost (rule 2.4).
   const existing = Array.from({ length: 10 }, (_, index) =>
     entry({ reference: `ENQ-0000${index}` }),
   );
   const queued = mergeIntoQueue(existing, { ...payload(), reference: 'ENQ-LATER' }, now);
   assert.equal(queued.length, 10);
-  assert.equal(queued[0]?.reference, 'ENQ-00000');
+  assert.ok(queued.some((queuedEntry) => queuedEntry.reference === 'ENQ-LATER'));
+  // And the oldest of the rest are what it makes room by dropping.
+  assert.equal(queued.at(-1)?.reference, 'ENQ-00008');
+});
+
+test('a response whose body cannot be read is not a confirmed delivery', async () => {
+  // The abort signal covers the response stream, not just the headers, so a
+  // connection dropped mid-body lands here. Reading it as success told the
+  // customer their enquiry was sent when nothing arrived (rule 2.4).
+  const broken = new Response(
+    new ReadableStream({
+      start(controller) {
+        controller.error(new Error('connection reset'));
+      },
+    }),
+    { status: 200 },
+  );
+  const { impl, calls } = stubFetch([broken, json({ success: true })]);
+  assert.deepEqual(await postEnquiry(options(impl)), { ok: true });
+  assert.equal(calls.length, 2, 'the unreadable body should have been retried');
+});
+
+test('an endpoint that answers in HTML is still believed', async () => {
+  // Netlify Forms does this. Not-JSON is a different thing from unreadable.
+  const html = new Response('<html><body>Thanks</body></html>', { status: 200 });
+  const { impl, calls } = stubFetch([html]);
+  assert.deepEqual(await postEnquiry(options(impl)), { ok: true });
+  assert.equal(calls.length, 1);
+});
+
+// --- the queue on disk ------------------------------------------------------
+
+test('a retry pass does not erase an enquiry queued while it was running', async () => {
+  useStorage();
+  queueEnquiry({ ...payload(), reference: 'ENQ-STALE' }, now);
+
+  // The live enquiry is queued mid-pass, exactly as it would be if the
+  // customer pressed Submit while this was still awaiting.
+  const impl = (async () => {
+    queueEnquiry({ ...payload(), reference: 'ENQ-LIVE' }, now);
+    return json({ success: false });
+  }) as unknown as typeof fetch;
+
+  await retryQueue({ accessKey: 'k', fetchImpl: impl, endpoint: 'https://example.invalid', now });
+
+  const refs = readQueue(now).map((entry) => entry.reference);
+  assert.ok(refs.includes('ENQ-LIVE'), 'the enquiry queued during the pass survived');
+  assert.ok(refs.includes('ENQ-STALE'), 'and the one it was retrying is still queued');
+});
+
+test('a delivered entry is dropped, not resurrected', async () => {
+  useStorage();
+  queueEnquiry({ ...payload(), reference: 'ENQ-SENT' }, now);
+  const { impl } = stubFetch([json({ success: true })]);
+
+  const sent = await retryQueue({
+    accessKey: 'k',
+    fetchImpl: impl,
+    endpoint: 'https://example.invalid',
+    now,
+  });
+
+  assert.deepEqual(sent.map((entry) => entry.reference), ['ENQ-SENT']);
+  assert.deepEqual(readQueue(now), []);
 });
 
 // --- spam guards ------------------------------------------------------------
+
+test('a stamp from the future is ignored rather than counted forever', () => {
+  // A phone whose clock ran ahead wrote stamps that could never age out, and
+  // the rate-limit path does not queue — so the customer was locked out with
+  // no way through and no way to clear it.
+  const ahead = Array.from({ length: 9 }, (_, index) => now + (index + 1) * 60_000);
+  assert.equal(withinRateLimit(ahead, now), true);
+});
 
 test('an instant submission is refused', () => {
   assert.equal(passesTimeCheck({ now, loadedAt: now - 500, startedAt: now - 500 }), false);

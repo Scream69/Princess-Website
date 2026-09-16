@@ -369,6 +369,10 @@ Two knock-on points that **UK-only delivery has now closed**: a customer pasting
 6. Include in the payload: reference, all items (brand, raw input, parsed model, note), contact details, and metadata — brands clicked, time on page, entry URL. The payload is flat and string-valued: a form-to-email service renders nested objects as unreadable JSON, so items arrive as numbered lines.
 7. An empty access key is reported as `unconfigured`, distinct from a network failure: nothing is posted, the enquiry is queued, and the customer is never told it was sent. A later build with the key delivers what is queued.
 8. Queue entries are keyed by reference, so "Try again" replaces rather than duplicates, and a confirmed send removes the entry — otherwise the client is emailed the same enquiry twice.
+9. **The enquiry being queued always survives the cap**, and the oldest are what make room. The reverse was true until 2026-09-16: the newest was appended and then sliced off the end, so a device holding ten entries silently discarded the enquiry that had just failed, while the screen said "Nothing has been lost".
+10. **A response whose body cannot be read is not a delivery.** The abort signal covers the response stream, so a connection dropped mid-body lands there; it is retried, not believed. A body that is merely *not JSON* is still a success — some endpoints answer in HTML.
+11. **The background retry re-reads the queue before writing it.** A pass can take a minute, and the customer is using the form throughout: writing back the snapshot it started with erased enquiries queued meanwhile and resurrected ones already delivered.
+12. **The retry only completes the on-screen enquiry if the delivered payload still matches it.** Otherwise a customer who added an appliance after a failure had it deleted when the older payload got through.
 
 ### 8.8 Spam protection
 Honeypot field (visually hidden, not `display:none`), plus a minimum time-to-submit check (~3 seconds), plus a per-browser rate limit in `localStorage`. **No CAPTCHA** — it costs real enquiries.

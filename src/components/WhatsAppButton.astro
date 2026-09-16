@@ -80,6 +80,18 @@ const href = whatsappHref();
   const cue = document.querySelector('[data-whatsapp-cue]');
 
   if (button) {
+    /*
+     * Marks that the observer below is attached. Nothing here reads it: it
+     * exists so the e2e harness can tell a page whose markup has parsed from
+     * one whose reveal is actually wired, which is the same job
+     * `[data-wizard][data-ready]` does on the order page. Waiting on a fixed
+     * delay instead made the reveal checks fail about one run in five once the
+     * home page gained 67 lazy brand images.
+     */
+    queueMicrotask(() => {
+      button.dataset.ready = '';
+    });
+
     if (!cue) {
       button.dataset.shown = '';
     } else {

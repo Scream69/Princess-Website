@@ -152,9 +152,19 @@ export function whatsappMessage(payload: EnquiryPayload): string {
     'Sent here because the website form could not reach you.',
   ].join('\n');
 
-  return body.length <= WHATSAPP_MAX_CHARS
-    ? body
-    : `${body.slice(0, WHATSAPP_MAX_CHARS)}…\n(cut short — please ask me for the rest)`;
+  if (body.length <= WHATSAPP_MAX_CHARS) return body;
+
+  /*
+   * Cut on a character, not on a UTF-16 index. `slice` counts code units, so a
+   * non-BMP character — any emoji, and people do put them in a free-text
+   * description — straddling the limit leaves a lone surrogate.
+   * `encodeURIComponent` throws `URIError` on that, and it throws inside the
+   * one code path whose entire job is to survive a failed submission: the
+   * failure panel had already been shown, so the customer was left looking at
+   * "we could not send it" with the WhatsApp button never revealed.
+   */
+  const cut = [...body].slice(0, WHATSAPP_MAX_CHARS).join('');
+  return `${cut}…\n(cut short — please ask me for the rest)`;
 }
 
 // --- posting ----------------------------------------------------------------
@@ -214,13 +224,34 @@ async function attemptPost(options: AttemptOptions): Promise<Attempt> {
 
   /*
    * A 2xx is not proof on its own: Web3Forms answers 200 with
-   * `{ success: false }` when it drops a submission. An unparseable body is
-   * read as success — Netlify Forms answers with HTML — because the only
-   * alternative is disbelieving an endpoint that accepted the POST.
+   * `{ success: false }` when it drops a submission.
+   *
+   * The distinction that matters is *why* the body could not be parsed. Text
+   * that simply is not JSON — Netlify Forms answers with HTML — is a
+   * successful post from an endpoint that talks differently, and disbelieving
+   * it would strand every Netlify deployment. A body that could not be *read*
+   * is a different thing: the abort signal covers the response stream, not
+   * just the headers, so a connection dropped mid-body or a stream that
+   * outlasts the timeout lands here too. Treating that as delivered told the
+   * customer their enquiry was sent when nothing arrived, which is rule 2.4
+   * exactly. It is retryable — the POST may well have been received, and the
+   * queue is keyed by reference so a duplicate send replaces rather than
+   * stacks.
    */
-  const body = await response.json().catch(() => null);
-  if (body && typeof body === 'object' && (body as { success?: unknown }).success === false) {
-    return { ok: false, reason: 'rejected', retryable: false };
+  let text: string;
+  try {
+    text = await response.text();
+  } catch {
+    return { ok: false, reason: 'network', retryable: true };
+  }
+
+  try {
+    const body: unknown = JSON.parse(text);
+    if (body && typeof body === 'object' && (body as { success?: unknown }).success === false) {
+      return { ok: false, reason: 'rejected', retryable: false };
+    }
+  } catch {
+    // Not JSON at all: an endpoint that answers in HTML, which is fine.
   }
   return { ok: true };
 }
@@ -310,7 +341,15 @@ function writeQueue(entries: QueueEntry[]): void {
 /*
  * Keyed by reference, so a customer pressing "Try again" replaces their queued
  * enquiry instead of stacking duplicates the client would have to de-duplicate
- * by hand. The oldest entries survive the cap — they have waited longest.
+ * by hand.
+ *
+ * **The entry being queued always survives the cap.** It used to be appended
+ * last and then `slice`d off the end, so on a device holding ten entries the
+ * enquiry the customer had just failed to send was the one thrown away — while
+ * the screen told them "Nothing has been lost. Your enquiry is saved on this
+ * device". Oldest-wins is the wrong tie-break anyway: the entries that have sat
+ * longest are the ones most likely already dead, and the newest is the only one
+ * with someone waiting on it.
  */
 export function mergeIntoQueue(
   entries: QueueEntry[],
@@ -325,7 +364,8 @@ export function mergeIntoQueue(
     attempts: existing?.attempts ?? 0,
   };
   const others = entries.filter((entry) => entry.reference !== payload.reference);
-  return [...others, merged].slice(0, QUEUE_MAX);
+  // Keep the newest, then as many of the rest as fit, oldest first.
+  return [merged, ...others.slice(0, QUEUE_MAX - 1)];
 }
 
 export function queueEnquiry(payload: EnquiryPayload, now: number = Date.now()): void {
@@ -354,14 +394,22 @@ export interface RetryQueueOptions {
  * Retried on every page load (CLAUDE.md 8.7 step 3). One pass, no retry
  * ladder: the customer is not waiting on this, and an entry that fails simply
  * stays queued for the next load.
+ *
+ * **The queue is re-read before it is written, never overwritten from the
+ * snapshot this started with.** Each entry can take seconds, and the customer
+ * is using the form the whole time: an enquiry they queue during the pass used
+ * to be erased by the write-back, and one they sent successfully on "Try
+ * again" used to be resurrected and mailed to the client a second time. What
+ * this pass knows is which references it delivered and which it tried — so it
+ * applies only that, to whatever the queue holds at the end.
  */
 export async function retryQueue(options: RetryQueueOptions): Promise<QueueEntry[]> {
   const now = options.now ?? Date.now();
   const queued = readQueue(now);
   if (queued.length === 0) return [];
 
-  const remaining: QueueEntry[] = [];
   const sent: QueueEntry[] = [];
+  const tried = new Set<string>();
 
   for (const entry of queued) {
     const result = await postEnquiry({
@@ -371,11 +419,18 @@ export async function retryQueue(options: RetryQueueOptions): Promise<QueueEntry
       endpoint: options.endpoint,
       retryDelays: [],
     });
+    tried.add(entry.reference);
     if (result.ok) sent.push(entry);
-    else remaining.push({ ...entry, attempts: entry.attempts + 1 });
   }
 
-  writeQueue(remaining);
+  const delivered = new Set(sent.map((entry) => entry.reference));
+  writeQueue(
+    readQueue(options.now ?? Date.now())
+      .filter((entry) => !delivered.has(entry.reference))
+      .map((entry) =>
+        tried.has(entry.reference) ? { ...entry, attempts: entry.attempts + 1 } : entry,
+      ),
+  );
   for (const entry of sent) options.onSent?.(entry);
   return sent;
 }
@@ -410,8 +465,22 @@ export function isHoneypotTripped(box: HTMLInputElement | null): boolean {
   return box?.checked === true;
 }
 
+/*
+ * A stamp from the future counts for nothing.
+ *
+ * `now - time <= WINDOW` is satisfied by every negative value, so a phone whose
+ * clock was running days ahead — a flat battery, a manually set date — wrote
+ * stamps that could never age out. Once the clock corrected itself the customer
+ * was rate-limited permanently, and the rate-limit path deliberately does not
+ * queue, so there was no route out and no way to clear it from inside the site.
+ */
+const withinWindow = (time: number, now: number): boolean => {
+  const age = now - time;
+  return age >= 0 && age <= RATE_WINDOW_MS;
+};
+
 export function withinRateLimit(times: readonly number[], now: number = Date.now()): boolean {
-  return times.filter((time) => now - time <= RATE_WINDOW_MS).length < RATE_LIMIT;
+  return times.filter((time) => withinWindow(time, now)).length < RATE_LIMIT;
 }
 
 export function readSubmissionTimes(now: number = Date.now()): number[] {
@@ -419,8 +488,8 @@ export function readSubmissionTimes(now: number = Date.now()): number[] {
     const parsed: unknown = JSON.parse(window.localStorage.getItem(RATE_KEY) ?? '[]');
     if (!Array.isArray(parsed)) return [];
     return parsed
-      .filter((time): time is number => typeof time === 'number')
-      .filter((time) => now - time <= RATE_WINDOW_MS);
+      .filter((time): time is number => Number.isFinite(time))
+      .filter((time) => withinWindow(time, now));
   } catch {
     return [];
   }
