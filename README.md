@@ -37,8 +37,10 @@ npm run dev
 | `npm run preview` | Serve the built output |
 | `npm run check` | Astro + TypeScript diagnostics |
 | `npm test` | Unit tests — pure logic, no DOM |
-| `npm run test:e2e` | Drives the wizard in real Chrome (needs `npm run dev` running) |
+| `npm run test:e2e` | Drives the quote wizard in real Chrome (needs `npm run dev` running) |
+| `npm run test:e2e:repairs` | Drives the repair booking, same technique (needs `npm run dev` running) |
 | `npm run check:links` | Brand link-rot checker (see Maintenance) |
+| `npm run fetch:holidays` | Refreshes the repair drop-off picker's bank-holiday list (see Maintenance) |
 
 ## Design tokens
 
@@ -79,8 +81,13 @@ view to submit success. No event carries personal data or enquiry content —
 
 ## Enquiry delivery
 
-Web3Forms, keyed by `PUBLIC_WEB3FORMS_KEY`. The key is public by design — it
-ships in the bundle and can only deliver to the address verified on the form.
+Web3Forms, keyed by `PUBLIC_WEB3FORMS_KEY` for quote enquiries and
+`PUBLIC_WEB3FORMS_KEY_REPAIRS` for repair bookings. **Two separate forms, not
+one** — in Web3Forms the access key is the binding to a destination address,
+so quotes (info@) and repairs (repairs@) each need their own. The repairs form
+does not exist yet; see `MISSING-ASSETS.md`. Both keys are public by
+design — they ship in the bundle and can only deliver to the address verified
+on their own form.
 
 **Web3Forms rejects any request whose `Origin` is not the Website URL
 registered on the form.** Verified 2026-09-10: the same payload returns 403
@@ -110,9 +117,10 @@ Verified live on 2026-09-10: enquiry `ENQ-4UVF6` submitted through
 princess-website.pages.dev, delivered, confirmation screen shown, storage
 cleared, nothing left queued.
 
-Free tier is 250 submissions a month. Leave the dashboard's Subject and Sender
-Name blank — the site sends its own per-enquiry subject carrying the reference
-and the country, and sets the sender to the customer.
+Free tier is 250 submissions a month, per form — so 250 quotes and 250 repairs
+once the second form exists. Leave the dashboard's Subject and Sender Name
+blank on both — each site sends its own per-submission subject carrying the
+reference, and sets the sender to the customer.
 
 ## SEO
 
@@ -201,27 +209,52 @@ Last run 2026-09-10: 57 ok, 7 blocked to scripts, 1 certificate chain
 (Humax), 0 broken. Belling, Liebherr, Stoves and Woods had moved and are
 updated.
 
+**Bank holiday refresh — annually, or whenever it warns.** The repair
+drop-off slot picker (`/repairs`) must not offer a day the shop is closed for
+a bank holiday. Run:
+
+```sh
+npm run fetch:holidays
+```
+
+It pulls GOV.UK's own open-data feed (england-and-wales division, no key, no
+cost) and writes `src/data/bank-holidays.json`. The feed publishes roughly
+three years ahead, so this does not need to run often — the script warns in
+its own output if fewer than 12 months of runway remain. One-off closures the
+client sets themselves (not a published bank holiday) go in `site.json`'s
+`closures` array instead, and need no script.
+
 ## Testing
 
 `npm test` covers the pure logic: filter matching, step guards, storage
-parsing and expiry, reference format, the enquiry payload, and the submission
-retry, queue and spam rules.
+parsing and expiry, reference format, the enquiry and repair payloads,
+drop-off slot generation, the printable-label encoding, and the submission
+retry, queue and spam rules — including that the queue survives an entry
+written before repairs existed, with no `kind` field at all.
 
-`npm run test:e2e` drives the whole wizard in a real headless Chrome or Edge
-over the DevTools Protocol — cold load, filtering, choosing a brand, adding and
-removing appliances, refresh mid-flow, the back button, deep links, discard,
-submission including the offline path, and the home page's two rules — the
-brand strip must enter the wizard, and the page must ship no JS but the nav
-toggle. It uses Node's built-in WebSocket,
-so there is no browser-automation dependency. Start `npm run dev` first; set
-`CHROME_PATH` if neither browser is in the usual place.
+`npm run test:e2e` drives the whole quote wizard in a real headless Chrome or
+Edge over the DevTools Protocol — cold load, filtering, choosing a brand,
+adding and removing appliances, refresh mid-flow, the back button, deep
+links, discard, submission including the offline path, and the home page's
+two rules — the brand strip must enter the wizard, and the page must ship no
+JS but the nav toggle. `npm run test:e2e:repairs` does the same for
+`/repairs`: category selection, the not-repaired list, the drop-off slot
+picker, the chat-styled details, submission (offline and, when a key is set,
+a real confirmed send), and the printable label at `/repairs/label`, decoded
+from a hand-built fragment independent of the app's own encoder. Both use
+Node's built-in WebSocket, so there is no browser-automation dependency.
+Start `npm run dev` first; set `CHROME_PATH` if neither browser is in the
+usual place.
 
-The delivery checks need `PUBLIC_WEB3FORMS_KEY` set to any non-empty value in
-`.env` (every request is stubbed, so nothing is sent anywhere). Without it the
-suite verifies the unconfigured behaviour instead — queued, and no false
-confirmation — and says so.
+The delivery checks need `PUBLIC_WEB3FORMS_KEY` (quotes) or
+`PUBLIC_WEB3FORMS_KEY_REPAIRS` (repairs) set to any non-empty value in `.env`
+(every request is stubbed, so nothing is sent anywhere — restart `npm run
+dev` after changing either). Without a key the corresponding suite verifies
+the unconfigured behaviour instead — queued, and no false confirmation — and
+says so. `PUBLIC_WEB3FORMS_KEY_REPAIRS` has no real value yet: the client has
+not created that Web3Forms form (see `MISSING-ASSETS.md`).
 
-Neither covers **iOS Safari**, which is primary traffic. The clipboard
+Neither suite covers **iOS Safari**, which is primary traffic. The clipboard
 behaviour in particular has to be checked by hand on a real device.
 
 ## Deployment

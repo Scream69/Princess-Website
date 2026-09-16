@@ -235,6 +235,21 @@ The fixed 24-hour response promise is written and lives in `site.json`
 (`responsePromise`). It is a flat string and is never computed from the
 clock (CLAUDE.md 8.5).
 
+- [ ] **Repairs copy — drafted 2026-09-16, needs client sign-off before
+      launch.** The client supplied two WhatsApp messages of reference
+      material when this was scoped, but that text is a different business's
+      copy — Hertford TV / Supertronics — and none of its specific claims
+      ("39 years' experience", "John Lewis Authorised Service Agents", "loan
+      TVs", "we come to your location") belong to Princes Electronics or are
+      confirmed facts about it (rule 2.2). Everything in `copy.json`'s
+      `repairs` and `home.repairs` blocks is written from the three sentences
+      the client actually gave: free estimate, drop off at the shop, repaired
+      on Saturdays. It reads correctly and makes no unconfirmed claim, but it
+      is a draft — send corrections or an approval before this goes live.
+      `site.json`'s `repairPromise` ("we will contact you once we have
+      assessed your item") is the repair-flow equivalent of the response
+      promise above, on the same footing.
+
 ## 4. Business details
 
 - [x] Enquiry destination email address — `info@princeselectronics.com`,
@@ -262,6 +277,21 @@ clock (CLAUDE.md 8.5).
       supplied 2026-09-11, in `site.json`, the footer and the privacy policy.
       They also complete the `LocalBusiness` structured data, which now
       carries the address and VAT number.
+- [x] **Repair drop-off address**, confirmed 2026-09-16 as the same address
+      above. Stored as its own field, `site.json`'s `contact.shopAddress`,
+      rather than reused from `company.registeredAddress` — a registered
+      office and a counter customers walk into are different facts that
+      happen to share a value today, and if the shop ever moves, one field
+      changes rather than two meanings pulling apart under one field. Shown
+      on `/repairs` and printed on the drop-off slip.
+- [x] **Repair drop-off scheduling rules**, confirmed 2026-09-16: no minimum
+      notice (the client contacts the customer after assessing the item, not
+      before), drop-off on any day the shop is open including Saturday,
+      morning/afternoon slots split at 13:00, and no Sunday or bank-holiday
+      drop-off. The picker excludes bank holidays via
+      `scripts/fetch-bank-holidays.mjs` (GOV.UK's open data feed,
+      England-and-Wales division) — see the README for the "run this
+      annually" maintenance note, the same shape as the link checker.
 - [x] **Registered company name — Princes Electronics**, supplied
       2026-09-11. It now stands in `site.json` as `legalName`, in the footer's
       Company block and as the data controller in the privacy policy. See
@@ -307,6 +337,15 @@ the value sent is always empty and their check never fires.
       Web3Forms also **refuses any request whose origin is not the registered
       Website URL** — see the README, it is a 403 that looks like a broken
       build.
+- [ ] **A second Web3Forms form, for repairs@princeselectronics.com** —
+      added 2026-09-16 alongside the repair booking flow (`/repairs`). One key
+      cannot deliver to two inboxes: in Web3Forms the access key *is* the
+      binding to a destination address, so quotes and repairs need their own
+      forms. `PUBLIC_WEB3FORMS_KEY_REPAIRS` is unset for exactly this reason —
+      every repair enquiry currently reports `unconfigured` and queues on the
+      device rather than being lost, but nothing is delivered until this
+      exists. Once created: set `PUBLIC_WEB3FORMS_KEY_REPAIRS`, redeploy, and
+      apply the same spam-protection dashboard settings as 4.1.
 - [ ] Analytics: Plausible or Umami, confirmed as cookieless, under the
       client's account. The wiring is built and switched off: set
       `PUBLIC_ANALYTICS_DOMAIN` and `PUBLIC_ANALYTICS_SRC` and it starts
