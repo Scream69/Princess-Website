@@ -149,9 +149,25 @@ function parseUrl(url: URL, brandSlug?: string | null): ParsedInput {
   const override = brandSlug ? BRAND_MODEL_PATTERNS[brandSlug] : undefined;
   let found = modelFromSegments(segments, override);
 
-  // Some sites carry the model in the query rather than the path.
+  /*
+   * Some sites carry the model in the query rather than the path — but only
+   * from a parameter that says so.
+   *
+   * This used to take the first value of any parameter that looked model-ish,
+   * in insertion order, which on a link from an email campaign or an ad meant
+   * the tracking code won: `?cmp=promo2024gb` was echoed to the customer as
+   * "Got it — Bravia 9 — PROMO2024GB" and went to the client as the model.
+   * Most customers arrive on a manufacturer's site through exactly such a
+   * link, so this was the common case rather than the edge one.
+   *
+   * An allowlist rather than a denylist of tracking keys: new campaign
+   * parameters appear constantly, and the cost of missing a real model here is
+   * only that parsing falls back to the path — parsing is a convenience and
+   * never a gate (CLAUDE.md 8.3).
+   */
   if (!found) {
-    for (const value of url.searchParams.values()) {
+    for (const [key, value] of url.searchParams.entries()) {
+      if (!MODEL_PARAMS.has(key.toLowerCase())) continue;
       if (looksLikeModel(value)) {
         found = { model: value.toUpperCase(), index: segments.length - 1 };
         break;
@@ -191,6 +207,27 @@ function parseBareText(value: string): ParsedInput {
     ? { inputType: 'model', model: collapsed.toUpperCase(), name: null }
     : { inputType: 'description', model: null, name: null };
 }
+
+/**
+ * Query parameters that actually name a product. Everything else — `utm_*`,
+ * `gclid`, `fbclid`, `mc_eid`, `cmp` — is campaign plumbing.
+ */
+const MODEL_PARAMS = new Set([
+  'model',
+  'modelno',
+  'model_no',
+  'modelnumber',
+  'sku',
+  'productcode',
+  'product_code',
+  'productid',
+  'product_id',
+  'articlenumber',
+  'article',
+  'variant',
+  'itemno',
+  'item',
+]);
 
 export function parseInput(raw: string, brandSlug?: string | null): ParsedInput {
   const value = raw.trim().replace(/\s+/g, ' ');

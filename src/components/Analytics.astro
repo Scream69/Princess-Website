@@ -36,7 +36,15 @@ const enabled = Boolean(domain && src);
           if (!link) return;
           const plausible = window.plausible;
           const umami = window.umami;
-          const props = { where: link.dataset.whatsapp ?? 'floating' };
+          /*
+            * `data-whatsapp` names the button. It used to be read and never
+            * set anywhere, so every click — hero, floating, step 4 follow-up,
+            * and the submission-failure escape hatch — arrived labelled
+            * "floating". The one number that matters to rule 2.4, how often
+            * the last route out is being used, was indistinguishable from a
+            * casual tap on the home page.
+            */
+          const props = { where: link.dataset.whatsapp ?? 'unlabelled' };
           if (typeof plausible === 'function') plausible('whatsapp_click', { props });
           else if (typeof umami?.track === 'function') umami.track('whatsapp_click', props);
         });

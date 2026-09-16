@@ -83,3 +83,14 @@ test('postcode rejects only length and stray characters', () => {
   assert.equal(validatePostcode('SW1A 1AA!').ok, false);
   assert.equal(validatePostcode('<script>').ok, false);
 });
+
+test('an invisible character does not make an address unmailable', () => {
+  // Copied out of Outlook or a PDF, a zero-width space rides along: `trim()`
+  // and `\s` both miss it, so the address validated, submitted, showed a
+  // confirmation — and the reply bounced.
+  const withZwsp = 'jane@example.co.uk​';
+  const result = validateEmail(withZwsp);
+  assert.equal(result.ok, true);
+  assert.equal(value(result), 'jane@example.co.uk');
+  assert.equal(value(validateEmail('﻿jane@example.co.uk')), 'jane@example.co.uk');
+});

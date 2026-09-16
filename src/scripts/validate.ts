@@ -45,8 +45,20 @@ export function validatePhone(raw: string): Validation {
  * valid addresses — long TLDs, plus-addressing, apostrophes — and this is the
  * field the entire quote depends on reaching.
  */
+/*
+ * Zero-width and bidi characters, which `trim()` and `\s` both miss.
+ *
+ * They ride along when an address is copied out of Outlook, a PDF, or a page
+ * that uses U+200B as a line-break hint — and the address then validates,
+ * stores, submits, and shows the customer a confirmation, while the client's
+ * reply bounces. That is the rule 2.4 failure shape: a send the customer
+ * believes succeeded. Stripped rather than rejected, because the customer did
+ * nothing wrong and cannot see the character to remove it.
+ */
+const INVISIBLE = /[\u200B-\u200F\u2060\uFEFF]/g;
+
 export function validateEmail(raw: string): Validation {
-  const value = raw.trim();
+  const value = raw.replace(INVISIBLE, '').trim();
   if (value === '') return no('Please enter your email address.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)) {
     return no('That does not look like an email address.');

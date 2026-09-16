@@ -776,9 +776,18 @@ await goto('/order?brand=miele');
 s = await evaluate(PROBE);
 check('?brand= enters at step 2 with the brand set', [s.step, s.brand], ['2', 'Miele']);
 
+// The brand has to survive the round trip to the manufacturer's site — on iOS
+// that tab is routinely evicted, and `?brand=` is stripped from the URL on
+// first paint, so memory alone loses it (CLAUDE.md 5.2).
+await goto('/order');
+s = await evaluate(PROBE);
+check('and survives a reload with the query string gone', [s.step, s.brand], ['2', 'Miele']);
+
+await reset();
 await goto('/order?brand=notarealbrand');
 s = await evaluate(PROBE);
 check('an unknown brand slug is ignored', s.brand, '');
+check('and leaves the customer at the directory, not an empty step 2', s.step, '1');
 
 // --- starting again ---------------------------------------------------------
 await reset();

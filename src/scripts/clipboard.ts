@@ -28,6 +28,15 @@ export interface ClipboardOptions {
   button: HTMLElement;
   /** Called whenever text lands in the field by any route. */
   onText: (text: string) => void;
+  /*
+   * Whether the product field is the one on screen. The document-level paste
+   * handler is the most reliable route (8.1 layer 2) and needs no permission,
+   * but it is bound to `document` and was firing on every step: a customer on
+   * step 3 who copied their email address, came back and pressed Cmd+V without
+   * clicking the field had the paste swallowed into the hidden step 2 input,
+   * and nothing appeared where they were looking.
+   */
+  isActive: () => boolean;
 }
 
 /** Typing into another field should never be hijacked. */
@@ -42,7 +51,7 @@ function isEditable(node: EventTarget | null): boolean {
   );
 }
 
-export function initClipboard({ input, button, onText }: ClipboardOptions): () => void {
+export function initClipboard({ input, button, onText, isActive }: ClipboardOptions): () => void {
   let leftThePage = false;
 
   /** Marks how the value arrived, so the wizard can tell a paste from typing. */
@@ -84,6 +93,8 @@ export function initClipboard({ input, button, onText }: ClipboardOptions): () =
     }
 
     if (isEditable(event.target)) return;
+    // Not our step: leave the paste to the browser and to whatever has focus.
+    if (!isActive()) return;
 
     event.preventDefault();
     accept(text, 'document');

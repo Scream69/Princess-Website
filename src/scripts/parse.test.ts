@@ -95,3 +95,28 @@ test('describe reads as a sentence the customer can confirm', () => {
     'a quiet dishwasher',
   );
 });
+
+test('a campaign parameter is never mistaken for a model', () => {
+  // Most customers reach a manufacturer's site through a link like this, so
+  // this was the common case: the tracking code was echoed back to them as the
+  // model and sent to the client as one.
+  for (const url of [
+    'https://www.sony.co.uk/tv/products/bravia-9?cmp=promo2024gb',
+    'https://www.miele.co.uk/?utm_campaign=2024-spring-sale',
+    'https://www.smeg.co.uk/products/fridges?mc_eid=a1b2c3d4e5',
+    'https://www.aeg.co.uk/ovens/?gclid=EAIaIQobChMI1234',
+  ]) {
+    const parsed = parseInput(url);
+    assert.notEqual(parsed.model, 'PROMO2024GB', url);
+    assert.ok(
+      parsed.model === null || /^[A-Z0-9-]+$/.test(parsed.model),
+      `${url} -> ${parsed.model}`,
+    );
+    assert.ok(!/UTM|GCLID|MC_EID|PROMO/i.test(parsed.model ?? ''), `${url} -> ${parsed.model}`);
+  }
+});
+
+test('a parameter that really does name the model is still used', () => {
+  assert.equal(parseInput('https://www.example.co.uk/ovens?model=H7860BPX').model, 'H7860BPX');
+  assert.equal(parseInput('https://www.example.co.uk/hobs?sku=IKX64301CB').model, 'IKX64301CB');
+});

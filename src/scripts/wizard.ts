@@ -646,7 +646,13 @@ export function initWizard() {
   });
 
   if (productInput && pasteButton) {
-    initClipboard({ input: productInput, button: pasteButton, onText: showEcho });
+    initClipboard({
+      input: productInput,
+      button: pasteButton,
+      onText: showEcho,
+      // Only while step 2 is the one on screen — see the note in clipboard.ts.
+      isActive: () => state.step === 2,
+    });
   }
 
   // --- submission (CLAUDE.md 8.7) -------------------------------------------
@@ -843,10 +849,32 @@ export function initWizard() {
     requested.brand && Object.hasOwn(brandNames, requested.brand) ? requested.brand : null;
   const intent = { ...requested, brand };
 
+  /*
+   * Persisted, not just held. This was a bare assignment, so the brand lived
+   * only in memory: the home page's strip links to `/order?brand=miele`, the
+   * customer taps through to the manufacturer, iOS evicts the backgrounded
+   * tab, and they return to a page that has forgotten which brand they picked
+   * — with `?brand=` already stripped from the URL by the `replaceState`
+   * below, so there is no second chance. CLAUDE.md 5.2 says `draftBrandSlug`
+   * exists precisely to survive that round trip.
+   */
   if (brand) state = { ...state, draftBrandSlug: brand };
 
   const resumable = state.items.length > 0 && intent.step === null;
   state = { ...state, step: clampStep(intendedStep(intent, state.step), guard()) };
+
+  /*
+   * Saved once, after both the brand and the step it implies are settled.
+   *
+   * Both were bare assignments, held in memory only. The home page's strip
+   * links to `/order?brand=miele`; the customer taps through to the
+   * manufacturer; iOS evicts the backgrounded tab; they come back to a page
+   * that has forgotten both which brand they picked and that they were on step
+   * 2 — and `?brand=` has already been stripped from the URL by the
+   * `replaceState` below, so there is no second chance to recover it. This is
+   * exactly the round trip CLAUDE.md 5.2 says `draftBrandSlug` exists for.
+   */
+  if (brand) save(state);
 
   history.replaceState({ step: state.step }, '', stepUrl(state.step));
   // previousStep === state.step, so the first paint moves no focus.
