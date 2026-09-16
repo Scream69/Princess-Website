@@ -1,0 +1,135 @@
+---
+import Base from '../../layouts/Base.astro';
+import copy from '../../data/copy.json';
+
+/*
+ * The printable A4 drop-off slip — architecture plan 2026-09-16.
+ *
+ * Reachable two ways, from the same generated link (label.ts): the customer
+ * taps "Print a drop-off slip" on their own confirmation screen, and the
+ * client clicks the same link from the notification email to print one for
+ * the workbench. There is no server and no database (CLAUDE.md 3), so the
+ * slip travels entirely inside the URL's fragment — `#` — which browsers
+ * never send in a request. Nothing here reaches a server log.
+ *
+ * That also means this page renders nothing at build time: the whole slip is
+ * built by client-side JS reading `location.hash`. `noindex` — this is a
+ * printable artefact for one enquiry, not a page anyone should find via
+ * search — and it is left out of sitemap.xml and disallowed in robots.txt
+ * for the same reason.
+ */
+const { label } = copy.repairs;
+---
+
+<Base title={label.title} description={label.description} showNavLinks={false} noindex={true}>
+  <div class="mx-auto max-w-page px-gutter pt-section pb-section print:p-0">
+    <div data-label-error hidden class="max-w-content">
+      <h1 class="font-serif text-heading text-ink">{label.emptyHeading}</h1>
+      <p class="mt-4 text-ink-muted">{label.emptyBody}</p>
+    </div>
+
+    <div data-label-root hidden class="mx-auto max-w-[210mm]">
+      <button
+        type="button"
+        data-label-print
+        class="mb-6 min-h-touch rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover print:hidden"
+      >
+        {label.print}
+      </button>
+
+      <div class="border border-line p-8 print:border-0 print:p-0">
+        <div class="flex items-baseline justify-between border-b-2 border-ink pb-4">
+          <h1 class="font-serif text-heading text-ink">{label.heading}</h1>
+          <p data-label-reference class="figures text-heading tracking-wide text-ink"></p>
+        </div>
+
+        <dl class="mt-6 grid grid-cols-[10rem_1fr] gap-x-4 gap-y-4 text-ink">
+          <dt class="text-sm text-ink-muted">{label.expectedLabel}</dt>
+          <dd data-label-dropoff class="text-lg"></dd>
+
+          <dt class="text-sm text-ink-muted">{label.customerLabel}</dt>
+          <dd data-label-name class="text-lg"></dd>
+
+          <dt class="text-sm text-ink-muted">{label.phoneLabel}</dt>
+          <dd data-label-phone class="text-lg"></dd>
+
+          <dt class="text-sm text-ink-muted">{label.emailLabel}</dt>
+          <dd data-label-email class="text-lg"></dd>
+
+          <dt class="text-sm text-ink-muted">{label.itemLabel}</dt>
+          <dd data-label-product class="text-lg"></dd>
+
+          <dt class="text-sm text-ink-muted">{label.faultLabel}</dt>
+          <dd data-label-fault class="text-lg"></dd>
+        </dl>
+
+        <div class="mt-10 grid grid-cols-2 gap-8 border-t border-line pt-6">
+          <div>
+            <p class="text-sm text-ink-muted">{label.receivedLabel}</p>
+            <p class="mt-1 text-xs text-ink-subtle">{label.receivedNote}</p>
+            <div class="mt-6 h-10 border-b border-ink"></div>
+          </div>
+          <div>
+            <p class="text-sm text-ink-muted">{label.estimateLabel}</p>
+            <div class="mt-6 h-10 border-b border-ink"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+  /*
+   * Screen chrome — the nav, footer and floating WhatsApp button that Base
+   * renders on every page — is suppressed only in print. On screen it stays,
+   * so a customer previewing their slip still has the ordinary way back to
+   * the rest of the site.
+   */
+  @media print {
+    :global(header),
+    :global(footer),
+    :global([data-whatsapp-float]),
+    :global(.skip-link) {
+      display: none !important;
+    }
+  }
+</style>
+
+<style is:global>
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+</style>
+
+<script>
+  import { decodeLabel } from '../../scripts/label';
+
+  const root = document.querySelector<HTMLElement>('[data-label-root]');
+  const errorPanel = document.querySelector<HTMLElement>('[data-label-error]');
+  const data = decodeLabel(location.hash);
+
+  if (!data || !root) {
+    if (errorPanel) errorPanel.hidden = false;
+  } else {
+    root.hidden = false;
+
+    const set = (attr: string, value: string) => {
+      const el = root.querySelector<HTMLElement>(`[data-label-${attr}]`);
+      if (el) el.textContent = value;
+    };
+
+    set('reference', data.reference);
+    set('name', data.name);
+    set('phone', data.phone);
+    set('email', data.email);
+    set('product', data.product);
+    set('fault', data.fault);
+    set('dropoff', data.dropoff || 'Not yet chosen');
+
+    document
+      .querySelector<HTMLButtonElement>('[data-label-print]')
+      ?.addEventListener('click', () => window.print());
+  }
+</script>

@@ -1,0 +1,58 @@
+---
+import copy from '../../data/copy.json';
+
+// Step 2. Free estimate, stated here where it does the most work: right
+// after asking for the fault, before any commitment (client confirmed
+// 2026-09-16 — the estimate is free, nothing is charged until agreed).
+const { step2 } = copy.repairs;
+---
+
+<section data-step-panel="2" hidden>
+  <h2
+    data-step-heading
+    tabindex="-1"
+    class="mt-6 max-w-content font-serif text-heading text-ink focus:outline-none"
+  >
+    {step2.heading}
+  </h2>
+  <p class="mt-4 max-w-content text-ink-muted">{step2.intro}</p>
+
+  <div class="mt-8 max-w-content">
+    <label for="repair-fault" class="block text-sm font-medium text-ink">{step2.faultLabel}</label>
+    <textarea
+      id="repair-fault"
+      data-repair-fault
+      rows="4"
+      placeholder={step2.faultPlaceholder}
+      aria-describedby="repair-step2-error"
+      class="mt-2 w-full rounded-sm border border-line-strong bg-surface px-3 py-2 text-ink placeholder:text-ink-subtle"
+    ></textarea>
+    <p id="repair-step2-error" data-step2-error role="alert" class="mt-2 text-sm text-error"></p>
+  </div>
+
+  <div class="mt-8 max-w-content rounded-sm border border-line bg-surface p-4">
+    <p class="font-medium text-ink">
+      <span aria-hidden="true" class="mr-2 text-gold-ink">&#10003;</span>
+      {step2.estimateHeading}
+    </p>
+    <p class="mt-2 text-sm text-ink-muted">{step2.estimateBody}</p>
+  </div>
+
+  <div class="mt-10 flex flex-wrap gap-3">
+    <button
+      type="button"
+      data-action="repair-go-step"
+      data-step="1"
+      class="min-h-touch rounded-sm border border-line-strong px-6 font-medium text-ink transition-colors hover:border-ink"
+    >
+      {step2.back}
+    </button>
+    <button
+      type="button"
+      data-step2-continue
+      class="min-h-touch rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+    >
+      {step2.continue}
+    </button>
+  </div>
+</section>

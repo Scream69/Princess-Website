@@ -14,7 +14,9 @@ import type { APIRoute, GetStaticPaths } from 'astro';
 export const getStaticPaths: GetStaticPaths = () =>
   import.meta.env.SITE ? [{ params: { sitemap: 'sitemap' } }] : [];
 
-const PATHS = ['/', '/order', '/privacy'];
+// /repairs/label is deliberately absent: it is a printable slip for one
+// enquiry, built from its URL fragment, and disallowed in robots.txt.
+const PATHS = ['/', '/order', '/repairs', '/privacy'];
 
 export const GET: APIRoute = ({ site }) => {
   if (!site) return new Response('Not found', { status: 404 });

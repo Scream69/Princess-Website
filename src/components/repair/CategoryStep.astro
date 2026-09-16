@@ -1,0 +1,82 @@
+---
+import copy from '../../data/copy.json';
+import repairs from '../../data/repairs.json';
+
+// Step 1. The not-repaired list sits in plain sight on this step — someone
+// with a broken dishwasher finds out in five seconds, not after filling in a
+// form (architecture plan 2026-09-16, "never dead-end", CLAUDE.md 6 step 1).
+const { step1 } = copy.repairs;
+---
+
+<section data-step-panel="1">
+  <h2
+    data-step-heading
+    tabindex="-1"
+    class="mt-6 max-w-content font-serif text-heading text-ink focus:outline-none"
+  >
+    {step1.heading}
+  </h2>
+  <p class="mt-4 max-w-content text-ink-muted">{step1.intro}</p>
+
+  <div class="mt-8 max-w-content">
+    <span class="block text-sm font-medium text-ink">{step1.categoryLabel}</span>
+    <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label={step1.categoryLabel}>
+      {
+        repairs.categories.map((category) => (
+          <button
+            type="button"
+            data-category={category.slug}
+            aria-pressed="false"
+            class="min-h-touch rounded-sm border border-line-strong px-4 text-sm text-ink transition-colors hover:border-ink aria-pressed:border-accent aria-pressed:bg-accent aria-pressed:text-accent-contrast"
+          >
+            {category.name}
+          </button>
+        ))
+      }
+      <button
+        type="button"
+        data-category="other"
+        aria-pressed="false"
+        class="min-h-touch rounded-sm border border-line-strong px-4 text-sm text-ink transition-colors hover:border-ink aria-pressed:border-accent aria-pressed:bg-accent aria-pressed:text-accent-contrast"
+      >
+        {step1.otherLabel}
+      </button>
+    </div>
+
+    <p data-other-note hidden class="mt-3 max-w-content text-sm text-ink-muted">
+      {step1.otherBody}
+    </p>
+
+    <div class="mt-6">
+      <label for="repair-product" class="block text-sm font-medium text-ink">
+        {step1.productLabel}
+      </label>
+      <textarea
+        id="repair-product"
+        data-repair-product
+        rows="2"
+        placeholder={step1.productPlaceholder}
+        aria-describedby="repair-product-hint repair-step1-error"
+        class="mt-2 w-full rounded-sm border border-line-strong bg-surface px-3 py-2 text-ink placeholder:text-ink-subtle"
+      ></textarea>
+      <p id="repair-product-hint" class="mt-2 text-sm text-ink-muted">{step1.productHint}</p>
+      <p id="repair-step1-error" data-step1-error role="alert" class="mt-2 text-sm text-error"></p>
+    </div>
+
+    <button
+      type="button"
+      data-step1-continue
+      class="mt-6 min-h-touch rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+    >
+      {step1.continue}
+    </button>
+  </div>
+
+  <div class="mt-10 max-w-content border-t border-line pt-6">
+    <h3 class="text-sm font-medium tracking-wide text-ink-muted uppercase">{step1.excludedHeading}</h3>
+    <p class="mt-2 text-sm text-ink-muted">{step1.excludedNote}</p>
+    <ul class="mt-3 list-none space-y-1 p-0 text-sm text-ink">
+      {repairs.excluded.map((item) => <li>{item}</li>)}
+    </ul>
+  </div>
+</section>

@@ -1,0 +1,64 @@
+---
+import Base from '../layouts/Base.astro';
+import RepairProgressBar from '../components/repair/RepairProgressBar.astro';
+import CategoryStep from '../components/repair/CategoryStep.astro';
+import FaultStep from '../components/repair/FaultStep.astro';
+import RepairDetailsStep from '../components/repair/RepairDetailsStep.astro';
+import RepairConfirmation from '../components/repair/RepairConfirmation.astro';
+import DropoffInfo from '../components/repair/DropoffInfo.astro';
+import copy from '../data/copy.json';
+
+/*
+ * The repair booking wizard — architecture plan 2026-09-16. All four step
+ * shells are rendered here and repair.ts toggles visibility, so a refresh or
+ * a back-button press can never land the customer on a blank page. With JS
+ * off this degrades to step 1's content plus the drop-off address: what is
+ * repaired, what is not, and where to bring it.
+ */
+---
+
+<Base title={copy.repairs.title} description={copy.repairs.description} showNavLinks={false}>
+  <div data-repair class="mx-auto max-w-page px-gutter pt-section pb-section">
+    <h1 class="sr-only">{copy.repairs.heading}</h1>
+
+    <RepairProgressBar />
+
+    <p data-announce role="status" aria-live="polite" class="sr-only"></p>
+
+    <div
+      data-resume
+      hidden
+      class="mt-6 flex flex-wrap items-center gap-4 rounded-sm border border-line bg-surface p-4"
+    >
+      <p class="text-ink">Welcome back — you had a repair booking saved. Continue where you left off?</p>
+      <div class="flex gap-3">
+        <button
+          type="button"
+          data-action="resume-continue"
+          class="min-h-touch rounded-sm bg-accent px-5 text-sm font-medium text-accent-contrast"
+        >
+          Continue
+        </button>
+        <button
+          type="button"
+          data-action="resume-discard"
+          class="min-h-touch px-2 text-sm text-ink-muted underline"
+        >
+          Start again
+        </button>
+      </div>
+    </div>
+
+    <CategoryStep />
+    <FaultStep />
+    <RepairDetailsStep />
+    <RepairConfirmation />
+
+    <DropoffInfo />
+  </div>
+</Base>
+
+<script>
+  import { initRepair } from '../scripts/repair';
+  initRepair();
+</script>

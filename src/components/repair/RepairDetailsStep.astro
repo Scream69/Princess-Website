@@ -1,0 +1,197 @@
+---
+import copy from '../../data/copy.json';
+
+// Step 3. Three chat-styled questions (repair-details.ts), then a drop-off
+// slot picker (slots.ts), then a review and submit — the repair-flow sibling
+// of order/DetailsStep.astro. No postcode: the customer is carrying the item
+// in, so no address is collected (rule 2.7).
+const { step3, submit } = copy.repairs;
+---
+
+<section data-step-panel="3" hidden>
+  <h2
+    data-step-heading
+    tabindex="-1"
+    class="mt-6 max-w-content font-serif text-heading text-ink focus:outline-none"
+  >
+    {step3.heading}
+  </h2>
+  <p class="mt-4 max-w-content text-ink-muted">{step3.intro}</p>
+
+  <div class="mt-8 max-w-content">
+    <ol
+      data-repair-transcript
+      role="log"
+      aria-live="polite"
+      class="m-0 list-none space-y-4 p-0"
+    ></ol>
+
+    <form data-repair-detail-form class="mt-6">
+      <p data-repair-detail-question class="text-ink"></p>
+
+      <div class="mt-3">
+        <label
+          data-repair-detail-label
+          for="repair-detail-input"
+          class="block text-sm font-medium text-ink"></label>
+
+        <input
+          id="repair-detail-input"
+          data-repair-detail-input
+          type="text"
+          autocomplete="off"
+          aria-describedby="repair-detail-error"
+          class="mt-2 h-touch w-full rounded-sm border border-line-strong bg-surface px-3 text-ink placeholder:text-ink-subtle"
+        />
+
+        <p id="repair-detail-error" data-repair-detail-error role="alert" class="mt-2 text-sm text-error"></p>
+      </div>
+
+      <button
+        type="submit"
+        class="mt-4 min-h-touch rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+      >
+        Continue
+      </button>
+    </form>
+
+    {/* The drop-off slot picker. Never presented as a booking — there is no
+        server to reserve anything against (architecture plan 2026-09-16) —
+        so the copy says "we will confirm", never "booked". */}
+    <div data-slot-section hidden class="mt-10 border-t border-line pt-8">
+      <h3 class="text-sm font-medium tracking-wide text-ink-muted uppercase">{step3.slotHeading}</h3>
+      <p class="mt-2 text-sm text-ink-muted">{step3.slotIntro}</p>
+
+      <p data-slot-none hidden class="mt-4 text-sm text-ink">{step3.slotNone}</p>
+
+      <div data-slot-chosen hidden class="mt-4 flex flex-wrap items-center gap-3">
+        <p class="rounded-sm border border-line bg-surface px-4 py-2 text-ink">
+          <span data-slot-chosen-text></span>
+        </p>
+        <button type="button" data-slot-change class="min-h-touch px-2 text-sm text-ink-muted underline">
+          Change
+        </button>
+      </div>
+
+      <div data-slot-days class="mt-4 max-w-[22rem]">
+        <span class="block text-sm font-medium text-ink">{step3.slotDayLabel}</span>
+
+        <div class="mt-2 flex items-center justify-between">
+          <button
+            type="button"
+            data-slot-prev-month
+            aria-label="Previous month"
+            class="flex h-8 w-8 items-center justify-center rounded-sm text-ink-muted transition-colors hover:text-ink disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            &#8592;
+          </button>
+          <p data-slot-month class="text-sm font-medium text-ink"></p>
+          <button
+            type="button"
+            data-slot-next-month
+            aria-label="Next month"
+            class="flex h-8 w-8 items-center justify-center rounded-sm text-ink-muted transition-colors hover:text-ink disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            &#8594;
+          </button>
+        </div>
+
+        {/* Mon–Sun header, matching the grid below. Decorative short labels —
+            the accessible name for each date lives on its own button. */}
+        <div aria-hidden="true" class="mt-3 grid grid-cols-7 gap-1 text-center text-xs text-ink-subtle">
+          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
+          <span>Fri</span><span>Sat</span><span>Sun</span>
+        </div>
+
+        <div
+          data-slot-grid
+          class="mt-1 grid grid-cols-7 gap-1"
+          role="group"
+          aria-label={step3.slotDayLabel}
+        ></div>
+      </div>
+
+      <div class="mt-4">
+        <span class="block text-sm font-medium text-ink">{step3.slotTimeLabel}</span>
+        <div data-slot-times hidden class="mt-2 flex flex-wrap gap-2" role="group" aria-label={step3.slotTimeLabel}></div>
+      </div>
+    </div>
+
+    {/* Everything below appears once contact details and a slot are both in. */}
+    <div data-repair-review hidden class="mt-10 border-t border-line pt-8">
+      <h3 class="text-sm font-medium tracking-wide text-ink-muted uppercase">{step3.reviewHeading}</h3>
+      <ul data-repair-review-list class="mt-2 list-none p-0"></ul>
+
+      <div class="mt-8 flex items-start gap-3">
+        <input
+          id="repair-consent"
+          data-repair-consent
+          type="checkbox"
+          class="mt-1 h-5 w-5 shrink-0 rounded-sm border-line-strong accent-accent"
+        />
+        <label for="repair-consent" class="text-sm text-ink">
+          {step3.consent}{' '}
+          <a href="/privacy" class="text-accent underline underline-offset-4">
+            {step3.consentLink}
+          </a>
+        </label>
+      </div>
+
+      {/* Honeypot (CLAUDE.md 8.8) — same construction as order/DetailsStep.astro. */}
+      <div class="sr-only" aria-hidden="true">
+        <label for="repair-botcheck">Leave this box unticked</label>
+        <input id="repair-botcheck" name="botcheck" data-repair-honeypot type="checkbox" tabindex="-1" />
+      </div>
+
+      <button
+        type="button"
+        data-repair-submit
+        disabled
+        class="mt-6 min-h-touch rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {step3.submit}
+      </button>
+      <p data-repair-submit-note role="status" aria-live="polite" class="mt-3 text-sm text-ink-muted"></p>
+
+      <div
+        data-repair-failure
+        hidden
+        class="mt-6 rounded-sm border border-line-strong bg-surface p-4"
+      >
+        <h4 data-repair-failure-heading tabindex="-1" class="font-medium text-ink focus:outline-none"></h4>
+        <p data-repair-failure-body class="mt-2 text-sm text-ink-muted"></p>
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            data-repair-retry
+            class="min-h-touch rounded-sm border border-line-strong px-6 text-sm font-medium text-ink transition-colors hover:border-ink"
+          >
+            {submit.retry}
+          </button>
+          <a
+            data-repair-whatsapp-fallback
+            href="#"
+            hidden
+            target="_blank"
+            rel="noopener noreferrer"
+            class="min-h-touch rounded-sm bg-accent px-6 py-3 text-sm font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+          >
+            {submit.whatsapp}
+          </a>
+        </div>
+        <p data-repair-whatsapp-note hidden class="mt-3 text-sm text-ink-subtle">{submit.whatsappNote}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-10 flex flex-wrap gap-3">
+    <button
+      type="button"
+      data-action="repair-go-step"
+      data-step="2"
+      class="min-h-touch rounded-sm border border-line-strong px-6 font-medium text-ink transition-colors hover:border-ink"
+    >
+      {step3.back}
+    </button>
+  </div>
+</section>

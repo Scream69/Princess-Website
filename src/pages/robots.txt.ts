@@ -11,12 +11,21 @@ import type { APIRoute } from 'astro';
  * launches competing with a copy of itself that search engines found first.
  * Disallowing until the domain is set costs nothing and removes that risk.
  *
- * Once `site` is set, both pages are indexable: /order is a real landing page
- * for brand searches, even though / is the ranking target (CLAUDE.md 10.4).
+ * Once `site` is set, /order and /repairs are both indexable landing pages
+ * for their own searches, even though / is the ranking target (CLAUDE.md
+ * 10.4). /repairs/label is disallowed regardless: it is a printable slip for
+ * one specific enquiry, built entirely from its URL fragment, and it has
+ * nothing to say to a search engine.
  */
 export const GET: APIRoute = ({ site }) => {
   const lines = site
-    ? ['User-agent: *', 'Allow: /', '', `Sitemap: ${new URL('sitemap.xml', site).href}`]
+    ? [
+        'User-agent: *',
+        'Allow: /',
+        'Disallow: /repairs/label',
+        '',
+        `Sitemap: ${new URL('sitemap.xml', site).href}`,
+      ]
     : [
         '# No live domain is configured yet, so this build is on a temporary',
         '# host. Set `site` in astro.config.mjs at launch and this becomes',

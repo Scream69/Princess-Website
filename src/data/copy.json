@@ -23,6 +23,7 @@
       "eyebrow": "Every major brand, at speed",
       "headline": "Fast delivery isn't an upgrade. It's our standard.",
       "process": "Choose your appliance on the manufacturer's website, send us the model number, and we will email you a quote within 24 hours.",
+      "repairCta": "Book a repair",
       "facts": {
         "brands": "brands we can quote"
       }
@@ -52,6 +53,15 @@
       "heading": "About us",
       "body": "We are an independent electrical retailer covering the major appliance, television and audio brands. We do not list prices online — every enquiry is quoted by hand.",
       "credentials": "Every enquiry is priced by a person who knows the range, so you can ask about anything a manufacturer makes — not only the models that happen to be listed on a website."
+    },
+    "repairs": {
+      "eyebrow": "Free estimate",
+      "heading": "We also repair",
+      "body": "Bring your item in to our counter in Edgware and we will find out what is wrong with it. Telling you what it needs, and what it would cost, is free — you decide once you know.",
+      "workshop": "Repairs are carried out on Saturdays. You can drop your item off on any day we are open.",
+      "cta": "Book a repair drop-off",
+      "listLabel": "What we repair",
+      "excludedLabel": "What we do not repair"
     }
   },
   "order": {
@@ -134,6 +144,116 @@
       "intro": "That is everything we need. Your enquiry is with us and nothing further is needed from you."
     },
     "trayHeading": "Your enquiry"
+  },
+  "repairs": {
+    "title": "Repairs",
+    "description": "We repair televisions, audio and DJ equipment, microwaves and smartphones. Bring your item to our counter in Edgware for a free estimate — you decide what to do once you know what it needs.",
+    "heading": "Book a repair drop-off",
+    "step1": {
+      "heading": "What needs repairing?",
+      "intro": "Choose the closest match, then tell us what the item is.",
+      "categoryLabel": "Type of item",
+      "productLabel": "What is the item?",
+      "productPlaceholder": "Samsung 55-inch OLED television, about four years old",
+      "productHint": "The make, model and rough age if you know them. A guess is fine.",
+      "excludedHeading": "What we do not repair",
+      "excludedNote": "If your item is one of these we cannot take it on. We would rather tell you now than after you have filled in a form.",
+      "otherLabel": "Something else",
+      "otherBody": "Tell us what it is below and we will let you know whether we can help. If you would rather ask first, message us on WhatsApp.",
+      "continue": "Continue"
+    },
+    "step2": {
+      "heading": "What is wrong with it?",
+      "intro": "In your own words — whatever you can tell us helps us start in the right place.",
+      "faultLabel": "The fault or damage",
+      "faultPlaceholder": "No picture, but the standby light comes on and I can still hear sound.",
+      "estimateHeading": "The estimate is free",
+      "estimateBody": "We look at your item, find out what it needs, and tell you what it would cost. Nothing is repaired and nothing is charged until you have agreed the price.",
+      "back": "Back",
+      "continue": "Continue"
+    },
+    "step3": {
+      "heading": "Your details and drop-off",
+      "intro": "Three short questions, then when you plan to bring it in.",
+      "questions": {
+        "name": {
+          "question": "What name should we put on the job?",
+          "label": "Your name",
+          "placeholder": "First and last name"
+        },
+        "phone": {
+          "question": "What is the best number to reach you on?",
+          "label": "Phone number",
+          "placeholder": "07700 900123"
+        },
+        "email": {
+          "question": "And your email address?",
+          "label": "Email address",
+          "placeholder": "you@example.com"
+        }
+      },
+      "slotHeading": "When will you bring it in?",
+      "slotIntro": "You do not need an appointment. This only tells us to expect you, so your item is booked in the moment it arrives.",
+      "slotDayLabel": "Day",
+      "slotTimeLabel": "Time",
+      "slotNone": "There are no drop-off times available at the moment. Call us and we will sort something out.",
+      "reviewHeading": "Your repair",
+      "consent": "I agree to my details being used to reply to this repair enquiry.",
+      "consentLink": "Privacy policy",
+      "back": "Back",
+      "submit": "Send my repair enquiry"
+    },
+    "step4": {
+      "heading": "Repair enquiry sent",
+      "intro": "We have your details. Bring your item to the counter at the time you chose and we will book it in.",
+      "referenceLabel": "Your reference",
+      "referenceNote": "Quote this if you get in touch about the repair.",
+      "copy": "Copy reference",
+      "copied": "Copied",
+      "copyFailed": "Select and copy above",
+      "bringHeading": "What to bring",
+      "bringNote": "The item itself, and anything that came with it that might be part of the fault — the remote, the power supply, the cable. If you have a printed slip it helps us match your item to your details, but it is not essential.",
+      "print": "Print a drop-off slip",
+      "whatsapp": "Message us on WhatsApp instead",
+      "whatsappNote": "Useful if you want to send us a photograph of the fault.",
+      "whatsappPrefill": "I have just sent a repair enquiry through your website. My reference is",
+      "again": "Send another repair enquiry"
+    },
+    "submit": {
+      "sending": "Sending your repair enquiry…",
+      "retrying": "Still trying — this can take a few seconds.",
+      "failureHeading": "We could not send your repair enquiry",
+      "failureBody": "Nothing has been lost. It is saved on this device and we will try again next time you open the page. You can also send it straight to us on WhatsApp, or simply bring the item in and give us your name at the counter.",
+      "blockedHeading": "We could not accept that from this browser",
+      "blockedBody": "This can happen with some browser extensions and automated tools. Try again, or send it to us on WhatsApp.",
+      "limitHeading": "That is several enquiries from this device",
+      "limitBody": "We have not sent this one. If it is a separate repair, send it to us on WhatsApp and we will pick it up.",
+      "retry": "Try again",
+      "whatsapp": "Send it on WhatsApp instead",
+      "whatsappNote": "This opens WhatsApp with your repair enquiry already written out."
+    },
+    "dropoff": {
+      "heading": "Where to bring it",
+      "hoursHeading": "Opening hours",
+      "workshopNote": "Repairs are carried out on Saturdays. You can drop your item off on any day we are open."
+    },
+    "label": {
+      "title": "Repair drop-off slip",
+      "description": "A printable A4 slip for a repair booked through the website.",
+      "heading": "Repair drop-off slip",
+      "print": "Print this page",
+      "expectedLabel": "Expected",
+      "customerLabel": "Customer",
+      "phoneLabel": "Phone",
+      "emailLabel": "Email",
+      "itemLabel": "Item",
+      "faultLabel": "Reported fault",
+      "receivedLabel": "Received by",
+      "receivedNote": "Date and initials",
+      "estimateLabel": "Estimate agreed",
+      "emptyHeading": "This link is incomplete",
+      "emptyBody": "A drop-off slip is built entirely from the link that opens it, so a link that has been cut short — by an email client wrapping it, usually — cannot be rebuilt. Open the original link again, or copy it in full into the address bar."
+    }
   },
   "footer": {
     "note": "All brand names and logos are the trademarks of their respective owners. We confirm every model, price and delivery date by email before an order is placed."

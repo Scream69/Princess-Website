@@ -1,0 +1,73 @@
+---
+import copy from '../../data/copy.json';
+import site from '../../data/site.json';
+import { whatsappHref } from '../../data/site';
+
+// Step 4. Reachable only once the form endpoint has confirmed delivery —
+// `submitted` in repair-storage.ts gates it, same discipline as the quote
+// wizard's Confirmation.astro (CLAUDE.md 2.4, 6).
+const { step4 } = copy.repairs;
+
+const whatsapp = whatsappHref();
+---
+
+<section data-step-panel="4" hidden>
+  <h2
+    data-step-heading
+    tabindex="-1"
+    class="mt-6 max-w-content font-serif text-heading text-ink focus:outline-none"
+  >
+    {step4.heading}
+  </h2>
+
+  <p class="mt-4 max-w-content text-ink-muted">{step4.intro}</p>
+  <p class="mt-3 max-w-content text-ink-muted">{site.repairPromise}</p>
+
+  <div class="mt-8 max-w-content rounded-sm border border-line bg-surface p-6">
+    <p class="text-sm text-ink-muted">{step4.referenceLabel}</p>
+    <p data-repair-reference class="figures mt-1 text-heading tracking-wide text-ink"></p>
+    <p class="mt-2 text-sm text-ink-subtle">{step4.referenceNote}</p>
+  </div>
+
+  <div class="mt-8 max-w-content rounded-sm border border-line bg-surface p-6">
+    <p class="font-medium text-ink">{step4.bringHeading}</p>
+    <p class="mt-2 text-sm text-ink-muted">{step4.bringNote}</p>
+    <a
+      data-repair-print
+      href="/repairs/label"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="mt-4 inline-block min-h-touch rounded-sm border border-line-strong px-6 py-3 text-sm font-medium text-ink transition-colors hover:border-ink"
+    >
+      {step4.print}
+    </a>
+  </div>
+
+  {
+    whatsapp && (
+      <div class="mt-8 max-w-content">
+        <a
+          data-repair-whatsapp-followup
+          href={whatsapp}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-block min-h-touch rounded-sm border border-line-strong px-6 py-3 font-medium text-ink transition-colors hover:border-ink"
+        >
+          {step4.whatsapp}
+        </a>
+        <p class="mt-3 text-sm text-ink-subtle">{step4.whatsappNote}</p>
+      </div>
+    )
+  }
+
+  <p class="mt-10">
+    <a
+      href="/repairs"
+      data-action="repair-go-step"
+      data-step="1"
+      class="text-sm text-accent underline underline-offset-4"
+    >
+      {step4.again} &#8594;
+    </a>
+  </p>
+</section>

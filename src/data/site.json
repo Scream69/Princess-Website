@@ -3,10 +3,13 @@
   "legalName": "Princes Electronics",
   "tagline": "Every major brand, at speed.",
   "responsePromise": "We reply to every enquiry within 24 hours.",
+  "repairPromise": "We will contact you as soon as we have assessed your item.",
   "contact": {
     "email": "info@princeselectronics.com",
+    "repairsEmail": "repairs@princeselectronics.com",
     "phone": "+44 20 8204 1526",
-    "whatsapp": "447930565656"
+    "whatsapp": "447930565656",
+    "shopAddress": "23 Haverford Way, Edgware, Middlesex, HA8 6DJ"
   },
   "hours": [
     {
@@ -30,6 +33,7 @@
       "closes": "16:00"
     }
   ],
+  "closures": [],
   "company": {
     "registrationNumber": "07396672",
     "vatNumber": "100 906 362",
@@ -44,6 +48,10 @@
     {
       "label": "Brands",
       "href": "/#brands"
+    },
+    {
+      "label": "Repairs",
+      "href": "/#repairs"
     },
     {
       "label": "About",

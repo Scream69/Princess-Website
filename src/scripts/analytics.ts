@@ -16,7 +16,15 @@
  *      needs counts and step numbers, not who the customer is (rule 2.7).
  */
 
-/** The full event list from CLAUDE.md 8.10. A union, so a typo will not compile. */
+/*
+ * The full event list from CLAUDE.md 8.10, plus the repair-flow equivalents.
+ * A union, so a typo will not compile. `step_view`, `validation_error`,
+ * `submit_attempt/success/failure`, `whatsapp_click` and `abandon` already
+ * cover both flows — a `page` property on the call distinguishes them rather
+ * than duplicating every event name. `category_click` and `slot_selected`
+ * are repair-only: there is no brand click or add-another loop on that page,
+ * and there is a drop-off slot to know the popularity of instead.
+ */
 export type AnalyticsEvent =
   | 'step_view'
   | 'brand_click'
@@ -30,7 +38,10 @@ export type AnalyticsEvent =
   | 'submit_success'
   | 'submit_failure'
   | 'whatsapp_click'
-  | 'abandon';
+  | 'abandon'
+  | 'category_click'
+  | 'excluded_shown'
+  | 'slot_selected';
 
 export type EventProps = Record<string, string | number | boolean>;
 
