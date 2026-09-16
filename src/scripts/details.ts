@@ -230,6 +230,15 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
 
     questionText!.textContent = question.question;
     error!.textContent = '';
+    /*
+     * The input is reused for all four questions, and `aria-invalid` was only
+     * ever cleared by a *successful* submit — so a bad phone number followed
+     * by "Edit" on an earlier answer left the attribute on a field that was
+     * untouched and had no error to explain it. A screen reader announced
+     * "Your name, edit, invalid entry". It belongs with the error text it
+     * accompanies.
+     */
+    input!.removeAttribute('aria-invalid');
     if (hint && field !== 'postcode') hint.textContent = '';
 
     const postcode = field === 'postcode' ? postcodeLabelFor(HOME_COUNTRY) : null;
@@ -262,9 +271,28 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
     if (submitButton) submitButton.disabled = !getConsent();
   }
 
+  /*
+   * Where focus goes after an answer. With a question still to ask, the input
+   * — it is the same element each time, so it has to be re-focused explicitly.
+   *
+   * With none left, `renderQuestion` hides the form that holds the focused
+   * input, and Tailwind's preflight makes `[hidden]` `display: none`, so focus
+   * fell back to `<body>`: a screen-reader user heard nothing at all after
+   * their last answer, and a keyboard user was returned to the top of the
+   * document to Tab past the nav, the skip link, the progress bar and four
+   * Edit buttons to reach Submit. The review panel appears at that moment, so
+   * focus belongs on it (CLAUDE.md 10.1).
+   */
   function focusControl(): void {
-    if (!activeField()) return;
-    input!.focus();
+    if (activeField()) {
+      input!.focus();
+      return;
+    }
+    const heading = review?.querySelector<HTMLElement>('h3');
+    if (heading) {
+      heading.tabIndex = -1;
+      heading.focus();
+    }
   }
 
   function refresh(): void {

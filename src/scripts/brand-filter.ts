@@ -84,7 +84,16 @@ export function initBrandFilter(root: ParentNode = document): void {
     // A rail letter that would jump to a hidden card is a broken promise.
     const live = new Set(cards.filter((c) => !c.hidden).map((c) => c.dataset.letter));
     for (const link of rail) {
-      link.setAttribute('aria-disabled', String(!live.has(link.dataset.brandRailLetter)));
+      /*
+       * `aria-disabled` with `pointer-events: none` stops the mouse and
+       * nothing else: the anchor kept its href and its place in the tab order,
+       * so Tab and Enter still jumped to a letter CLAUDE.md 9.4 says is not
+       * clickable — landing on cards that are all hidden. `tabindex="-1"`
+       * takes it out of the sequence as well.
+       */
+      const dead = !live.has(link.dataset.brandRailLetter);
+      link.setAttribute('aria-disabled', String(dead));
+      link.tabIndex = dead ? -1 : 0;
     }
 
     // The featured row is a shortcut, not a search result — it only muddies a query.

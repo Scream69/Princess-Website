@@ -1152,6 +1152,54 @@ s = await evaluate(`
 `);
 check('a failed submission moves focus to the reason', s.focused, true);
 
+/*
+ * Two things a screen reader depends on at the end of the funnel. Neither was
+ * covered, and both were broken: the form that holds the focused input is
+ * hidden once the last question is answered, so focus fell to `<body>` with
+ * nothing announced; and `aria-invalid` was only cleared by a successful
+ * submit, so it followed the reused input on to the next question.
+ */
+await reset();
+await goto('/order');
+await clickBrand('miele');
+await addItem('H7860BPX');
+await evaluate(`document.querySelector('[data-continue-details]').click(); return 1;`);
+
+await answer('Jane Doe');
+await answer('not a phone number');
+s = await evaluate(`
+  const input = document.querySelector('[data-detail-input]');
+  return input.getAttribute('aria-invalid');
+`);
+check('a refused answer marks the field invalid', s, 'true');
+
+await evaluate(`
+  document.querySelector('[data-transcript] button[data-edit="name"]').click();
+  return 1;
+`);
+s = await evaluate(`
+  const input = document.querySelector('[data-detail-input]');
+  return { invalid: input.getAttribute('aria-invalid'), error: document.querySelector('[data-detail-error]').textContent };
+`);
+check('and editing an earlier answer does not inherit it', [s.invalid, s.error], [null, '']);
+
+await answer('Jane Doe');
+await answer('+44 7700 900123');
+await answer('jane@example.co.uk');
+await answer('SW1A 1AA');
+s = await evaluate(`
+  const active = document.activeElement;
+  const review = document.querySelector('[data-review]');
+  return {
+    inReview: review ? review.contains(active) : false,
+    onBody: active === document.body,
+    reviewShown: review ? !review.hidden : false,
+  };
+`);
+check('the last answer moves focus into the review, not to the body', [
+  s.reviewShown, s.inReview, s.onBody,
+], [true, true, false]);
+
 check('the wizard logs no console errors', consoleErrors, []);
 
 const failed = results.filter((ok) => !ok).length;
