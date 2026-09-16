@@ -62,6 +62,13 @@ const child = spawn(
     '--headless',
     '--disable-gpu',
     '--no-first-run',
+    // Headless Chrome/Edge default to a viewport below 1024px without this —
+    // narrower than the `lg` breakpoint the home page's scroll-scrubbed
+    // how-it-works sequence is gated behind (CLAUDE.md 10.2). Every check in
+    // this suite had been running with that entire code path dark: it is
+    // desktop primary-navigation traffic, and this is what a desktop reader
+    // actually sees. 1440x900 matches the design's own reference width.
+    '--window-size=1440,900',
     `--remote-debugging-port=${PORT}`,
     `--user-data-dir=${profile}`,
     'about:blank',
@@ -938,6 +945,46 @@ check('and appears once the reader is half way through how it works', [s.shown, 
 check('with a real number, opening in a new tab', [s.href, s.target, s.rel], [
   'https://wa.me/447930565656', '_blank', 'noopener noreferrer',
 ]);
+
+/*
+ * The scroll-scrubbed sequence itself, not just the button that shares its
+ * cue. `measure()` — the function that reads how tall the track is and how
+ * far down the page it sits — was only ever called from inside the resize
+ * listener, never before the first render. `trackHeight` stayed 0,
+ * `progress()`'s own guard against that made it return 0 forever, and the
+ * sequence sat frozen on step 1 however far the reader scrolled, on any
+ * session that never happens to fire a `resize` event — which a fixed-size
+ * desktop viewport may never do. Caught 2026-09-16, after the reader having
+ * scrolled well past the cue is exactly the state this asserts.
+ */
+/*
+ * Scrolled deliberately to a point well inside the track, rather than reusing
+ * wherever the WhatsApp cue polling loop above happened to stop — that loop
+ * re-scrolls to a *moving* target while brand images are still loading
+ * (CLAUDE.md's own note on it) and exits as soon as the float button's
+ * separate IntersectionObserver first crosses threshold, which is not the
+ * same thing as this sequence having reached a settled, comparable scroll
+ * position.
+ */
+await evaluate(`
+  const stage = document.querySelector('[data-stage]');
+  const track = stage?.querySelector('[data-sentinel]')?.parentElement;
+  if (stage && track) {
+    const top = stage.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo(0, top + track.offsetHeight * 0.6);
+  }
+  return 1;
+`);
+await settle();
+check('the sequence itself has actually advanced by the same scroll position', await evaluate(`
+  const stage = document.querySelector('[data-stage]');
+  const fill = stage?.querySelector('[data-fill]');
+  const scaleX = Number(fill?.style.transform?.match(/scaleX\\(([\\d.]+)\\)/)?.[1] ?? 0);
+  // 0.02 is the floor render() clamps to before any real scrolling — 60%
+  // through the track has to read as well more than that, not still sitting
+  // on it.
+  return scaleX > 0.3;
+`), true);
 
 // Back to the top: it has to go away again, and an observer watching a 1px
 // cue against the plain viewport would not have noticed the jump.

@@ -1013,8 +1013,19 @@ const CHOSEN = 3;
       measure();
       onScroll();
     });
-    window.addEventListener('resize', onScroll, { passive: true });
     desktop.addEventListener('change', render);
+
+    /*
+     * `measure()` had never been called before this line — only from inside
+     * the resize handler above. `trackHeight` and `trackTop` started at 0,
+     * `progress()` guards `trackHeight <= 0` by returning 0, and `render()`
+     * therefore drew step 1 at zero elapsed time and nothing else, however
+     * far the reader scrolled — until something happened to fire a `resize`
+     * event, which a fixed-viewport desktop session may never do. Whether
+     * that ever ran was down to circumstance, not this code; measuring once
+     * before the first render is what actually makes it reliable.
+     */
+    measure();
     render();
   }
 </script>
