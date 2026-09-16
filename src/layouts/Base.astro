@@ -49,10 +49,29 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
     {canonical && <meta property="og:url" content={canonical} />}
     <meta name="twitter:card" content="summary_large_image" />
 
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {/* The crown from the client's own lockup, cut out by measurement in
+        scripts/make-icons.mjs. The wordmark is left off deliberately: at 32px
+        "PRINCES ELECTRONICS" is three grey smudges. */}
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
-    {/* No og:image tag until a real 1200x630 share image exists — a broken
-        one renders worse in a share card than none (MISSING-ASSETS.md 2). */}
+    {/*
+      Absolute, or not at all. Every platform that reads og:image fetches it
+      server-side with no page context, so a root-relative path resolves
+      against their host and 404s — and a broken share card renders worse than
+      none. `site` is unset until the domain lands (MISSING-ASSETS.md 5), so
+      this appears with the canonical URL and not before.
+    */}
+    {
+      canonical && (
+        <>
+          <meta property="og:image" content={new URL('/og-image.png', Astro.site).href} />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:image:alt" content={`${site.name} — ${site.tagline}`} />
+        </>
+      )
+    }
     <StructuredData />
     <Analytics />
   </head>

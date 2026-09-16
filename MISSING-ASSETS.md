@@ -180,8 +180,18 @@ supervisory authorities has deliberately been left in place (CLAUDE.md 11).
       arrive. Fonts must be **self-hosted `woff2`** with `font-display: swap`
       — no Google Fonts CDN (GDPR data transfer, CLAUDE.md 9.3).
 - [ ] Any brand guidelines document
-- [ ] Open Graph share image (1200x630) for `/` and `/order`
-- [ ] Real favicon — `public/favicon.svg` is currently a plain accent-colour
+- [x] Open Graph share image — generated 2026-09-16 by
+      `scripts/make-icons.mjs` from the client's own lockup, at
+      `public/og-image.png`. **It is only emitted once `site` is set**: every
+      platform fetches og:image server-side with no page context, so a
+      root-relative path resolves against their host and 404s, and a broken
+      card renders worse than none.
+- [x] Favicon — generated 2026-09-16 from the crown in the client's lockup,
+      found by measurement rather than a hardcoded crop so it survives the logo
+      being replaced. The wordmark is deliberately left out: at 32px "PRINCES
+      ELECTRONICS" is three grey smudges. An `apple-touch-icon` goes with it,
+      on a white tile because iOS composites onto one. Superseded: `favicon.svg`
+      was a plain accent-colour
       square, deliberately not an invented mark
 
 ## 3. Copy
