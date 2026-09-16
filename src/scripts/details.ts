@@ -120,8 +120,9 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
     }
 
     const area = await lookupPostcode(raw);
-    // A slower earlier request must not overwrite a newer one's answer.
-    if (run !== lookupRun) return;
+    // A slower earlier request must not overwrite a newer one's answer — nor
+    // land a postcode confirmation under whatever question is showing now.
+    if (run !== lookupRun || activeField() !== 'postcode') return;
 
     confirmed = area;
     hint.textContent = area
@@ -133,7 +134,18 @@ export function initDetails(options: DetailsOptions): { refresh: () => void } {
   input.addEventListener('input', () => {
     if (activeField() !== 'postcode') return;
     clearTimeout(hintTimer);
-    hintTimer = setTimeout(() => void confirmPostcode(input.value), 400);
+    /*
+     * Re-checked when the timer fires, not only when it was set. One input
+     * element serves all four questions, so a customer who typed a postcode
+     * and clicked "Edit" on an earlier answer within 400ms had `input.value`
+     * rewritten to that field — and this then sent their *name* to
+     * postcodes.io. The privacy policy states that only the postcode is ever
+     * sent there, so that was a promise the code was breaking.
+     */
+    hintTimer = setTimeout(() => {
+      if (activeField() !== 'postcode') return;
+      void confirmPostcode(input.value);
+    }, 400);
   });
 
   const activeField = (): FieldName | null => editing ?? firstUnanswered(getContact());

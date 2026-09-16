@@ -142,7 +142,7 @@ export function initWizard() {
   const brandUrls: Record<string, string> = {};
   for (const card of root.querySelectorAll<HTMLAnchorElement>('[data-brand-card]')) {
     const slug = card.dataset.slug;
-    if (!slug || slug in brandNames) continue;
+    if (!slug || Object.hasOwn(brandNames, slug)) continue;
     brandNames[slug] = card.dataset.name ?? slug;
     brandUrls[slug] = card.href;
   }
@@ -821,10 +821,29 @@ export function initWizard() {
 
   // --- first paint ----------------------------------------------------------
 
-  const intent = readUrl(location.search);
-  if (intent.brand && brandNames[intent.brand]) {
-    state = { ...state, draftBrandSlug: intent.brand };
-  }
+  const requested = readUrl(location.search);
+
+  /*
+   * A brand from the URL has to name a real one before anything is done with
+   * it, and `Object.hasOwn` rather than a truthiness test: `brandNames` is a
+   * plain object, so it inherits from `Object.prototype` — `?brand=toString`
+   * resolved to a function, passed the gate, and was persisted as the chosen
+   * brand. The page then read "Brand: function toString() { [native code] }",
+   * the manufacturer link pointed at that string, and it travelled into the
+   * enquiry email.
+   *
+   * The unrecognised slug is dropped from the intent entirely, not just from
+   * the draft. Routing keyed off `intent.brand` as well, so a stale or
+   * mistyped link — a brand since made inactive, `?brand=Miele` with a capital
+   * — put the customer on "Add your appliance" with no brand shown and no
+   * manufacturer site to have come back from, never seeing the directory that
+   * would have let them pick one.
+   */
+  const brand =
+    requested.brand && Object.hasOwn(brandNames, requested.brand) ? requested.brand : null;
+  const intent = { ...requested, brand };
+
+  if (brand) state = { ...state, draftBrandSlug: brand };
 
   const resumable = state.items.length > 0 && intent.step === null;
   state = { ...state, step: clampStep(intendedStep(intent, state.step), guard()) };

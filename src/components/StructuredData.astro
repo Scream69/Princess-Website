@@ -55,4 +55,29 @@ const data = ready
   : null;
 ---
 
-{data && <script type="application/ld+json" is:inline set:html={JSON.stringify(data)} />}
+{
+  data && (
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={
+        /*
+         * `JSON.stringify` escapes quotes and backslashes but not `<`, and
+         * this string is written inside a `<script>` element — so a value
+         * containing `</script>` closes the block early and everything after
+         * it is parsed as markup, in the head of every page. The values come
+         * from site.json, which rule 9 designates as the file the client
+         * edits, so this is one careless paste away rather than hypothetical.
+         *
+         * Escaping `<` as `\u003c` is invisible to a JSON parser and makes
+         * the sequence unwritable. `\u2028`/`\u2029` go with it: both are
+         * valid in JSON and both terminate a line in JavaScript.
+         */
+        JSON.stringify(data)
+          .replace(/</g, '\\u003c')
+          .replace(/\u2028/g, '\\u2028')
+          .replace(/\u2029/g, '\\u2029')
+      }
+    />
+  )
+}

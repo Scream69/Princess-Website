@@ -258,6 +258,24 @@ clock (CLAUDE.md 8.5).
       section 3 on the "Limited"/"Ltd" suffix, which is the one thing that
       could still change it.
 
+### 4.1 Web3Forms spam settings — a dashboard task, not a code one
+
+The access key is `PUBLIC_`-prefixed and inlined into the shipped bundle by
+design: a static site has nowhere to hide it. Anyone who views source can post
+to the endpoint with it, and the three guards in `submit.ts` — honeypot, time
+check, rate limit — all run in the customer's browser, so a direct POST skips
+every one of them.
+
+This cannot be closed in the code. The honeypot field is named `botcheck`,
+which is Web3Forms' own server-side convention, but wiring it into the payload
+would be theatre: the client already refuses to submit when it is ticked, so
+the value sent is always empty and their check never fires.
+
+- [ ] Turn on whatever spam protection and domain restriction the Web3Forms
+      dashboard offers for this key, and set the allowed origin to the real
+      domain once it exists. That is the only layer that sees a request which
+      never touched our JavaScript.
+
 ## 5. Infrastructure
 
 - [ ] Domain, registrar access, and **existing MX records** — these must be

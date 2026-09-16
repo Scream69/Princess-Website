@@ -89,12 +89,49 @@ export function isExpired(state: { updatedAt?: unknown }, now: number = Date.now
   return typeof state.updatedAt !== 'number' || now - state.updatedAt > THIRTY_DAYS_MS;
 }
 
+/** One appliance, checked field by field rather than assumed. */
+function isItem(value: unknown): value is EnquiryItem {
+  if (typeof value !== 'object' || value === null) return false;
+  const item = value as Record<string, unknown>;
+  return (
+    typeof item.id === 'string' &&
+    (item.brandSlug === null || typeof item.brandSlug === 'string') &&
+    typeof item.rawInput === 'string' &&
+    (item.inputType === 'url' || item.inputType === 'model' || item.inputType === 'description') &&
+    (item.parsedModel === null || typeof item.parsedModel === 'string') &&
+    (item.parsedName === null || typeof item.parsedName === 'string') &&
+    typeof item.note === 'string' &&
+    typeof item.addedAt === 'number'
+  );
+}
+
+const isStringRecord = (value: unknown, keys: readonly string[]): boolean =>
+  typeof value === 'object' &&
+  value !== null &&
+  keys.every((key) => typeof (value as Record<string, unknown>)[key] === 'string');
+
 /*
  * Anything that is not a current, unexpired, structurally sound state is
  * discarded rather than repaired. A half-migrated enquiry that silently drops
  * a field is worse than an empty one: the customer sees their appliances and
  * we send an incomplete quote request.
+ *
+ * **This is untrusted input.** It is a string under the customer's own hand in
+ * devtools, and anything that survives here is spread straight into the
+ * running state. Two things went through before the checks below existed:
+ *
+ *   - `{ version: 1, items: [], submitted: true }` forged a confirmation
+ *     screen for an enquiry that was never sent, which is the one thing
+ *     CLAUDE.md 5.2 says `submitted` exists to prevent.
+ *   - `items: [null]` threw inside `backfillParse` during init, before any
+ *     listener was attached — a page that renders and does nothing at all,
+ *     with the enquiry unrecoverable behind it.
+ *
+ * The spread was also only one level deep, so a stored `contact` replaced the
+ * defaults wholesale and a partial one reached `validateName(undefined)`.
  */
+const CONTACT_KEYS = ['name', 'email', 'phone', 'country', 'postcode'] as const;
+
 export function parseStored(raw: string | null, now: number = Date.now()): EnquiryState | null {
   if (!raw) return null;
 
@@ -109,10 +146,32 @@ export function parseStored(raw: string | null, now: number = Date.now()): Enqui
   const state = parsed as Partial<EnquiryState>;
 
   if (state.version !== SCHEMA_VERSION) return null;
-  if (!Array.isArray(state.items)) return null;
+  if (!Array.isArray(state.items) || !state.items.every(isItem)) return null;
   if (isExpired(state, now)) return null;
+  if (state.contact !== undefined && !isStringRecord(state.contact, CONTACT_KEYS)) return null;
+  if (state.step !== undefined && ![1, 2, 3, 4].includes(state.step)) return null;
 
-  return { ...createEmptyState(), ...state } as EnquiryState;
+  // Missing fields still fill from the defaults; only wrong-typed ones are
+  // dropped, so a record written by an older build is not thrown away.
+  const reference = typeof state.reference === 'string' ? state.reference : '';
+
+  /*
+   * `submitted` is only believed alongside a reference and an emptied item
+   * list — the shape `completeEnquiry` actually leaves behind. A record
+   * claiming to be submitted while still holding appliances is not one this
+   * code ever wrote, and CLAUDE.md 5.2 says this flag exists precisely so a
+   * confirmation cannot be forged.
+   */
+  const submitted = state.submitted === true && reference !== '' && state.items.length === 0;
+
+  const empty = createEmptyState();
+  return {
+    ...empty,
+    ...state,
+    reference,
+    submitted,
+    contact: { ...empty.contact, ...(state.contact ?? {}) },
+  } as EnquiryState;
 }
 
 export function load(now: number = Date.now()): EnquiryState | null {
