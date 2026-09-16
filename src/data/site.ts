@@ -35,7 +35,6 @@ export function isPlaceholder(value: string): boolean {
  * exact form is what belongs here: the legal footer and the privacy policy's
  * controller line are legal statements, not branding.
  */
-export const tradingName = site.name;
 export const legalName = isPlaceholder(site.legalName) ? site.name : site.legalName;
 
 /** Pre-filled wa.me link, or null when no number is configured. */

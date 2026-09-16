@@ -43,7 +43,6 @@
 
   /* Feedback — used only for form validation, never decoration */
   --color-error: #a3282d; /*                            — 6.9:1 on canvas */
-  --color-success: #123a75;
 
   /* Type — self-hosted only, no Google Fonts CDN (CLAUDE.md 9.3).
      Font files not yet supplied; the stacks below fall back to system
@@ -84,7 +83,6 @@
 
   /* Radii — restrained. Nothing fully rounded (CLAUDE.md 9.1). */
   --radius-sm: 2px;
-  --radius-md: 4px;
 }
 
 /* Digits set as digits: on a shared baseline, and all one width so a

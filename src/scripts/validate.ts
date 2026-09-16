@@ -75,7 +75,8 @@ export function validateEmail(raw: string): Validation {
  * funnel is the worst place to tell a customer their own address is wrong.
  * There is no
  * per-country pattern here and there must never be one (CLAUDE.md 8.6) — a
- * UK-shaped regex would reject most European customers at the final step.
+ * pattern would reject new-build postcodes, which can lead the published
+ * dataset by months, at the final step.
  */
 export function validatePostcode(raw: string): Validation {
   const value = collapse(raw).toUpperCase();

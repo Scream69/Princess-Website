@@ -7,7 +7,7 @@ export interface Brand {
   name: string;
   /** UK homepage only. `null` only ever on an inactive brand — see `assertLinkable`. */
   url: string | null;
-  /** Filename in src/assets/brands/. `null` renders the text fallback (CLAUDE.md 9.4). */
+  /** Filename in `public/brands/`. `null` renders the text fallback (CLAUDE.md 9.4). */
   logo: string | null;
   opticalScale: number;
   categories: BrandCategory[];

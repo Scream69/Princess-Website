@@ -3,7 +3,8 @@
  *
  * THIS IS CONFIRMATION, NOT VALIDATION. Nothing here may ever block a
  * submission. The API can be down, a new-build postcode can be missing from
- * the dataset, and most importantly the business serves the whole of Europe
+ * the dataset. Delivery is UK-only as of 2026-09-12, so this is the only
+ * country it ever runs for
  * (CLAUDE.md 8.6) — so a lookup that fails means only that we say nothing.
  *
  * It also deliberately does NOT fetch a street address. Rule 7 is data

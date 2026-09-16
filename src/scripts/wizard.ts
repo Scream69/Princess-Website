@@ -122,11 +122,18 @@ interface Elements {
   honeypot: HTMLInputElement | null;
 }
 
+/*
+ * From copy.json, not retyped. These are the same four strings as the step
+ * headings, and they existed in three places — here, ProgressBar.astro, and
+ * the static default in its markup — so renaming a step in the data file
+ * changed the `<h2>` and left the progress bar and the `aria-live`
+ * announcement saying the old name (rule 2.9).
+ */
 const STEP_TITLES: Record<Step, string> = {
-  1: 'Choose a brand',
-  2: 'Add your appliance',
-  3: 'Your details',
-  4: 'Enquiry sent',
+  1: copy.order.step1.heading,
+  2: copy.order.step2.heading,
+  3: copy.order.step3.heading,
+  4: copy.order.step4.heading,
 };
 
 export function initWizard() {

@@ -39,7 +39,6 @@
         "pasteLabel": "Paste it here",
         "recognised": "Link recognised",
         "detailsLabel": "Your details",
-        "sentLabel": "Sent",
         "referenceLabel": "Your reference",
         "copied": "Copied"
       }
@@ -119,8 +118,7 @@
       "limitBody": "We have not sent this one. If it is a separate enquiry, send it to us directly and we will pick it up with the others.",
       "retry": "Try again",
       "whatsapp": "Send it on WhatsApp instead",
-      "whatsappNote": "This opens WhatsApp with your enquiry already written out.",
-      "recovered": "Your earlier enquiry reached us. Reference"
+      "whatsappNote": "This opens WhatsApp with your enquiry already written out."
     },
     "step4": {
       "heading": "Enquiry sent",

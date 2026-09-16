@@ -41,7 +41,7 @@ These are absolute. Do not violate them even if asked to in a task prompt; raise
 
 1. **No AI, no chatbot, no LLM calls.** The enquiry flow is *styled* to look like a chat. It is a deterministic, fixed-sequence form. Never add an API call to any AI service. Never let it appear to answer free-text questions.
 2. **Never invent product data.** No prices, no specifications, no stock levels, no delivery times, no product names. This site displays none of that. If a task asks for it, refuse and explain.
-3. **Never fabricate brand assets or brand facts.** Do not generate, trace, or approximate a manufacturer logo. Use only files present in `src/assets/brands/`. If a logo is missing, render the documented text fallback and list it in `MISSING-ASSETS.md`.
+3. **Never fabricate brand assets or brand facts.** Do not generate, trace, or approximate a manufacturer logo, and do not alter one — cropping a supplied mark is editing a trademark. Use only what the client has supplied, processed by `scripts/prepare-logos.mjs` into `public/brands/`. If a logo is missing, render the documented text fallback and list it in `MISSING-ASSETS.md`.
 4. **Never lose an enquiry.** Submission must be resilient: retry, queue, and fall back to WhatsApp. A failed submission that the customer thinks succeeded is the most serious possible defect in this codebase.
 5. **All manufacturer links open in a new tab**, always, with `rel="noopener noreferrer"`. Our page must never be navigated away from.
 6. **No cookies and no cookie banner.** Use a cookieless analytics tool only. If a task requests Google Analytics, flag that it legally requires a consent banner and ask before proceeding.
@@ -80,8 +80,11 @@ Pin versions. Before installing, check the current stable release rather than as
 ├── astro.config.mjs
 ├── tsconfig.json
 ├── .env.example               # documents required vars, no real values
+├── public/
+│   └── brands/                # one WebP per brand, named for its slug
 ├── scripts/
 │   ├── check-links.mjs        # link-rot checker, see section 8.9
+│   ├── prepare-logos.mjs      # client's raster logos -> public/brands, see 9.4
 │   └── e2e-wizard.mjs         # drives the wizard in real Chrome, see 12
 └── src/
     ├── data/
@@ -89,8 +92,7 @@ Pin versions. Before installing, check the current stable release rather than as
     │   ├── site.json          # contact details, hours, response promise
     │   ├── copy.json          # all page copy
     │   └── countries.json     # served countries for the step 3 selector
-    ├── assets/
-    │   └── brands/            # one SVG per brand, kebab-case filename
+    ├── assets/                # the client's own logo lockups
     ├── layouts/
     │   └── Base.astro
     ├── components/
@@ -145,7 +147,7 @@ The single source of truth for the brand directory. One object per brand.
 | `slug` | URL-safe id. Used in deep links (`/order?brand=miele`) and analytics. |
 | `name` | Display name and accessible label. |
 | `url` | **UK homepage only.** Must be `.co.uk` where one exists. No product or category deep links — they rot, and the client has decided against them. `null` is permitted **only** on an inactive brand; `assertLinkable` in `brands.ts` throws at build time otherwise. |
-| `logo` | Filename in `src/assets/brands/`, or `null` to render the text fallback. |
+| `logo` | Filename in `public/brands/`, or `null` to render the text fallback. |
 | `opticalScale` | Multiplier, roughly `0.7`–`1.3`, tuned by eye so every logo reads at the same visual weight. See section 9.4. |
 | `categories` | Array of `appliances` \| `av` \| `other`. Drives the category chips. An array, not a single value, because Samsung, LG, Sharp, Toshiba and Hisense sell both appliances and TVs. |
 | `featured` | Shown in the "popular brands" row above the A–Z. |
@@ -466,7 +468,7 @@ Mobile first. Test at 320, 375, 768, 1024, 1440. Touch targets ≥ 44px. The pro
 - Total JS < 40KB gzipped. **Measured 2026-09-15: 11.9KB gzipped**, all of it on `/order`; the home page ships 1.8KB of inline module script and nothing else.
 - The home page's three scripts are the nav toggle (351 bytes), the how-it-works sequence (1,206 bytes) and the floating WhatsApp button's reveal (286 bytes). The e2e suite names every script the home page is allowed to load, so a fourth cannot appear unnoticed — the list went from two to three deliberately, in the commit that added the button.
 - **The how-it-works sequence is scroll-scrubbed, not observed.** This section previously described it as "one IntersectionObserver, 728 bytes, no scroll listener". That stopped being true when the client asked to slow the sequence down and it was rewritten to advance with the scroll position: it now uses a passive `scroll` listener throttled through `requestAnimationFrame`, and there is no IntersectionObserver left in it. It is still gated at `lg` and still degrades to a plain list without JavaScript. Measured TBT remains 0ms.
-- All logos as optimised SVG; lazy-load below the fold.
+- Brand logos are raster, normalised to a common canvas by `scripts/prepare-logos.mjs` and served from `public/brands/` (see 9.4 for why they are not SVG). Lazy-load below the fold — but **not** the featured row, which is inside the first viewport on every size and was making the first images on the page the last requested.
 - No layout shift on load (CLS < 0.05).
 
 ### 10.3 Browsers

@@ -1,10 +1,14 @@
 ---
 // Step 4 is a success screen and is not counted here (CLAUDE.md 6): three
 // reads as shorter than four, and step 4 asks nothing of the customer.
+import copy from '../../data/copy.json';
+
+// The labels are the step headings, read from copy.json rather than retyped —
+// three copies of these strings had to be kept in step by hand (rule 2.9).
 const steps = [
-  { number: 1, label: 'Choose a brand' },
-  { number: 2, label: 'Add your appliance' },
-  { number: 3, label: 'Your details' },
+  { number: 1, label: copy.order.step1.heading },
+  { number: 2, label: copy.order.step2.heading },
+  { number: 3, label: copy.order.step3.heading },
 ];
 ---
 
@@ -12,7 +16,9 @@ const steps = [
   {/* Mobile: one line and a fill bar. Four labels side by side do not fit
       at 320px and never look like anything but a squeeze (CLAUDE.md 9.5). */}
   <div class="md:hidden">
-    <p data-progress-label class="text-sm font-medium text-ink">Step 1 of 3 — Choose a brand</p>
+    <p data-progress-label class="text-sm font-medium text-ink">
+      Step 1 of 3 &#8212; {steps[0]?.label}
+    </p>
     <div class="mt-2 h-0.5 w-full bg-line">
       <div data-progress-fill class="h-full bg-accent transition-[width] duration-200" style="width:33.333%"></div>
     </div>
