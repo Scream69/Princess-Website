@@ -8,6 +8,8 @@
  * an exception mid-enquiry is not (CLAUDE.md 2.4).
  */
 
+import { createLocalStore } from './local-store.ts';
+
 export const STORAGE_KEY = 'enquiry:v1';
 export const SCHEMA_VERSION = 1;
 
@@ -17,7 +19,6 @@ export const SCHEMA_VERSION = 1;
  */
 export const HOME_COUNTRY = 'GB';
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-const SAVE_DEBOUNCE_MS = 300;
 
 export type Step = 1 | 2 | 3 | 4;
 export type InputType = 'url' | 'model' | 'description';
@@ -174,82 +175,28 @@ export function parseStored(raw: string | null, now: number = Date.now()): Enqui
   } as EnquiryState;
 }
 
-export function load(now: number = Date.now()): EnquiryState | null {
-  let raw: string | null;
-  try {
-    raw = window.localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return null;
-  }
+/*
+ * The read/write/debounce/expiry machinery lives in local-store.ts, shared
+ * with the repair booking. Only the validation above is specific to an
+ * enquiry — and it stays specific, because each record has its own idea of
+ * what an implausible one looks like.
+ *
+ * Writes at most every 300ms (CLAUDE.md 8.4); always paired with `flush` on
+ * unload.
+ */
+const store = createLocalStore<EnquiryState>({ key: STORAGE_KEY, parse: parseStored });
 
-  const state = parseStored(raw, now);
-  if (!state) clear();
-  return state;
-}
+export const load = store.load;
+export const save = store.save;
+export const flush = store.flush;
+export const discard = store.discard;
+export const persistOnUnload = store.persistOnUnload;
 
-function write(state: EnquiryState): void {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, updatedAt: Date.now() }));
-  } catch {
-    // Quota exceeded or storage blocked. The in-memory enquiry is unaffected.
-  }
-}
-
+/** Removes the record without cancelling a pending write — `discard` does both. */
 export function clear(): void {
   try {
     window.localStorage.removeItem(STORAGE_KEY);
   } catch {
     // Nothing to do — if we cannot remove it, it will expire.
   }
-}
-
-let pending: EnquiryState | null = null;
-let timer: ReturnType<typeof setTimeout> | undefined;
-
-/** Writes at most every 300ms (CLAUDE.md 8.4). Always pair with `flush` on unload. */
-export function save(state: EnquiryState): void {
-  pending = state;
-  if (timer !== undefined) return;
-  timer = setTimeout(() => {
-    timer = undefined;
-    if (pending) write(pending);
-    pending = null;
-  }, SAVE_DEBOUNCE_MS);
-}
-
-/*
- * Cancels any debounced write *and* removes the record. `clear()` alone is not
- * enough: a save queued moments earlier would fire afterwards and recreate the
- * enquiry the customer just asked us to forget.
- */
-export function discard(): void {
-  if (timer !== undefined) {
-    clearTimeout(timer);
-    timer = undefined;
-  }
-  pending = null;
-  clear();
-}
-
-/** Writes any debounced change immediately. */
-export function flush(): void {
-  if (timer !== undefined) {
-    clearTimeout(timer);
-    timer = undefined;
-  }
-  if (pending) write(pending);
-  pending = null;
-}
-
-/*
- * A customer who closes the tab within 300ms of their last keystroke would
- * otherwise lose it. pagehide is the only event iOS Safari fires reliably when
- * a tab is backgrounded or the app is swiped away; visibilitychange covers
- * the rest.
- */
-export function persistOnUnload(): void {
-  window.addEventListener('pagehide', flush);
-  window.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') flush();
-  });
 }

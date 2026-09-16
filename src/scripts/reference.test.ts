@@ -1,11 +1,21 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createId, createReference, REFERENCE_PATTERN } from './reference.ts';
+import { createId, createReference, REFERENCE_PATTERN, referencePattern } from './reference.ts';
 
 test('references match the documented ENQ-XXXXX shape', () => {
   for (let i = 0; i < 200; i += 1) {
     assert.match(createReference(), REFERENCE_PATTERN);
   }
+});
+
+test('repair references carry their own prefix and the same alphabet', () => {
+  for (let i = 0; i < 200; i += 1) {
+    assert.match(createReference('REP'), referencePattern('REP'));
+  }
+  // The two must never be mistaken for each other: they go to different
+  // inboxes and are handled by different people.
+  assert.doesNotMatch(createReference('REP'), REFERENCE_PATTERN);
+  assert.doesNotMatch(createReference('ENQ'), referencePattern('REP'));
 });
 
 test('references exclude characters that are ambiguous aloud or on screen', () => {
@@ -17,7 +27,9 @@ test('references exclude characters that are ambiguous aloud or on screen', () =
 });
 
 test('references are not trivially repeating', () => {
-  const seen = new Set(Array.from({ length: 500 }, createReference));
+  // Wrapped rather than passed bare: `Array.from` hands its mapper an index,
+  // which would arrive as the prefix now that there is one.
+  const seen = new Set(Array.from({ length: 500 }, () => createReference()));
   assert.ok(seen.size > 490, `expected near-unique references, got ${seen.size}/500`);
 });
 

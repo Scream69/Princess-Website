@@ -7,7 +7,7 @@ import {
   parseQueue,
   passesTimeCheck,
   postEnquiry,
-  queueEnquiry,
+  queueSubmission,
   readQueue,
   retryQueue,
   whatsappMessage,
@@ -280,8 +280,18 @@ test('a 2xx with an unreadable body is taken at its word', async () => {
 
 // --- the on-device queue ----------------------------------------------------
 
+/** One key per inbox — quotes and repairs are separate Web3Forms forms. */
+const KEYS = { quote: 'quote-key', repair: 'repair-key' } as const;
+
 function entry(overrides: Partial<QueueEntry> = {}): QueueEntry {
-  return { reference: 'ENQ-4CDEF', payload: payload(), queuedAt: now, attempts: 0, ...overrides };
+  return {
+    kind: 'quote',
+    reference: 'ENQ-4CDEF',
+    payload: payload(),
+    queuedAt: now,
+    attempts: 0,
+    ...overrides,
+  };
 }
 
 test('an unreadable queue is empty, never an exception', () => {
@@ -299,14 +309,14 @@ test('a queued enquiry survives, until it is 30 days old', () => {
 
 test('re-queueing the same enquiry replaces it rather than duplicating it', () => {
   // Otherwise "Try again" posts the same enquiry to the client twice.
-  const queued = mergeIntoQueue([entry({ queuedAt: now - 5000 })], payload(), now);
+  const queued = mergeIntoQueue([entry({ queuedAt: now - 5000 })], 'quote', payload(), now);
   assert.equal(queued.length, 1);
   assert.equal(queued[0]?.queuedAt, now - 5000, 'the original wait is preserved');
 });
 
 test('a second, different enquiry is queued alongside the first', () => {
   const other = { ...payload(), reference: 'ENQ-77777' };
-  const queued = mergeIntoQueue([entry()], other, now);
+  const queued = mergeIntoQueue([entry()], 'quote', other, now);
   assert.deepEqual(
     queued.map((queuedEntry) => queuedEntry.reference).sort(),
     ['ENQ-4CDEF', 'ENQ-77777'],
@@ -321,7 +331,7 @@ test('the queue is capped, and the enquiry being queued always survives it', () 
   const existing = Array.from({ length: 10 }, (_, index) =>
     entry({ reference: `ENQ-0000${index}` }),
   );
-  const queued = mergeIntoQueue(existing, { ...payload(), reference: 'ENQ-LATER' }, now);
+  const queued = mergeIntoQueue(existing, 'quote', { ...payload(), reference: 'ENQ-LATER' }, now);
   assert.equal(queued.length, 10);
   assert.ok(queued.some((queuedEntry) => queuedEntry.reference === 'ENQ-LATER'));
   // And the oldest of the rest are what it makes room by dropping.
@@ -357,16 +367,21 @@ test('an endpoint that answers in HTML is still believed', async () => {
 
 test('a retry pass does not erase an enquiry queued while it was running', async () => {
   useStorage();
-  queueEnquiry({ ...payload(), reference: 'ENQ-STALE' }, now);
+  queueSubmission('quote', { ...payload(), reference: 'ENQ-STALE' }, now);
 
   // The live enquiry is queued mid-pass, exactly as it would be if the
   // customer pressed Submit while this was still awaiting.
   const impl = (async () => {
-    queueEnquiry({ ...payload(), reference: 'ENQ-LIVE' }, now);
+    queueSubmission('quote', { ...payload(), reference: 'ENQ-LIVE' }, now);
     return json({ success: false });
   }) as unknown as typeof fetch;
 
-  await retryQueue({ accessKey: 'k', fetchImpl: impl, endpoint: 'https://example.invalid', now });
+  await retryQueue({
+    accessKeys: KEYS,
+    fetchImpl: impl,
+    endpoint: 'https://example.invalid',
+    now,
+  });
 
   const refs = readQueue(now).map((entry) => entry.reference);
   assert.ok(refs.includes('ENQ-LIVE'), 'the enquiry queued during the pass survived');
@@ -375,17 +390,52 @@ test('a retry pass does not erase an enquiry queued while it was running', async
 
 test('a delivered entry is dropped, not resurrected', async () => {
   useStorage();
-  queueEnquiry({ ...payload(), reference: 'ENQ-SENT' }, now);
+  queueSubmission('quote', { ...payload(), reference: 'ENQ-SENT' }, now);
   const { impl } = stubFetch([json({ success: true })]);
 
   const sent = await retryQueue({
-    accessKey: 'k',
+    accessKeys: KEYS,
     fetchImpl: impl,
     endpoint: 'https://example.invalid',
     now,
   });
 
   assert.deepEqual(sent.map((entry) => entry.reference), ['ENQ-SENT']);
+  assert.deepEqual(readQueue(now), []);
+});
+
+test('a queue entry written before repairs existed is still delivered', () => {
+  // Entries on real devices predate `kind` entirely, and they hold enquiries
+  // that were never sent. Dropping them for a missing field would throw away
+  // exactly what the queue exists to protect (rule 2.4).
+  const legacy = JSON.stringify([
+    { reference: 'ENQ-OLDER', payload: payload(), queuedAt: now, attempts: 1 },
+  ]);
+  const parsed = parseQueue(legacy, now);
+  assert.equal(parsed.length, 1, 'the entry survived the schema change');
+  assert.equal(parsed[0]?.kind, 'quote', 'and is read as the only thing it can be');
+});
+
+test('each queued entry is retried with the key for its own inbox', async () => {
+  useStorage();
+  queueSubmission('quote', { ...payload(), reference: 'ENQ-AAAAA' }, now);
+  queueSubmission('repair', { reference: 'REP-BBBBB', name: 'Jo' }, now);
+
+  const used: string[] = [];
+  const impl = (async (_url: string, init: RequestInit) => {
+    used.push(JSON.parse(String(init.body)).access_key);
+    return json({ success: true });
+  }) as unknown as typeof fetch;
+
+  await retryQueue({
+    accessKeys: KEYS,
+    fetchImpl: impl,
+    endpoint: 'https://example.invalid',
+    now,
+  });
+
+  // Posting a repair with the quote key would deliver it to the wrong inbox.
+  assert.deepEqual(used.sort(), ['quote-key', 'repair-key']);
   assert.deepEqual(readQueue(now), []);
 });
 

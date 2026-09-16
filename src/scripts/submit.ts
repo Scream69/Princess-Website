@@ -16,6 +16,8 @@
  * rate-limit behaviour can be tested without a browser or a network.
  */
 import { describe as describeItem } from './parse.ts';
+import type { RepairState } from './repair-storage.ts';
+import { formatSlotDay, weekdayOf } from './slots.ts';
 import type { EnquiryItem, EnquiryState } from './storage.ts';
 
 /** Web3Forms. Netlify Forms would be a different endpoint and the same payload. */
@@ -39,13 +41,32 @@ const WHATSAPP_MAX_CHARS = 1400;
 // --- payload ----------------------------------------------------------------
 
 /*
+ * What the transport will carry. Flat and scalar, always: the client reads
+ * these as an email, and a form-to-email service renders a nested object as
+ * unreadable JSON.
+ *
+ * A `type` rather than an `interface` on purpose — an interface has no
+ * implicit index signature, so the concrete payloads below would not be
+ * assignable to this and every call site would need a cast.
+ */
+export type FormPayload = Record<string, string | number>;
+
+/**
+ * The two things this site sends, and the two inboxes they go to. Carried on
+ * every queue entry so a retry knows which access key to post with — they are
+ * separate Web3Forms forms, because the key is what binds a form to its
+ * destination address.
+ */
+export type SubmissionKind = 'quote' | 'repair';
+
+/*
  * Deliberately flat and string-valued. The client reads these as an email, and
  * a form-to-email service renders nested objects as unreadable JSON — so the
  * appliances arrive as numbered lines, not as an array. Every field required
  * by CLAUDE.md 8.7 step 6 is present: reference, items with brand, raw input,
  * parsed model and note, contact details, and the session metadata.
  */
-export interface EnquiryPayload {
+export type EnquiryPayload = {
   subject: string;
   from_name: string;
   replyto: string;
@@ -61,7 +82,7 @@ export interface EnquiryPayload {
   brands_clicked: string;
   time_on_page: string;
   submitted_at: string;
-}
+};
 
 export interface SessionMeta {
   /** The URL the customer landed on — tells the client where the lead came from. */
@@ -137,6 +158,22 @@ export function buildPayload(context: PayloadContext): EnquiryPayload {
 }
 
 /*
+ * Shared by both WhatsApp fallbacks below. Cuts on a character, not a UTF-16
+ * index — `slice` counts code units, so a non-BMP character (any emoji, and
+ * people do put them in a free-text fault description) straddling the limit
+ * leaves a lone surrogate. `encodeURIComponent` throws `URIError` on that,
+ * and it would throw inside the one code path whose entire job is to survive
+ * a failed submission: the failure panel had already been shown, so the
+ * customer would be left looking at "we could not send it" with the one
+ * button that could still save the lead never appearing.
+ */
+function truncateForWhatsapp(body: string): string {
+  if (body.length <= WHATSAPP_MAX_CHARS) return body;
+  const cut = [...body].slice(0, WHATSAPP_MAX_CHARS).join('');
+  return `${cut}…\n(cut short — please ask me for the rest)`;
+}
+
+/*
  * The fallback that actually saves the lead when the form endpoint is
  * unreachable (CLAUDE.md 8.7 step 4). Written from the customer's side —
  * they are the one sending it.
@@ -152,19 +189,97 @@ export function whatsappMessage(payload: EnquiryPayload): string {
     'Sent here because the website form could not reach you.',
   ].join('\n');
 
-  if (body.length <= WHATSAPP_MAX_CHARS) return body;
+  return truncateForWhatsapp(body);
+}
 
-  /*
-   * Cut on a character, not on a UTF-16 index. `slice` counts code units, so a
-   * non-BMP character — any emoji, and people do put them in a free-text
-   * description — straddling the limit leaves a lone surrogate.
-   * `encodeURIComponent` throws `URIError` on that, and it throws inside the
-   * one code path whose entire job is to survive a failed submission: the
-   * failure panel had already been shown, so the customer was left looking at
-   * "we could not send it" with the WhatsApp button never revealed.
-   */
-  const cut = [...body].slice(0, WHATSAPP_MAX_CHARS).join('');
-  return `${cut}…\n(cut short — please ask me for the rest)`;
+// --- the repair booking payload (CLAUDE.md-equivalent for /repairs) --------
+
+/*
+ * The repair booking's transport shape — flat and string-valued for the same
+ * reason as `EnquiryPayload`: a form-to-email service renders a nested object
+ * as unreadable JSON, and the client reads this as an email.
+ */
+export type RepairPayload = {
+  subject: string;
+  from_name: string;
+  replyto: string;
+  reference: string;
+  name: string;
+  phone: string;
+  email: string;
+  category: string;
+  product: string;
+  fault: string;
+  dropoff: string;
+  consent: string;
+  entry_url: string;
+  time_on_page: string;
+  submitted_at: string;
+};
+
+export interface RepairPayloadContext {
+  state: RepairState;
+  session: SessionMeta;
+  categoryNames: Readonly<Record<string, string>>;
+  now?: number;
+}
+
+/** "Monday 21 September — Morning", or "" if no slot has been chosen yet. */
+export function formatDropoff(
+  slot: RepairState['slot'],
+  slots: { morningLabel: string; afternoonLabel: string },
+): string {
+  if (!slot) return '';
+  const partLabel = slot.part === 'morning' ? slots.morningLabel : slots.afternoonLabel;
+  return `${formatSlotDay(slot.date, weekdayOf(slot.date))} — ${partLabel}`;
+}
+
+export interface BuildRepairPayloadOptions extends RepairPayloadContext {
+  dropoff: string;
+}
+
+export function buildRepairPayload(options: BuildRepairPayloadOptions): RepairPayload {
+  const { state, session, categoryNames, dropoff } = options;
+  const now = options.now ?? Date.now();
+  const { contact } = state;
+
+  const category = state.category ? (categoryNames[state.category] ?? state.category) : 'Not specified';
+
+  return {
+    subject: `Repair ${state.reference} — ${contact.name} (${category})`,
+    from_name: contact.name,
+    replyto: contact.email,
+    reference: state.reference,
+    name: contact.name,
+    phone: contact.phone,
+    email: contact.email,
+    category,
+    product: state.product,
+    fault: state.fault,
+    dropoff,
+    consent: state.consent ? `Given at ${new Date(now).toISOString()}` : 'NOT GIVEN',
+    entry_url: session.entryUrl,
+    time_on_page: formatDuration(session.msOnPage),
+    submitted_at: new Date(now).toISOString(),
+  };
+}
+
+/** The repair-flow equivalent of `whatsappMessage` — CLAUDE.md 8.7 step 4. */
+export function repairWhatsappMessage(payload: RepairPayload): string {
+  const lines = [
+    `Repair enquiry ${payload.reference}`,
+    `${payload.name} · ${payload.phone} · ${payload.email}`,
+    '',
+    `Item: ${payload.product}`,
+    `Fault: ${payload.fault}`,
+  ];
+  // The slot is only known once step 3 is reached; the message must still be
+  // buildable before that, for the same reason showFailure builds one on any
+  // failure.
+  if (payload.dropoff) lines.push(`Bringing it in: ${payload.dropoff}`);
+  lines.push('', 'Sent here because the website form could not reach you.');
+
+  return truncateForWhatsapp(lines.join('\n'));
 }
 
 // --- posting ----------------------------------------------------------------
@@ -175,7 +290,7 @@ export type SendResult =
 
 export interface PostOptions {
   accessKey: string;
-  payload: EnquiryPayload;
+  payload: FormPayload;
   fetchImpl?: typeof fetch;
   endpoint?: string;
   timeoutMs?: number;
@@ -197,7 +312,7 @@ function classify(status: number): Attempt {
 
 interface AttemptOptions {
   accessKey: string;
-  payload: EnquiryPayload;
+  payload: FormPayload;
   fetchImpl: typeof fetch;
   endpoint: string;
   timeoutMs: number;
@@ -289,13 +404,23 @@ export async function postEnquiry(options: PostOptions): Promise<SendResult> {
 // --- the on-device queue ----------------------------------------------------
 
 export interface QueueEntry {
+  kind: SubmissionKind;
   reference: string;
-  payload: EnquiryPayload;
+  payload: FormPayload;
   queuedAt: number;
   attempts: number;
 }
 
-function isEntry(value: unknown): value is QueueEntry {
+/*
+ * `kind` is *not* required here, and must never become required.
+ *
+ * Entries written before repairs existed have no `kind` at all, and they are
+ * sitting on real customers' devices holding enquiries that were never
+ * delivered. Rejecting them for a missing field would throw away exactly what
+ * the queue exists to protect (rule 2.4) — so a missing `kind` is read as the
+ * only thing it can be, a quote, and normalised on the way through.
+ */
+function isEntry(value: unknown): value is Omit<QueueEntry, 'kind'> & { kind?: unknown } {
   if (typeof value !== 'object' || value === null) return false;
   const entry = value as Partial<QueueEntry>;
   return (
@@ -307,6 +432,8 @@ function isEntry(value: unknown): value is QueueEntry {
   );
 }
 
+const asKind = (value: unknown): SubmissionKind => (value === 'repair' ? 'repair' : 'quote');
+
 /** Anything unreadable or older than 30 days is dropped rather than repaired. */
 export function parseQueue(raw: string | null, now: number = Date.now()): QueueEntry[] {
   if (!raw) return [];
@@ -317,7 +444,10 @@ export function parseQueue(raw: string | null, now: number = Date.now()): QueueE
     return [];
   }
   if (!Array.isArray(parsed)) return [];
-  return parsed.filter(isEntry).filter((entry) => now - entry.queuedAt <= QUEUE_TTL_MS);
+  return parsed
+    .filter(isEntry)
+    .filter((entry) => now - entry.queuedAt <= QUEUE_TTL_MS)
+    .map((entry) => ({ ...entry, kind: asKind(entry.kind) }));
 }
 
 export function readQueue(now: number = Date.now()): QueueEntry[] {
@@ -353,23 +483,30 @@ function writeQueue(entries: QueueEntry[]): void {
  */
 export function mergeIntoQueue(
   entries: QueueEntry[],
-  payload: EnquiryPayload,
+  kind: SubmissionKind,
+  payload: FormPayload,
   now: number = Date.now(),
 ): QueueEntry[] {
-  const existing = entries.find((entry) => entry.reference === payload.reference);
+  const reference = String(payload.reference);
+  const existing = entries.find((entry) => entry.reference === reference);
   const merged: QueueEntry = {
-    reference: payload.reference,
+    kind,
+    reference,
     payload,
     queuedAt: existing?.queuedAt ?? now,
     attempts: existing?.attempts ?? 0,
   };
-  const others = entries.filter((entry) => entry.reference !== payload.reference);
+  const others = entries.filter((entry) => entry.reference !== reference);
   // Keep the newest, then as many of the rest as fit, oldest first.
   return [merged, ...others.slice(0, QUEUE_MAX - 1)];
 }
 
-export function queueEnquiry(payload: EnquiryPayload, now: number = Date.now()): void {
-  writeQueue(mergeIntoQueue(readQueue(now), payload, now));
+export function queueSubmission(
+  kind: SubmissionKind,
+  payload: FormPayload,
+  now: number = Date.now(),
+): void {
+  writeQueue(mergeIntoQueue(readQueue(now), kind, payload, now));
 }
 
 /*
@@ -382,7 +519,12 @@ export function dropFromQueue(reference: string, now: number = Date.now()): void
 }
 
 export interface RetryQueueOptions {
-  accessKey: string;
+  /*
+   * One key per kind. Both pages pass both: a repair queued on /repairs must
+   * still go out if the customer's next visit happens to be to /order, which
+   * is the whole point of retrying on page load.
+   */
+  accessKeys: Record<SubmissionKind, string>;
   fetchImpl?: typeof fetch;
   endpoint?: string;
   /** Called once per entry the endpoint has confirmed. */
@@ -413,7 +555,7 @@ export async function retryQueue(options: RetryQueueOptions): Promise<QueueEntry
 
   for (const entry of queued) {
     const result = await postEnquiry({
-      accessKey: options.accessKey,
+      accessKey: options.accessKeys[entry.kind],
       payload: entry.payload,
       fetchImpl: options.fetchImpl,
       endpoint: options.endpoint,

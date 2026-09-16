@@ -15,6 +15,7 @@ import { whatsappHref } from '../data/site.ts';
 import { initClipboard } from './clipboard.ts';
 import { initDetails, isComplete } from './details.ts';
 import { describe, parseInput } from './parse.ts';
+import { ACCESS_KEYS } from './keys.ts';
 import { createId, createReference } from './reference.ts';
 import {
   createEmptyState,
@@ -33,7 +34,7 @@ import {
   isHoneypotTripped,
   passesTimeCheck,
   postEnquiry,
-  queueEnquiry,
+  queueSubmission,
   readSubmissionTimes,
   recordSubmission,
   retryQueue,
@@ -665,11 +666,11 @@ export function initWizard() {
   // --- submission (CLAUDE.md 8.7) -------------------------------------------
 
   /*
-   * Baked in at build time from .env. An empty key means the site was deployed
-   * unconfigured: `postEnquiry` reports that distinctly, the enquiry is queued
-   * rather than dropped, and a later build with the key delivers it.
+   * Baked in at build time from .env (see keys.ts). An empty key means the
+   * site was deployed unconfigured: `postEnquiry` reports that distinctly, the
+   * enquiry is queued rather than dropped, and a later build with the key
+   * delivers it.
    */
-  const ACCESS_KEY: string = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
   const SUBMIT_COPY = copy.order.submit;
 
   /** Guards against a second send while the first is still in flight. */
@@ -780,7 +781,7 @@ export function initWizard() {
     hideFailure();
     track('submit_attempt', { items: state.items.length });
 
-    const result = await postEnquiry({ accessKey: ACCESS_KEY, payload });
+    const result = await postEnquiry({ accessKey: ACCESS_KEYS.quote, payload });
 
     sending = false;
     setSubmitBusy(false);
@@ -793,7 +794,7 @@ export function initWizard() {
 
     // Queue before telling them, so the enquiry is safe on the device even if
     // the render below throws.
-    queueEnquiry(payload);
+    queueSubmission('quote', payload);
     track('submit_failure', { reason: result.reason });
     showFailure('failure', payload);
   }
@@ -909,7 +910,7 @@ export function initWizard() {
    * finish the job and show them step 4 with their reference.
    */
   void retryQueue({
-    accessKey: ACCESS_KEY,
+    accessKeys: ACCESS_KEYS,
     onSent: (entry) => {
       /*
        * Only when the delivered payload is still what is on the device.
@@ -928,6 +929,11 @@ export function initWizard() {
        * superset of the first — which is a far cheaper failure than deleting
        * an appliance the customer chose.
        */
+      // The queue now carries repairs too, and this page must never complete
+      // one. The reference prefixes differ so the check below would fail
+      // anyway, but relying on that is relying on a coincidence.
+      if (entry.kind !== 'quote') return;
+
       const unchanged = entry.payload.appliances === currentPayload().appliances;
       if (
         entry.reference === state.reference &&
