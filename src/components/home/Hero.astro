@@ -58,11 +58,12 @@ const whatsapp = whatsappHref();
       <p class="mt-8 max-w-content border-l-2 border-gold pl-4 text-ink">{hero.process}</p>
 
       {/*
-        Two ways to start, with one of them clearly first. The quote button is
-        the filled one because the enquiry form is what this page exists to
-        feed (CLAUDE.md 1); WhatsApp is outlined, for the customer who would
-        rather send a photo than fill anything in. Equal weight would make the
-        page ask a question instead of giving a direction.
+        Three ways to start, with one of them clearly first. The quote button
+        is the filled one because the enquiry form is what this page exists to
+        feed (CLAUDE.md 1); repairs and WhatsApp are both outlined, so the two
+        secondary paths carry equal weight against each other and neither
+        competes with the primary action. Equal weight on all three would make
+        the page ask a question instead of giving a direction.
       */}
       <div class="mt-10 flex flex-wrap items-center gap-3">
         <a
@@ -70,6 +71,13 @@ const whatsapp = whatsappHref();
           class="inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
         >
           {site.cta.label}
+        </a>
+
+        <a
+          href="/repairs"
+          class="inline-flex min-h-touch items-center rounded-sm border border-line-strong px-5 font-medium text-ink transition-colors hover:border-ink"
+        >
+          {hero.repairCta}
         </a>
 
         {

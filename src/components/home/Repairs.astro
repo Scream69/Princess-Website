@@ -1,0 +1,48 @@
+---
+import copy from '../../data/copy.json';
+import repairs from '../../data/repairs.json';
+
+/*
+ * The repairs section on the home page — a summary that sends the reader to
+ * /repairs for the full booking flow, the same relationship the brand strip
+ * has with /order (CLAUDE.md 7: "from the home page we want them entering
+ * the wizard"). Ships no JavaScript: the whole section is static markup, so
+ * it costs nothing against the home page's script budget (CLAUDE.md 10.2).
+ */
+const { repairs: section } = copy.home;
+---
+
+<section id="repairs" class="border-t border-line bg-canvas">
+  <div class="mx-auto grid max-w-page gap-10 px-gutter py-section lg:grid-cols-[1fr_22rem]">
+    <div>
+      <span aria-hidden="true" class="mb-5 block h-0.5 w-10 bg-gold"></span>
+      <p class="text-sm font-medium tracking-wide text-gold-ink uppercase">{section.eyebrow}</p>
+      <h2 class="mt-2 max-w-content font-serif text-heading text-ink">{section.heading}</h2>
+      <p class="mt-6 max-w-content text-ink-muted">{section.body}</p>
+      <p class="mt-4 max-w-content text-ink-muted">{section.workshop}</p>
+
+      <a
+        href="/repairs"
+        class="mt-8 inline-flex min-h-touch items-center rounded-sm bg-accent px-6 font-medium text-accent-contrast transition-colors hover:bg-accent-hover"
+      >
+        {section.cta}
+      </a>
+    </div>
+
+    <aside class="border-t border-line pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10">
+      <div>
+        <p class="text-sm font-medium tracking-wide text-ink-muted uppercase">{section.listLabel}</p>
+        <ul class="mt-3 list-none space-y-1 p-0 text-ink">
+          {repairs.categories.map((category) => <li>{category.name}</li>)}
+        </ul>
+      </div>
+
+      <div class="mt-6">
+        <p class="text-sm font-medium tracking-wide text-ink-muted uppercase">{section.excludedLabel}</p>
+        <ul class="mt-3 list-none space-y-1 p-0 text-sm text-ink-muted">
+          {repairs.excluded.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
+    </aside>
+  </div>
+</section>
