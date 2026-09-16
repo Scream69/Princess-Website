@@ -63,7 +63,7 @@ const cards = brands.map((brand) => {
         <h3 class="text-sm font-medium tracking-wide text-ink-muted uppercase">Popular brands</h3>
         <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {featuredBrands.map((brand) => (
-            <BrandCard brand={brand} isFirstOfLetter={false} />
+            <BrandCard brand={brand} isFirstOfLetter={false} eager />
           ))}
         </div>
       </section>

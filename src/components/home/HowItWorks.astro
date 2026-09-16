@@ -84,6 +84,11 @@ const CHOSEN = 3;
               process.steps.map((step, index) => (
                 <li class="step" data-step={index + 1}>
                   <span aria-hidden="true" class="block h-0.5 w-8 bg-gold" />
+                  {/* `figures` here is the Tailwind utility for lining digits, not
+                      the layout class below — which is why that one is called
+                      `figure-stack`. They collided: Astro's scoped styles are
+                      unlayered, so `.figures { display: none }` beat Tailwind's
+                      `block` and these numerals were invisible on every phone. */}
                   <span aria-hidden="true" class="figures mt-4 block text-3xl text-gold-ink">
                     {index + 1}
                   </span>
@@ -96,7 +101,7 @@ const CHOSEN = 3;
 
           {/* Decorative: everything here is said properly in the column on
               the left, so there is nothing for a screen reader to gain. */}
-          <div class="figures" aria-hidden="true">
+          <div class="figure-stack" aria-hidden="true">
             <div class="figure" data-figure="1" data-length="1800">
               <p class="figure-label">{figures.brandsLabel}</p>
               <div class="tiles">
@@ -210,7 +215,7 @@ const CHOSEN = 3;
   /* --- unenhanced, and every screen below lg: three plain blocks -------- */
 
   .sentinels,
-  .figures,
+  .figure-stack,
   .rail {
     display: none;
   }
@@ -321,7 +326,7 @@ const CHOSEN = 3;
       transform: none;
     }
 
-    [data-enhanced] .figures {
+    [data-enhanced] .figure-stack {
       display: grid;
       min-height: 13rem;
     }
@@ -372,7 +377,7 @@ const CHOSEN = 3;
     }
 
     [data-enhanced] .band,
-    [data-enhanced] .figures {
+    [data-enhanced] .figure-stack {
       min-height: 11rem;
     }
 
@@ -401,7 +406,7 @@ const CHOSEN = 3;
     }
 
     [data-enhanced] .band,
-    [data-enhanced] .figures {
+    [data-enhanced] .figure-stack {
       min-height: 8rem;
     }
 
@@ -605,12 +610,26 @@ const CHOSEN = 3;
     background-color: var(--color-line);
   }
 
+  /*
+   * Scaled, not resized. `width` is a layout property, so writing it on every
+   * scroll frame dirtied layout for the rail and its ancestors 60 times a
+   * second — and the 450ms transition on it meant each frame restarted an
+   * interpolation the next frame cancelled, so the fill permanently trailed
+   * the reader's thumb by up to half a second and never caught up. `transform`
+   * is composited and needs no transition to look smooth, because the scroll
+   * position is already continuous.
+   *
+   * It also starts at zero rather than a third: the declared `width: 33.3333%`
+   * was visible for one frame on load, so the rail appeared to shrink from a
+   * third to nothing before anyone had scrolled.
+   */
   .rail-fill {
     display: block;
     height: 1px;
-    width: 33.3333%;
+    width: 100%;
+    transform: scaleX(0);
+    transform-origin: left center;
     background-color: var(--color-accent);
-    transition: width 450ms ease;
   }
 
   .rail-numbers {
@@ -931,12 +950,28 @@ const CHOSEN = 3;
       mark(numbers, 'number', step);
     };
 
+    /*
+     * The track's height and its distance down the page are measured once and
+     * on resize, never inside the scroll frame.
+     *
+     * They were read every frame — and the frame before had just written
+     * `data-active` on three node lists and a transform on the fill, so layout
+     * was dirty and each `offsetHeight` forced a synchronous relayout of the
+     * whole document, twice per frame, on a page also running the marquee.
+     * Neither value changes while scrolling: only a resize moves them.
+     */
+    let trackHeight = 0;
+    let trackTop = 0;
+
+    const measure = () => {
+      trackHeight = track?.offsetHeight ?? 0;
+      trackTop = stage.getBoundingClientRect().top + window.scrollY;
+    };
+
     /** Where the reader is, as a fraction of the whole three-step track. */
     const progress = () => {
-      const height = track?.offsetHeight ?? 0;
-      if (height <= 0) return 0;
-      const top = stage.getBoundingClientRect().top + window.scrollY;
-      return Math.min(Math.max((window.scrollY - top) / height, 0), 1);
+      if (trackHeight <= 0) return 0;
+      return Math.min(Math.max((window.scrollY - trackTop) / trackHeight, 0), 1);
     };
 
     const render = () => {
@@ -960,7 +995,7 @@ const CHOSEN = 3;
 
       // The rail fills continuously rather than in thirds, so it reads as a
       // position in the sequence rather than a counter.
-      if (fill) fill.style.width = `${Math.max(overall, 0.02) * 100}%`;
+      if (fill) fill.style.transform = `scaleX(${Math.max(overall, 0.02)})`;
     };
 
     let queued = false;
@@ -974,6 +1009,10 @@ const CHOSEN = 3;
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', () => {
+      measure();
+      onScroll();
+    });
     window.addEventListener('resize', onScroll, { passive: true });
     desktop.addEventListener('change', render);
     render();

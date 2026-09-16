@@ -5,9 +5,16 @@ interface Props {
   brand: LinkableBrand;
   /** True for the first brand under each initial — carries the A–Z rail's scroll target. */
   isFirstOfLetter: boolean;
+  /*
+   * The featured row sits inside the first viewport on both desktop and
+   * mobile, and `loading="lazy"` there defers the first images on the page and
+   * fetches them at low priority — so the thing the customer looks at first is
+   * the last thing requested. Everything below the fold stays lazy.
+   */
+  eager?: boolean;
 }
 
-const { brand, isFirstOfLetter } = Astro.props;
+const { brand, isFirstOfLetter, eager = false } = Astro.props;
 const letter = firstLetter(brand.name);
 
 /*
@@ -49,7 +56,7 @@ const logoUrl = brand.logo ? `/brands/${brand.logo}` : null;
   target="_blank"
   rel="noopener noreferrer"
   aria-label={`${brand.name} — view range on the manufacturer's site (opens in a new tab)`}
-  class="group relative flex min-h-32 flex-col items-center justify-center gap-2 rounded-sm border border-line bg-surface px-4 py-6 transition-[transform,border-color] duration-150 hover:-translate-y-0.5 hover:border-line-strong focus-visible:-translate-y-0.5"
+  class="group relative flex min-h-32 flex-col items-center justify-center gap-2 rounded-sm border border-line bg-surface px-4 py-6 transition-[translate,border-color] duration-150 hover:-translate-y-0.5 hover:border-line-strong focus-visible:-translate-y-0.5"
   style={`--optical-scale:${brand.opticalScale}`}
 >
   {
@@ -59,7 +66,8 @@ const logoUrl = brand.logo ? `/brands/${brand.logo}` : null;
         alt=""
         width="280"
         height="88"
-        loading="lazy"
+        loading={eager ? 'eager' : 'lazy'}
+        fetchpriority={eager ? 'high' : undefined}
         decoding="async"
         class="h-11 w-full origin-center object-contain"
         style="scale: var(--optical-scale)"

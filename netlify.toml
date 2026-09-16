@@ -41,3 +41,10 @@
   for = "/*.html"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
+
+# See the note in public/_headers: the logo filenames are stable slugs rather
+# than content hashes, so they get a week with revalidation instead of a year.
+[[headers]]
+  for = "/brands/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, must-revalidate"

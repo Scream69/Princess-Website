@@ -51,6 +51,21 @@ const rows = [names.slice(0, half), names.slice(half)];
    * visible jump every ninety seconds.
    */
   .marquee {
+    /*
+     * Skipped entirely once it is off screen. Four tracks carrying 130 items
+     * animate forever, and nothing was stopping them when the reader had
+     * scrolled three sections past — a phone kept compositing several
+     * thousand-pixel-wide layers behind a mask with none of it visible.
+     *
+     * `content-visibility` rather than an IntersectionObserver toggling
+     * `animation-play-state`: the home page's script budget is three modules,
+     * named one by one in the e2e suite (CLAUDE.md 10.2), and this needs no
+     * JavaScript at all. The intrinsic size keeps the page height stable while
+     * the content is skipped, so nothing jumps as it scrolls back in.
+     */
+    content-visibility: auto;
+    contain-intrinsic-size: auto 8.5rem;
+
     --gap: 2rem;
 
     border-top: 1px solid var(--color-line);

@@ -18,3 +18,11 @@
 # Fingerprinted by Astro, so these can never go stale.
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
+
+# The brand logos. Not fingerprinted — the filename is the slug, so a replaced
+# logo keeps its name — hence a week rather than a year, and `must-revalidate`
+# so a swap reaches people who have already visited. Without a rule of their
+# own these 67 files fell through to `/*` and were revalidated on every repeat
+# visit to /order.
+/brands/*
+  Cache-Control: public, max-age=604800, must-revalidate
