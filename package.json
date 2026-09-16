@@ -10,7 +10,9 @@
     "check": "astro check",
     "test": "node --test \"src/**/*.test.ts\"",
     "test:e2e": "node scripts/e2e-wizard.mjs",
-    "check:links": "node scripts/check-links.mjs"
+    "test:e2e:repairs": "node scripts/e2e-repairs.mjs",
+    "check:links": "node scripts/check-links.mjs",
+    "fetch:holidays": "node scripts/fetch-bank-holidays.mjs"
   },
   "dependencies": {
     "astro": "7.3.1"

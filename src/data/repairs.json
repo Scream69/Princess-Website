@@ -1,0 +1,28 @@
+{
+  "_comment": "What the workshop takes in and what it turns away, plus the shape of the drop-off slot picker. Structural data only — the page's wording lives in copy.json, the same split as brands.json.",
+
+  "categories": [
+    { "slug": "tv", "name": "Televisions", "detail": "Any make or model" },
+    { "slug": "audio", "name": "Audio equipment", "detail": "All audio equipment" },
+    { "slug": "dj", "name": "DJ equipment", "detail": "All DJ equipment" },
+    { "slug": "microwave", "name": "Microwaves", "detail": null },
+    { "slug": "phone", "name": "Smartphones", "detail": "All smartphones" }
+  ],
+
+  "_excludedComment": "Confirmed by the client 2026-09-16. Shown on the first step, in plain sight, so somebody with a broken dishwasher finds out in five seconds rather than after filling in a form.",
+  "excluded": [
+    "Washing machines",
+    "Tumble dryers",
+    "Fridges and freezers",
+    "Dishwashers",
+    "Ovens"
+  ],
+
+  "_slotsComment": "Drop-off is any day the shop is open — the days and times come from `hours` in site.json, never retyped here. `middayHour` is only where the day is cut in two for the morning/afternoon choice. `daysAhead` is how far the calendar's month navigation reaches, not a booking horizon: nothing is reserved, so there is no real cost to letting a customer plan several months out — a customer travelling and dropping the item off once they are back needs to be able to pick a month ahead, not just a fortnight. Widened from 14 to 180 on 2026-09-16 for exactly that case.",
+  "slots": {
+    "daysAhead": 180,
+    "middayHour": 13,
+    "morningLabel": "Morning",
+    "afternoonLabel": "Afternoon"
+  }
+}
