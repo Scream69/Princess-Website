@@ -133,7 +133,10 @@ async function square(size, pad) {
     .toBuffer();
 }
 
-writeFileSync('public/favicon.png', await square(512, 0.06));
+// 48px covers every browser's actual tab/bookmark use (they downscale from
+// here, never up) — 512 was write-once-run-never bloat: every visit paid for
+// pixels no `<link rel="icon">` consumer asks for.
+writeFileSync('public/favicon.png', await square(48, 0.06));
 // Apple's icon is composited onto a white tile, so it gets one of its own.
 const touch = await sharp({
   create: { width: 180, height: 180, channels: 4, background: { r: 255, g: 255, b: 255, alpha: 1 } },

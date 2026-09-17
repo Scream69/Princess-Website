@@ -7,6 +7,8 @@ import Analytics from '../components/Analytics.astro';
 import site from '../data/site.json';
 import { isPlaceholder } from '../data/site';
 import StructuredData from '../components/StructuredData.astro';
+import interUrl from '../assets/fonts/inter-400-latin.woff2?url';
+import frauncesUrl from '../assets/fonts/fraunces-600-latin.woff2?url';
 
 interface Props {
   title: string;
@@ -52,8 +54,16 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
     {/* The crown from the client's own lockup, cut out by measurement in
         scripts/make-icons.mjs. The wordmark is left off deliberately: at 32px
         "PRINCES ELECTRONICS" is three grey smudges. */}
-    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="48x48" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    {/* Every page renders body copy and a serif heading above the fold —
+        preload those two so first paint doesn't wait on the CSS to be
+        parsed before the font request even starts. Inter 500 (labels,
+        buttons) is left to load on its own; preloading every weight just
+        makes them compete with each other. */}
+    <link rel="preload" as="font" type="font/woff2" href={interUrl} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={frauncesUrl} crossorigin />
 
     {/*
       Absolute, or not at all. Every platform that reads og:image fetches it
