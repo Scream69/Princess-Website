@@ -35,7 +35,7 @@ const phoneIsReal = !isPlaceholder(phone);
           <h2>
             <img src={logoStacked} alt={site.name} width="169" height="166" loading="lazy" />
           </h2>
-          <p class="mt-3 text-sm text-ink-muted">{site.tagline}</p>
+          <p class="mt-2 text-sm text-ink-muted">{site.tagline}</p>
         </div>
         <p class="mt-4 text-sm text-ink-muted">{site.responsePromise}</p>
       </div>
@@ -44,14 +44,14 @@ const phoneIsReal = !isPlaceholder(phone);
         <h2 class="text-sm font-medium tracking-wide text-ink uppercase">Contact</h2>
         <ul class="mt-3 space-y-2 text-sm text-ink-muted">
           <li>
-            <a class="inline-flex min-h-touch items-center hover:text-ink" href={`mailto:${site.contact.email}`}>
+            <a class="tap-target hover:text-ink" href={`mailto:${site.contact.email}`}>
               {site.contact.email}
             </a>
           </li>
           <li>
             {
               phoneIsReal ? (
-                <a class="inline-flex min-h-touch items-center hover:text-ink" href={telHref}>
+                <a class="tap-target hover:text-ink" href={telHref}>
                   {phone}
                 </a>
               ) : (
@@ -101,12 +101,11 @@ const phoneIsReal = !isPlaceholder(phone);
 <style>
   .lockup {
     /* `inline-grid` shrinks to fit its widest item. With the mark excluded
-       from that measurement below, the widest item is the tagline. */
+       from that measurement below, the widest item is the tagline — capped
+       below so the mark stays a compact footer mark rather than growing to
+       match the (much longer) Contact/Company columns beside it. */
     display: inline-grid;
-    /* A safety rail, not a design decision: the mark is close to square, so
-       a long tagline on a narrow column would otherwise scale it to the full
-       column width and give the footer a logo taller than the address. */
-    max-width: 16rem;
+    max-width: 8rem;
   }
 
   .lockup img {
@@ -117,5 +116,25 @@ const phoneIsReal = !isPlaceholder(phone);
     width: 0;
     min-width: 100%;
     height: auto;
+  }
+
+  /*
+   * The mailto/tel links sit in the same list as plain-text lines (the
+   * opening hours). Giving them `min-h-touch` directly, as every other link
+   * on the site does, stretched those two rows to 44px while their
+   * neighbours stayed text-height — the list read as raggedly spaced. This
+   * keeps every row the same height and instead grows the *hit area* only,
+   * via an invisible pseudo-element, so the 44px touch target (CLAUDE.md 9.5)
+   * costs nothing visually.
+   */
+  .tap-target {
+    position: relative;
+    display: inline-block;
+  }
+
+  .tap-target::before {
+    content: '';
+    position: absolute;
+    inset: -0.75rem -0.5rem;
   }
 </style>
