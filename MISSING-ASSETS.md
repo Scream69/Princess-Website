@@ -46,16 +46,25 @@ Until logos land, **every card renders the documented text fallback**
 (CLAUDE.md 9.4). The grid is therefore only half-judgeable: layout, filter,
 A–Z and hover behaviour are final, optical balance is not.
 
-**Assumption on record, and now weaker.** Every brand is written as
-`"authorised": true` on the basis that buying-group membership confirms
-dealer status for the group's range. CLAUDE.md 11 says not to assume this.
+**Assumption on record.** Every brand is written as `"authorised": true` on
+the basis that buying-group membership confirms dealer status for the
+group's range. CLAUDE.md 11 says not to assume this without confirmation.
 
 On 2026-09-11 the client asked for the buying group to be removed from the
 site entirely — "we can't show that" — so the site no longer states the
-relationship the `authorised` flag rests on. That makes written confirmation
-of dealer status more important rather than less: the brand grid displays
-sixty-five manufacturers' names, and section 11 says that is only safe where
-a supply relationship exists. Worth resolving before launch.
+relationship the `authorised` flag rests on.
+
+- [x] **Resolved 2026-09-17.** The client confirmed no authorised-dealer
+      language will appear anywhere on the site — nothing here needs written
+      confirmation because nothing is being claimed. `authorised: true`
+      stays as internal metadata only; the risk this was tracking (displaying
+      a manufacturer's mark in a way that implies a supply relationship) is
+      the client's own commercial call to accept, not a data gap.
+- [x] **Resolved 2026-09-17.** No Euronics brand asset pack is coming — the
+      client has confirmed to proceed with the raster logos already supplied
+      (2026-09-15) and processed by `prepare-logos.mjs`, as-is. The
+      soft/upscaled files noted above (Leisure, Vivanco, Comfee,
+      Fridgemaster) are accepted rather than chased for replacements.
 
 ### 1.2 Positioning — premium or general electricals?
 
@@ -64,9 +73,14 @@ electricals". The supplied list contradicts that: it has Miele and AEG but **no
 Siemens, Gaggenau, NEFF or Bosch**, and roughly a quarter of it is TV, audio and
 lifestyle (Sony, KEF, Ninebot, Reflex Active, Revitive).
 
-- [ ] Confirm whether the site presents as a premium appliance specialist or as
-      a general electricals retailer. This changes the home page copy and the
-      visual direction, so it is worth settling before Phase 7.
+- [x] **Resolved 2026-09-17: premium specialist.** The client confirmed the
+      site should present as a premium appliance specialist. No copy or
+      design change follows from this on its own — CLAUDE.md 9.1's
+      restrained direction (generous white space, one restrained accent,
+      confident type, no gradients or heavy shadows) was written to degrade
+      gracefully either way, and the hero copy is separately confirmed good
+      (section 3). This closes the positioning question CLAUDE.md 9.1 and
+      section 13 tracked as open.
 - [ ] Confirm the client genuinely cannot supply Siemens / Gaggenau / NEFF /
       Bosch — their absence may simply be an omission in the list supplied.
 
@@ -152,12 +166,18 @@ supervisory authorities has deliberately been left in place (CLAUDE.md 11).
         ink bounds `1087.2 1004.3 37394.5 8082.9`, so a CSS height is the
         height of the mark rather than of the mark plus 5% dead margin.
 
-      - [ ] **Both lockups are light-background artwork.** "PRINCES" is solid
-            navy `#022346`, so on a dark ground the wordmark disappears and
-            only the crown survives. Harmless today — nav and footer are both
-            light — but a reversed (all-white or outlined) version is needed
-            before any dark section, dark footer or dark-mode treatment. Worth
-            requesting now while the designer has the file open.
+      - [x] **Resolved 2026-09-17: no reversed version is coming.** The
+            client confirmed this is the only logo file that exists.
+            "PRINCES" is solid navy `#022346`, so on a dark ground the
+            wordmark disappears and only the crown survives — harmless today,
+            since nav and footer are both light, but this is now a hard
+            constraint rather than a gap: **do not design a dark section,
+            dark footer, or dark-mode treatment that puts the lockup on a
+            dark ground.** If one is ever needed, the pragmatic fallback is a
+            CSS-driven white recolour of the existing vector (this is the
+            client's own mark, not a manufacturer's, so recolouring it is a
+            design choice for the client to approve, not a trademark
+            concern under CLAUDE.md rule 2.3) — not a fabricated redraw.
       - [ ] The logo's gold is a CMYK→RGB conversion (`#D0A031`–`#F0D079`) and
             does not match the `--color-gold` token. Deliberately not
             recoloured — a brand mark keeps its own colour — but if the two
@@ -175,11 +195,19 @@ supervisory authorities has deliberately been left in place (CLAUDE.md 11).
             them from anything printed. These were chosen to sit in the
             blue/white/gold brief while passing contrast — a bright gold
             cannot carry text at all, which is why there are two.
-- [ ] Typefaces. The token stacks reference `PrincessSans` / `PrincessSerif`
-      and fall back to system faces, so nothing shifts once the real files
-      arrive. Fonts must be **self-hosted `woff2`** with `font-display: swap`
-      — no Google Fonts CDN (GDPR data transfer, CLAUDE.md 9.3).
-- [ ] Any brand guidelines document
+- [x] **Typefaces — resolved 2026-09-17.** No brand fonts or guidelines
+      exist, and the client asked us to choose rather than wait. Fraunces
+      (headings, one weight — 600) and Inter (body, 400 and 500) — both
+      open-source (SIL OFL), self-hosted as `woff2` with `font-display: swap`
+      from `src/assets/fonts/`, latin subset only, no Google Fonts CDN
+      request at runtime (CLAUDE.md 9.3). See the comment above the
+      `@font-face` rules in `global.css` for why each is a separate static
+      file rather than one combined request — Google's font API silently
+      serves identical bytes for every weight requested in a single query.
+- [x] **Resolved 2026-09-17: no brand guidelines document exists.** The
+      client confirmed there is nothing beyond what is already supplied (the
+      logo and the blue/white/gold palette). Typefaces above were chosen on
+      that basis.
 - [x] Open Graph share image — generated 2026-09-16 by
       `scripts/make-icons.mjs` from the client's own lockup, at
       `public/og-image.png`. **It is only emitted once `site` is set**: every
@@ -386,10 +414,20 @@ the value sent is always empty and their check never fires.
       - how long enquiries are kept once received (24 months from last
         contact is a common choice)
       - each provider's location and the transfer safeguard relied on
-- [ ] A read-through by whoever advises the business on data protection.
-      The draft is accurate to the build; it has not been reviewed by anyone
-      qualified to sign it off.
-- [ ] Confirm the client is registered as data controller
+- [ ] A read-through by whoever advises the business on data protection —
+      still open. This means the *substance* reviewed, not just wording:
+      whether the retention period (18 months from last contact), the
+      lawful bases stated, and above all **the transfers clause** are
+      defensible. The transfers clause is generic wording written against
+      what the code actually does (Web3Forms, postcodes.io, and whichever
+      analytics tool is eventually named) rather than a checked position for
+      each provider, and the EU-reachability question in section 1.4 (UK-only
+      delivery, but the site itself is reachable from anywhere) sits inside
+      it. The draft is accurate to the build; it has not been reviewed by
+      anyone qualified to sign it off.
+- [x] **Resolved 2026-09-17: not required.** The client confirmed ICO
+      registration as data controller does not need to be confirmed for this
+      round.
 
 ---
 

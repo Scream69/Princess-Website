@@ -613,10 +613,11 @@ The client is a **buying-group member** and carries that group's range — 67 br
 spanning premium appliances (Miele, Smeg, Liebherr, Fisher & Paykel), mainstream
 appliances (Beko, Indesit, Hotpoint), and TV/audio (Sony, Samsung, LG, KEF).
 
-**Open question, not yet answered:** whether the site should present as premium
-or as general electricals. Do not resolve it in code — it is a positioning
-decision for the client (logged in `MISSING-ASSETS.md`). Until it is answered,
-the restrained direction below holds, because it degrades gracefully either way.
+**Resolved 2026-09-17: premium specialist.** The client confirmed the site
+should present as a premium appliance specialist, not a general electricals
+retailer (logged in `MISSING-ASSETS.md` 1.2). No copy or visual change follows
+from this on its own — the restrained direction below was written to degrade
+gracefully either way, and now has a confirmed answer to hold to.
 
 The reference the client supplied (Euronics) is navy-and-yellow volume retail — take its *information architecture*, reject its aesthetic.
 
@@ -633,6 +634,8 @@ Gold is a documented exception to "one accent only" below. It is decoration, nev
 
 ### 9.3 Type
 One family, or a serif for headings paired with a clean sans for body if the brand allows. Self-host the fonts (`woff2`, `font-display: swap`) — no Google Fonts CDN, since that carries a GDPR data-transfer question.
+
+**Resolved 2026-09-17: Fraunces (headings) and Inter (body).** No brand fonts or guidelines exist; the client asked us to choose rather than wait. Both are self-hosted from `src/assets/fonts/` — downloaded once from Google's own archive, not loaded from `fonts.googleapis.com` at runtime, so the GDPR concern above does not apply. See `src/styles/global.css` and `MISSING-ASSETS.md` 2.
 
 ### 9.4 Brand grid — the detail that decides quality
 This is what the client will judge. Get it right.
@@ -748,16 +751,23 @@ Track these; do not guess answers.
       public site.** The client asked on 2026-09-11 for it to be removed from
       the hero and the About section. It stays in these notes because it is
       where `brands.json` came from; it is not something the site may claim.
-- [ ] Authorised-dealer status confirmed **in writing** (currently assumed from
-      Euronics membership — see `MISSING-ASSETS.md` 1.1)
-- [ ] Access to the Euronics brand asset pack (logos)
-- [ ] Positioning: premium specialist or general electricals (`MISSING-ASSETS.md` 1.2)
-- [x] Client logo (vector) — supplied 2026-09-11, in the nav and footer. A
-      reversed version for dark grounds is still outstanding
+- [x] Authorised-dealer status — **client confirmed 2026-09-17 that no
+      authorised-dealer language will appear on the site**, so no written
+      per-brand confirmation is being pursued; `authorised: true` stays as
+      internal metadata only (`MISSING-ASSETS.md` 1.1)
+- [x] Access to the Euronics brand asset pack — **client confirmed
+      2026-09-17: none is coming; proceed with the logos already supplied
+      and processed, as-is**
+- [x] Positioning — **premium specialist, confirmed 2026-09-17**
+      (`MISSING-ASSETS.md` 1.2)
+- [x] Client logo (vector) — supplied 2026-09-11, in the nav and footer.
+      **No reversed version for dark grounds exists or is coming** — client
+      confirmed 2026-09-17 this is the only logo file. Do not design a dark
+      section, dark footer, or dark-mode treatment for the lockup
       (`MISSING-ASSETS.md` 2)
 - [ ] Logo files (vector) for each manufacturer
 - [x] Brand colours — **blue, white and gold**
-- [ ] Fonts and any brand guidelines
+- [x] Fonts — **Fraunces + Inter, chosen 2026-09-17** (no client font or brand guidelines document exists — `MISSING-ASSETS.md` 2)
 - [ ] Home page copy: hero, about, how-it-works
 - [x] Enquiry destination email address — `info@princeselectronics.com`
 - [x] WhatsApp Business number — **+44 7930 565656**, supplied 2026-09-15. This was the last thing standing between the site and rule 2.4: with no number, every WhatsApp button rendered nothing, so an enquiry that could not be sent had "Try again" and no second route out.
@@ -767,7 +777,7 @@ Track these; do not guess answers.
 - [x] Trading name — **Princes Electronics**
 - [x] Company registration number `07396672`, VAT `100 906 362`, registered office `23 Haverford Way, Edgware, Middlesex, HA8 6DJ`
 - [x] Registered company name — **Princes Electronics** (same as the trading name)
-- [x] Privacy policy — written and completed 2026-09-15 apart from the effective date, which is set on launch day. Retention is 18 months from last contact. **Still needs a read-through by whoever advises the business on data protection**, and the client should confirm ICO registration as data controller.
+- [x] Privacy policy — written and completed 2026-09-15 apart from the effective date, which is set on launch day. Retention is 18 months from last contact. **Still needs a read-through by whoever advises the business on data protection** — specifically the transfers clause (generic wording, not a checked position per provider) and the EU-reachability question in 8.6. ICO registration as data controller does **not** need confirming — client instruction, 2026-09-17.
 - [ ] Domain, registrar access, and **existing MX records** (changing DNS carelessly will break their email)
 - [x] Analytics — **deferred**, 2026-09-15. The client may build their own next year. No provider script is loaded, `track()` no-ops, and the privacy policy no longer describes analytics at all. The event wiring in `analytics.ts` stays: it is CLAUDE.md 8.10's list, it costs nothing while no provider is present, and naming a provider is the only step needed to turn it on.
 - [x] Repair categories and exclusions — **confirmed 2026-09-16**: repairs

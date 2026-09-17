@@ -1,6 +1,66 @@
 @import 'tailwindcss';
 
 /*
+ * Self-hosted type (CLAUDE.md 9.3 — woff2, font-display: swap, no Google
+ * Fonts CDN). Chosen 2026-09-17: no brand fonts or guidelines exist, and the
+ * client asked us to pick rather than wait, so this is us choosing rather
+ * than the client supplying. Both are open-source (SIL OFL), downloaded once
+ * from Google's own font archive and served from this repo — self-hosting,
+ * not the CDN the rule forbids, which is about a runtime request to
+ * fonts.googleapis.com on every visit, not a font's origin.
+ *
+ * Latin subset only (this is a UK-only site — CLAUDE.md 8.6) via `url()` in
+ * src/assets/fonts/, which Vite hashes and bundles like any other asset.
+ *
+ * One weight for Fraunces, deliberately: 600 covers every heading (browser
+ * default bold) *and* every plain-paragraph serif accent (About's pull
+ * quote, the 404 numeral) at the same confident weight, rather than
+ * shipping a second file to distinguish them (CLAUDE.md 9.1, "one restrained
+ * accent"). Inter ships two weights because the site actually uses two: 400
+ * body text and 500 for every `font-medium` label/button (~70 uses) — no
+ * component uses a heavier sans weight. Each is a genuinely separate static
+ * file — Google's font API serves identical bytes for every weight when
+ * they're requested together in one query, which would have silently
+ * collapsed `font-medium` back to body weight; requesting each weight
+ * separately gets distinct files.
+ */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../assets/fonts/fraunces-600-latin.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/inter-400-latin.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../assets/fonts/inter-500-latin.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/*
  * Design tokens — the single source of truth for colour, type and spacing.
  *
  * Tailwind 4 is configured in CSS rather than tailwind.config.mjs (see
@@ -44,23 +104,21 @@
   /* Feedback — used only for form validation, never decoration */
   --color-error: #a3282d; /*                            — 6.9:1 on canvas */
 
-  /* Type — self-hosted only, no Google Fonts CDN (CLAUDE.md 9.3).
-     Font files not yet supplied; the stacks below fall back to system
-     faces so nothing shifts once the real woff2 files land. */
+  /* Type — self-hosted only, no Google Fonts CDN (CLAUDE.md 9.3). Chosen
+     2026-09-17 (see the @font-face rules above); the system-face fallback
+     stays so nothing shifts if a file ever fails to load. */
   --font-sans:
-    'PrincessSans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
-    Helvetica, Arial, sans-serif;
-  --font-serif: 'PrincessSerif', ui-serif, Georgia, Cambria, 'Times New Roman', serif;
-  /* A serif for digits, because the serif above cannot set them level.
-     `ui-serif` resolves to Georgia on Windows, macOS and iOS, and Georgia
-     ships old-style figures only: measured at 44px, `6` rises 30px above the
-     baseline and `5` drops 8px below it. Beautiful inside a sentence, wrong
-     for a figure read on its own — "65" looks like two digits that failed to
-     line up. Georgia carries no lining set, so `lining-nums` has nothing to
-     switch to; the face itself has to change. Cambria covers Windows, Times
-     New Roman covers macOS and iOS, and the generic `serif` covers Android —
-     all three set every digit on the baseline at cap height. */
-  --font-figure: 'PrincessSerif', Cambria, 'Times New Roman', Times, serif;
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica,
+    Arial, sans-serif;
+  --font-serif: 'Fraunces', ui-serif, Georgia, Cambria, 'Times New Roman', serif;
+  /* Fraunces already sets every digit on the baseline at cap height, unlike
+     the old system-serif fallback (Georgia ships old-style figures only, so
+     "65" used to look like two digits that failed to line up) — so this can
+     stay one stack rather than a workaround. `lining-nums tabular-nums`
+     (the `figures` utility below) is still applied on top: it's a no-op on
+     Fraunces and keeps the old fallback chain correct if the file fails to
+     load. */
+  --font-figure: 'Fraunces', Cambria, 'Times New Roman', Times, serif;
 
   /* Fluid display sizes — clamped so there is no layout shift on load */
   --text-display: clamp(2.25rem, 1.5rem + 3.2vw, 3.75rem);
