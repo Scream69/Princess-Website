@@ -60,15 +60,11 @@ const MIN_USABLE_WIDTH = 240;
  * these was identified by looking at the artwork.
  */
 const OVERRIDES = {
-  'A/audio.png': 'audio-pro',
-  'A/images.png': 'avtex', // The same mark as AVTEX.jpg at 720px rather than 155px.
-  'A/AVTEX.jpg': null, // Superseded by the above.
   'F/Fridge master.png': 'fridgemaster',
   'M/MORPHY RICHARD.png': 'morphy-richards',
   'N/Segway-Ninebot_Logo.png': 'ninebot',
   'S/SCHONHAUS.png': 'schonhaus',
-  'V/Vispera.jpg': 'vispera', // Brand is inactive; kept so it is ready if it returns.
-  'Z/Screenshot 2026-09-10 174948.png': 'zenith', // Ditto.
+  'Z/Screenshot 2026-09-10 174948.png': 'zenith', // Brand is inactive; kept so it is ready if it returns.
 };
 
 function walk(dir) {

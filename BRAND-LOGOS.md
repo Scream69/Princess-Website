@@ -36,7 +36,7 @@ requests, nothing could be read and the brand is in section 3.
 
 ---
 
-## 1. Brands with a press or brand-asset page (12)
+## 1. Brands with a press or brand-asset page (11)
 
 Start here — these are public and usually carry a downloadable logo pack.
 
@@ -53,9 +53,8 @@ Start here — these are public and usually carry a downloadable logo pack.
 | [ ] | TCL | `tcl.svg` | [Press Contact](https://www.tcl.com/uk/en/contact-us-form/contact-presse) |
 | [ ] | Toshiba | `toshiba.svg` | [Toshiba Europe Newsroom](https://www.toshiba.eu/newsroom/) |
 | [ ] | Tower | `tower.svg` | [Media Centre & Affiliate Scheme](https://www.towerhousewares.co.uk/pages/media-centre) |
-| [ ] | TP-Link | `tp-link.svg` | [News](https://www.tp-link.com/uk/press/news/) |
 
-## 2. Brands with a trade or dealer route (4)
+## 2. Brands with a trade or dealer route (2)
 
 No public press page, but a trade login or dealer enquiry form — which is
 where asset packs usually sit once you have an account.
@@ -63,11 +62,9 @@ where asset packs usually sit once you have an account.
 | | Brand | Save as | Route |
 |---|---|---|---|
 | [ ] | AEG | `aeg.svg` | [Premier Partner](https://www.aeg.co.uk/local/premier-partner/) |
-| [ ] | Avtex | `avtex.svg` | [Dealers Avtex HUB](https://services.avtex.co.uk/the-hub-login) |
 | [ ] | CDA | `cda.svg` | [Trade Sales](https://www.cda.co.uk/trade-sales/) |
-| [ ] | Montpellier | `montpellier.svg` | [Become A Retailer](https://www.montpellier-appliances.com/become-a-retailer/) |
 
-## 3. Nothing readable from the homepage (51)
+## 3. Nothing readable from the homepage (49)
 
 For these, in order: the Euronics asset library, then the account manager or
 distributor, then the footer of the brand's own site opened in a browser — a
@@ -77,13 +74,13 @@ these sites refuse scripted requests outright.
 | | Brand | Save as | Site | Fetch result |
 |---|---|---|---|---|
 | [ ] | ASKO | `asko.svg` | [uk.asko.com](https://uk.asko.com) | blocked (403) |
-| [ ] | Audio Pro | `audio-pro.svg` | [uk.audiopro.com](https://uk.audiopro.com) | read, no asset link in it |
 | [ ] | Beko | `beko.svg` | [www.beko.co.uk](https://www.beko.co.uk) | read, no asset link in it |
 | [ ] | Belling | `belling.svg` | [www.belling.co.uk/en-gb](https://www.belling.co.uk/en-gb) | read, no asset link in it |
 | [ ] | Blomberg | `blomberg.svg` | [www.blomberg.co.uk](https://www.blomberg.co.uk) | read, no asset link in it |
+| [x] | Bosch | `bosch.svg` | [www.bosch-home.co.uk](https://www.bosch-home.co.uk) | supplied 2026-09-18 |
 | [ ] | Candy | `candy.svg` | [www.candy-home.com/en_GB](https://www.candy-home.com/en_GB/) | read, no asset link in it |
 | [ ] | Cata | `cata.svg` | [www.cata-appliances.co.uk](https://www.cata-appliances.co.uk) | read, no asset link in it |
-| [ ] | Comfee | `comfee.svg` | [www.comfee.com/uk](https://www.comfee.com/uk) | unreachable |
+| [x] | Dell | `dell.svg` | [www.dell.com/en-uk](https://www.dell.com/en-uk) | supplied 2026-09-18 |
 | [ ] | Denon | `denon.svg` | [www.denon.com/en-gb](https://www.denon.com/en-gb/) | read, no asset link in it |
 | [ ] | Dyson | `dyson.svg` | [www.dyson.co.uk](https://www.dyson.co.uk) | blocked (403) |
 | [ ] | Freesat | `freesat.svg` | [www.freesat.co.uk](https://www.freesat.co.uk) | read, no asset link in it |
@@ -92,24 +89,24 @@ these sites refuse scripted requests outright.
 | [ ] | Haier | `haier.svg` | [www.haier-europe.com/en_GB](https://www.haier-europe.com/en_GB/) | read, no asset link in it |
 | [ ] | Hisense | `hisense.svg` | [uk.hisense.com](https://uk.hisense.com) | blocked (403) |
 | [ ] | Hoover | `hoover.svg` | [www.hoover-home.com/en_GB](https://www.hoover-home.com/en_GB/) | read, no asset link in it |
+| [x] | HP | `hp.svg` | [www.hp.com/gb-en](https://www.hp.com/gb-en/home.html) | supplied 2026-09-18 |
 | [ ] | Humax | `humax.svg` | [uk.humaxdigital.com](https://uk.humaxdigital.com) | unreachable |
 | [ ] | IceKing | `iceking.svg` | [www.ice-king.co.uk](https://www.ice-king.co.uk) | read, no asset link in it |
 | [ ] | Indesit | `indesit.svg` | [www.indesit.co.uk](https://www.indesit.co.uk) | read, no asset link in it |
 | [ ] | JVC | `jvc.svg` | [uk.jvc.com](https://uk.jvc.com) | read, no asset link in it |
 | [ ] | KEF | `kef.svg` | [uk.kef.com](https://uk.kef.com) | read, no asset link in it |
 | [ ] | Leisure | `leisure.svg` | [www.leisurecooker.co.uk](https://www.leisurecooker.co.uk) | read, no asset link in it |
-| [ ] | Lenco | `lenco.svg` | [lenco.uk](https://lenco.uk) | read, no asset link in it |
+| [x] | Lenovo | `lenovo.svg` | [www.lenovo.com/gb/en](https://www.lenovo.com/gb/en/) | supplied 2026-09-18 |
 | [ ] | Loewe | `loewe.svg` | [www.loewe.tv/uk](https://www.loewe.tv/uk) | blocked (403) |
-| [ ] | Metz | `metz.svg` | [metzblue.com/en-GB](https://metzblue.com/en-GB/) | read, no asset link in it |
 | [ ] | Midea | `midea.svg` | [www.midea.com/uk](https://www.midea.com/uk) | read, no asset link in it |
 | [ ] | Morphy Richards | `morphy-richards.svg` | [www.morphyrichards.co.uk](https://www.morphyrichards.co.uk) | read, no asset link in it |
+| [x] | Neff | `neff.svg` | [www.neff-home.com/uk](https://www.neff-home.com/uk/) | supplied 2026-09-18 |
 | [ ] | Ninebot | `ninebot.svg` | [uk-en.segway.com](https://uk-en.segway.com) | read, no asset link in it |
 | [ ] | Ninja | `ninja.svg` | [www.sharkninja.co.uk](https://www.sharkninja.co.uk) | read, no asset link in it |
 | [ ] | Numatic | `numatic.svg` | [numatic.com/uk](https://numatic.com/uk/) | read, no asset link in it |
 | [ ] | NutriBullet | `nutribullet.svg` | [nutribullet.co.uk](https://nutribullet.co.uk) | read, no asset link in it |
 | [ ] | Rangemaster | `rangemaster.svg` | [www.rangemaster.co.uk](https://www.rangemaster.co.uk) | blocked (403) |
 | [ ] | Reflex Active | `reflex-active.svg` | [www.reflex-active.com](https://www.reflex-active.com) | read, no asset link in it |
-| [ ] | Revitive | `revitive.svg` | [www.revitive.com](https://www.revitive.com) | read, no asset link in it |
 | [ ] | Roberts Radio | `roberts-radio.svg` | [www.robertsradio.com/en-gb](https://www.robertsradio.com/en-gb) | read, no asset link in it |
 | [ ] | Russell Hobbs | `russell-hobbs.svg` | [uk.russellhobbs.com](https://uk.russellhobbs.com) | blocked (405) |
 | [ ] | Schönhaus | `schonhaus.svg` | [www.schonhaus.co.uk](https://www.schonhaus.co.uk) | read, no asset link in it |
@@ -117,14 +114,12 @@ these sites refuse scripted requests outright.
 | [ ] | Sensis | `sensis.svg` | [www.sensis.uk](https://www.sensis.uk) | read, no asset link in it |
 | [ ] | Shark | `shark.svg` | [www.sharkninja.co.uk](https://www.sharkninja.co.uk) | read, no asset link in it |
 | [ ] | Sharp | `sharp.svg` | [www.sharpconsumer.uk](https://www.sharpconsumer.uk) | read, no asset link in it |
+| [x] | Siemens | `siemens.svg` | [www.siemens-home.bsh-group.com/uk](https://www.siemens-home.bsh-group.com/uk/) | supplied 2026-09-18 |
 | [ ] | Smeg | `smeg.svg` | [www.smeguk.com](https://www.smeguk.com) | read, no asset link in it |
-| [ ] | Statesman | `statesman.svg` | [statesmanappliances.co.uk](https://statesmanappliances.co.uk) | read, no asset link in it |
 | [ ] | Stoves | `stoves.svg` | [www.stoves.co.uk/en-gb](https://www.stoves.co.uk/en-gb) | read, no asset link in it |
 | [ ] | Vax | `vax.svg` | [www.vax.co.uk](https://www.vax.co.uk) | read, no asset link in it |
-| [ ] | Vispera | `vispera.svg` | — | no site |
 | [ ] | Vivanco | `vivanco.svg` | [www.vivanco.com/en-eu](https://www.vivanco.com/en-eu) | read, no asset link in it |
 | [ ] | White Knight | `white-knight.svg` | [www.whiteknight-home.com](https://www.whiteknight-home.com) | read, no asset link in it |
-| [ ] | Woods | `woods.svg` | [www.woodsairmovement.com/en-gb](https://www.woodsairmovement.com/en-gb) | read, no asset link in it |
 | [ ] | Zanussi | `zanussi.svg` | [www.zanussi.co.uk](https://www.zanussi.co.uk) | read, no asset link in it |
 | [ ] | Zenith | `zenith.svg` | — | no site |
 

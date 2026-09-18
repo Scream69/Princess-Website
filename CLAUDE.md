@@ -17,9 +17,10 @@ enquiries and replies with a quote by hand, and it assesses repairs on items
 the customer brings to the counter.
 
 **The quote model:**
-1. Customer wants an appliance or a piece of consumer electronics (Miele, AEG,
-   Smeg, Samsung, Sony and ~60 others — the Euronics range; `brands.json` is
-   the definitive list).
+1. Customer wants an appliance, a piece of consumer electronics, or a
+   computer (Miele, AEG, Smeg, Samsung, Sony and ~57 others — the Euronics
+   range, including Siemens, Neff and Bosch as of 2026-09-18; `brands.json`
+   is the definitive list).
 2. They browse the *manufacturer's own website* to choose a product.
 3. They copy the product page link or model number.
 4. They come back to this site and submit it, with their contact details.
@@ -609,9 +610,11 @@ Do not build these. They were considered and rejected.
 ## 9. Design
 
 ### 9.1 Direction
-The client is a **buying-group member** and carries that group's range — 67 brands
-spanning premium appliances (Miele, Smeg, Liebherr, Fisher & Paykel), mainstream
-appliances (Beko, Indesit, Hotpoint), and TV/audio (Sony, Samsung, LG, KEF).
+The client is a **buying-group member** and carries that group's range — 62 brands
+spanning premium appliances (Miele, Smeg, Liebherr, Fisher & Paykel, and, as of
+2026-09-18, Siemens, Neff and Bosch), mainstream appliances (Beko, Indesit,
+Hotpoint), TV/audio (Sony, Samsung, LG, KEF), and computing (HP, Dell, Lenovo
+— also added 2026-09-18).
 
 **Resolved 2026-09-17: premium specialist.** The client confirmed the site
 should present as a premium appliance specialist, not a general electricals
@@ -642,11 +645,11 @@ This is what the client will judge. Get it right.
 - Identical card size, white background, subtle 1px border, generous internal padding.
 - Every mark must read at the same visual weight. A tall stacked mark and a long wordmark fitted to the same box width look wrong, and that is what makes a brand grid look automated.
 - **This is now done in the asset pipeline, not by hand.** `scripts/prepare-logos.mjs` crops each supplied file to its own ink and scales it so its geometric mean — `sqrt(width × height)` — is constant, then centres it on an identical 280×88 canvas. Because every file is the same size with the mark already balanced inside it, the card renders them all in one box and they come out looking the same size.
-- **`opticalScale` remains, as the escape hatch** for a mark the automatic pass still gets wrong. It is `1` for all 67 today. Set it on the single record that needs it rather than moving the pipeline for everyone.
+- **`opticalScale` remains, as the escape hatch** for a mark the automatic pass still gets wrong. It is `1` for every brand today. Set it on the single record that needs it rather than moving the pipeline for everyone.
 - **Raster, not SVG.** This section said "SVG only" until 2026-09-15, when the client supplied the artwork as photographs — PNG, JPG, WebP and one AVIF. That is what manufacturers' press pages hand out, so it is what the grid has to accept. The pipeline normalises them to WebP and flags any source too small to survive a 2× render, because a soft logo on a white card is worse than the text fallback it replaces. The text fallback stays for any brand whose file has not arrived.
-- Logos live in `public/brands/<slug>.webp` — a plain path rather than Astro's image pipeline, because 67 files referenced from data cannot be statically imported, and they are pre-sized anyway.
+- Logos live in `public/brands/<slug>.webp` — a plain path rather than Astro's image pipeline, because the brand count referenced from data cannot be statically imported, and they are pre-sized anyway.
 - Rows fill continuously; **do not force a row break at each letter** (the reference page wastes large amounts of space doing this). Mark letters with a sticky divider or heading instead.
-- **The brand name sits under the logo.** This reversed on 2026-09-15, at the client's request. The rule had been "no redundant text label — use `aria-label` and a hover treatment", which assumes every mark is recognisable on sight; across 65 brands it is not, and Sensis, Schönhaus, Statesman, Avtex and Haden are wordmarks a customer has no reason to know. The `aria-label` stays and still wins as the accessible name: it opens with the visible text, as WCAG 2.5.3 requires, and adds what the hover affordance tells a sighted user — that the link leaves the site.
+- **The brand name sits under the logo.** This reversed on 2026-09-15, at the client's request. The rule had been "no redundant text label — use `aria-label` and a hover treatment", which assumes every mark is recognisable on sight; across dozens of brands it is not, and Sensis, Schönhaus, Sanus and Haden are wordmarks a customer has no reason to know. The `aria-label` stays and still wins as the accessible name: it opens with the visible text, as WCAG 2.5.3 requires, and adds what the hover affordance tells a sighted user — that the link leaves the site.
 - Where no artwork has arrived the name stands in for the mark and is set larger, because there it *is* the card rather than a label on it.
 - On hover: slight lift and a **"View range ↗"** affordance, so it is obvious the link leaves the site.
 - Letters with no active brands are dimmed and not clickable in the A–Z rail.
@@ -746,7 +749,16 @@ Works on mobile Safari · keyboard accessible · handles the failure case · sta
 
 Track these; do not guess answers.
 
-- [x] Final brand list — 67 Euronics brands, supplied and in `brands.json`
+- [x] Final brand list — originally 67 Euronics brands, supplied and in
+      `brands.json`. **Updated 2026-09-18:** Woods, TP-Link, Vispera,
+      Statesman, Revitive, Montpellier, Metz, Lenco, Comfee, Avtex and Audio
+      Pro removed at the client's request; HP, Dell, Lenovo, Siemens, Neff
+      and Bosch added, with logos supplied the same day (`MISSING-ASSETS.md`
+      1.1). The Siemens/Neff/Bosch addition also resolves the long-open
+      question in `MISSING-ASSETS.md` 1.2 about their absence from the
+      original list — it was an omission, not a deliberate exclusion.
+      Gaggenau remains unconfirmed and is not added. 62 brands now in
+      `brands.json`.
 - [x] Buying group membership — **confirmed to us, but must not appear on the
       public site.** The client asked on 2026-09-11 for it to be removed from
       the hero and the About section. It stays in these notes because it is

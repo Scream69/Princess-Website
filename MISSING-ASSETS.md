@@ -16,10 +16,61 @@ Markers used in the code:
 
 ### 1.1 Brand logos — blocks the Phase 2 finish
 
-The brand list itself is **resolved**: 67 Euronics brands are in
+The brand list itself is **resolved**: 62 Euronics brands are in
 `src/data/brands.json`, supplied by the client. Buying group is **Euronics**.
 
-What is still missing is the artwork:
+**Updated 2026-09-18 — brand roster change.** The client asked for eleven
+brands to be dropped and three added:
+
+- **Removed:** Woods, TP-Link, Vispera, Statesman, Revitive, Montpellier,
+  Metz, Lenco, Comfee, Avtex, Audio Pro. Their entries, processed logos
+  (`public/brands/<slug>.webp`) and the corresponding overrides in
+  `scripts/prepare-logos.mjs` are all gone — this was a removal, not a
+  deactivation, so none of the eleven render even the text fallback.
+- **Added:** HP, Dell, Lenovo, all `"categories": ["other"]` alongside the
+  existing computing-adjacent entries (Sanus, Vivanco, Ninebot). Their
+  `url` fields are each brand's own UK consumer homepage (verified reachable
+  2026-09-18; Lenovo's answers 403 to a scripted fetch, the same bot-protection
+  pattern already logged below for Asko, Dyson, Hisense, Loewe, Rangemaster,
+  Russell Hobbs and Sebo — it loads normally in a browser).
+  - [x] **Logos supplied 2026-09-18**, same day as the roster change, so all
+        three render real artwork rather than the text fallback from the
+        start. Processed through `scripts/prepare-logos.mjs` like every other
+        brand — no override needed, the source filenames (`Dell.png`,
+        `HP.png`, `Lenovo.png`) matched their `brands.json` names directly.
+        All three ink boxes were comfortably above `MIN_USABLE_WIDTH`, so
+        none joins the below-240px soft-render list.
+- `"authorised": true` is carried on all three on the same basis as every
+  other brand here — buying-group membership standing in for confirmed
+  dealer status (the assumption immediately below) — consistent with how the
+  original 67 were entered, not a new one made for this change.
+
+**Second addition, same day.** Siemens, Neff and Bosch — `"categories":
+["appliances"]` — answering the open question in section 1.2 about their
+absence from the original supplied list (it was an omission; Gaggenau
+remains genuinely unconfirmed and stays out). `url`s are each brand's UK
+consumer site: `bosch-home.co.uk`, `neff-home.com/uk`,
+`siemens-home.bsh-group.com/uk` (all verified reachable 2026-09-18).
+
+- [x] **Logos supplied 2026-09-18.** The three source files arrived as
+      JPEGs with a checkerboard transparency pattern baked into the pixels
+      rather than a flattened white background — visible in the pasted
+      previews, and confirmed by sampling raw pixel data (`sharp`), which
+      showed two alternating grey bands (~203 and ~253) tiled across the
+      whole canvas. Run through `prepare-logos.mjs` as-is, that pattern
+      would have been read as ink by `inkBox`'s background-detection
+      (CLAUDE.md 9.4) and produced a garbled crop. Each file was pre-cleaned
+      with a one-off script: any near-greyscale pixel (channels within 10 of
+      each other) at or above value 180 was flattened to pure white, which
+      is safely clear of every real ink colour in these three marks (Bosch's
+      red/black, Neff's dark red, Siemens' teal) — the mark itself was never
+      touched, only the artefact behind it. The resulting `BOSCH.png`,
+      `NEFF.png` and `SIEMENS.png` in the source folder are the cleaned
+      versions; `prepare-logos.mjs --report` confirmed sane ink boxes
+      (705×189, 544×192, 728×128) before the real run, and all three
+      renders were checked visually. None is below `MIN_USABLE_WIDTH`.
+
+The artwork itself, resolved:
 
 - [x] **Logos supplied 2026-09-15** — the client provided all of them at
       once, as raster files, which is why `BRAND-LOGOS.md` (the sourcing
@@ -34,13 +85,13 @@ What is still missing is the artwork:
         jvc, lg, dyson, vax, numatic, cata, reflex-active.
       - **Vivanco's file is wrong rather than small** — the artwork is a black
         bar above a small wordmark, which is a crop of a larger lockup.
-      - Comfee and Fridgemaster are pale, low-contrast versions that look
-        washed out beside their neighbours; a standard-weight version of each
-        would sit better.
+      - Fridgemaster is a pale, low-contrast version that looks washed out
+        beside its neighbours; a standard-weight version would sit better.
+        (Comfee had the same issue; moot since it was removed 2026-09-18.)
 - [x] `opticalScale` — no longer hand-tuned. The optical balancing moved into
       `prepare-logos.mjs`, which normalises every mark to a constant geometric
       mean before it reaches the page (CLAUDE.md 9.4). The field stays at `1`
-      for all 67 and is kept as the per-brand override.
+      for every brand and is kept as the per-brand override.
 
 Until logos land, **every card renders the documented text fallback**
 (CLAUDE.md 9.4). The grid is therefore only half-judgeable: layout, filter,
@@ -64,14 +115,17 @@ relationship the `authorised` flag rests on.
       client has confirmed to proceed with the raster logos already supplied
       (2026-09-15) and processed by `prepare-logos.mjs`, as-is. The
       soft/upscaled files noted above (Leisure, Vivanco, Comfee,
-      Fridgemaster) are accepted rather than chased for replacements.
+      Fridgemaster) are accepted rather than chased for replacements. Comfee
+      itself was removed from the roster 2026-09-18; the remaining three
+      still stand.
 
 ### 1.2 Positioning — premium or general electricals?
 
 CLAUDE.md 9.1 originally read "this client sells Miele and Gaggenau, not budget
-electricals". The supplied list contradicts that: it has Miele and AEG but **no
-Siemens, Gaggenau, NEFF or Bosch**, and roughly a quarter of it is TV, audio and
-lifestyle (Sony, KEF, Ninebot, Reflex Active, Revitive).
+electricals". The list as originally supplied contradicted that: it had Miele
+and AEG but **no Siemens, Gaggenau, NEFF or Bosch**, and roughly a quarter of
+it was TV, audio and lifestyle (Sony, KEF, Ninebot, Reflex Active, Revitive).
+Siemens, Neff and Bosch joined 2026-09-18 (below); Gaggenau has not.
 
 - [x] **Resolved 2026-09-17: premium specialist.** The client confirmed the
       site should present as a premium appliance specialist. No copy or
@@ -81,24 +135,32 @@ lifestyle (Sony, KEF, Ninebot, Reflex Active, Revitive).
       gracefully either way, and the hero copy is separately confirmed good
       (section 3). This closes the positioning question CLAUDE.md 9.1 and
       section 13 tracked as open.
-- [ ] Confirm the client genuinely cannot supply Siemens / Gaggenau / NEFF /
-      Bosch — their absence may simply be an omission in the list supplied.
+- [x] **Partially resolved 2026-09-18.** It was an omission, not an
+      exclusion: the client added Siemens, Neff and Bosch to `brands.json`,
+      each `"categories": ["appliances"]`, with logos supplied the same day
+      (section 1.1). **Gaggenau is still not in the list** — not confirmed
+      either way, so it stays out rather than being assumed alongside its
+      sister brands.
 
 ### 1.3 Brand data corrections already applied
 
 Recorded here so they can be checked back with the client:
 
 - **Comfee** — the supplied `comfee-uk.com` returns a hard 404. Changed to
-  `https://www.comfee.com/uk`, which resolves.
+  `https://www.comfee.com/uk`, which resolves. Moot as of 2026-09-18: Comfee
+  is removed from `brands.json` (section 1.1).
 - **Vispera** and **Zenith** — no manufacturer website exists (the client's own
   list says "sold via retailers only"). Both set `"active": false`: a card that
-  opens nothing is a dead end in the middle of the funnel. They need either a
-  destination or a decision to drop them.
+  opens nothing is a dead end in the middle of the funnel. **Vispera resolved
+  2026-09-18: removed from `brands.json` entirely** (section 1.1), the "drop
+  it" side of the choice this bullet was tracking. Zenith is still inactive
+  and still needs a destination or the same decision.
 - **AEG** and **Zanussi** — refused connection during the Phase 2 check.
   Both answer 200 on the Phase 10 run, so this has resolved itself.
-- **Belling, Liebherr, Stoves and Woods** — all four redirected to a locale
-  path (`/en-gb`). Updated to the destination the redirect actually returned,
-  so customers skip the hop. Verified, not guessed.
+- **Belling, Liebherr and Stoves** (and, until it was removed 2026-09-18,
+  Woods) — redirected to a locale path (`/en-gb`). Updated to the destination
+  the redirect actually returned, so customers skip the hop. Verified, not
+  guessed.
 - **Humax** — `uk.humaxdigital.com` serves an incomplete certificate chain.
   Browsers repair that themselves by fetching the missing intermediate, so
   customers are unaffected and the link works; scripted checks cannot, which
@@ -108,7 +170,8 @@ Recorded here so they can be checked back with the client:
   Rangemaster, Russell Hobbs, Sebo) and load normally in a browser. Bot
   protection, reported as such rather than as failures.
 - **Display names** lightly corrected to the registered trademark styling:
-  `Fisher & Paykel`, `IceKing`, `Lenco`, `NutriBullet`, `Schönhaus`, `TP-Link`.
+  `Fisher & Paykel`, `IceKing`, `NutriBullet`, `Schönhaus` (Lenco and TP-Link,
+  also on this list, were removed 2026-09-18).
 - **`featured`** is a placeholder six (Miele, Samsung, LG, Smeg, Dyson,
   Hotpoint), chosen only so the "popular brands" row is buildable.
   - [ ] Client to choose the real featured set.
